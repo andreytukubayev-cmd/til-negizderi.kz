@@ -3,64 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Тьютор: Казахский язык</title>
+    <title>Тіл-Көмекші | AI для педагогов</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 mt-10">
-        <h1 class="text-2xl font-bold text-center text-blue-600 mb-2">Тіл-Көмекші</h1>
-        <p class="text-sm text-gray-500 text-center mb-6">Казахский для профессионалов без зубрежки</p>
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 mt-10 border border-blue-50">
+        <h1 class="text-2xl font-bold text-center text-blue-700 mb-1">Тіл-Көмекші</h1>
+        <p class="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest">Профессиональный помощник</p>
 
-        <div id="chat-box" class="h-80 overflow-y-auto border-b mb-4 p-2 space-y-4">
-            <div class="bg-blue-100 p-3 rounded-lg text-sm">
-                Салем! Напишите фразу на русском, которую вам нужно сказать на работе (педагогам или госслужащим), и я перестрою её «как для детей».
+        <div id="chat-box" class="h-96 overflow-y-auto mb-4 p-2 space-y-4 text-sm border-b border-gray-100">
+            <div class="bg-blue-50 p-3 rounded-2xl rounded-tl-none border border-blue-100 text-blue-800">
+                Салем! Я ваш ИИ-ассистент. Напишите рабочую фразу на русском, и я переведу её на казахский по методике «глагол в конце».
             </div>
         </div>
 
-        <div class="flex gap-2">
-            <input id="user-input" type="text" placeholder="Пример: Как позвать студента?" 
-                   class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Отправить</button>
+        <div class="flex gap-2 bg-gray-50 p-2 rounded-xl">
+            <input id="user-input" type="text" placeholder="Пример: Студенты, тишина!" 
+                   class="flex-1 bg-transparent px-2 py-2 focus:outline-none text-sm">
+            <button onclick="sendMessage()" id="send-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95">
+                →
+            </button>
         </div>
     </div>
 
     <script type="module">
-        // Для теста я использую бесплатный прокси или прямой вызов. 
-        // ВАЖНО: Позже сюда нужно будет вставить ваш API Ключ от Google Gemini.
+        const API_KEY = "AIzaSyD1ZPc7B6LWqZY145uuCwZW2ztCkRmUrHc";
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY;
+
+const SYSTEM_PROMPT = `Ты — эксперт-лингвист, специализирующийся на деловом казахском языке для государственных служащих и работников образования. 
+        Твоя задача — переводить рабочие фразы, соблюдая официальный стиль и профессиональную этику.
         
-        const SYSTEM_PROMPT = `Ты эксперт по казахскому языку. Твоя методика: обучение через интуитивное понимание, как у детей. 
-        ПРАВИЛА:
-        1. Никаких терминов (падежи, окончания, спряжения).
-        2. Всегда ставь глагол в самый конец предложения (SOV структура).
-        3. Пиши транскрипцию русскими буквами.
-        4. Объясняй ритм фразы (например: 'звучит мягко' или 'ритм как в песне').
-        5. Ориентируйся на педагогов и госслужащих Казахстана.`;
+        МЕТОДИКА РАЗБОРА:
+        1. СТРОГИЙ ПОРЯДОК (SOV): Всегда ставь глагол (действие) в самый конец предложения. Это база структуры казахского языка.
+        2. ПРОФЕССИОНАЛЬНЫЙ СТИЛЬ: Используй лексику, подходящую для совещаний, учебного процесса и официальной переписки.
+        3. БЕЗ ТЕРМИНОВ: Не пиши про падежи или спряжения. Объясняй логику фразы просто.
+        4. ТРАНСКРИПЦИЯ: Пиши произношение русскими буквами, выделяя ударения или специфические звуки.
+        5. КОНТЕКСТ: Если фраза может звучать по-разному (официально или очень официально), дай наиболее подходящий вариант для госслужбы.
+
+        ФОРМАТ ОТВЕТА:
+        Вариант для работы: [фраза на казахском]
+        Как произнести: [транскрипция русскими буквами]
+        Логика фразы: [почему глагол в конце и какой «вес» у этой фразы в деловой среде]`;
 
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const chatBox = document.getElementById('chat-box');
-            if (!input.value) return;
+            const btn = document.getElementById('send-btn');
+            
+            if (!input.value || btn.disabled) return;
 
             const userMsg = input.value;
-            chatBox.innerHTML += `<div class="text-right"><span class="bg-gray-200 p-2 rounded-lg inline-block text-sm">${userMsg}</span></div>`;
             input.value = '';
+            btn.disabled = true;
 
-            // Здесь будет логика обращения к Gemini API
-            chatBox.innerHTML += `<div id="loading" class="italic text-gray-400 text-xs">ИИ думает...</div>`;
+            chatBox.innerHTML += `<div class="flex justify-end"><span class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%]">${userMsg}</span></div>`;
             
-            // Имитация ответа (пока вы не вставили ключ)
-            setTimeout(() => {
-                document.getElementById('loading').remove();
-                chatBox.innerHTML += `
-                    <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-sm">
-                        <strong>Перевод:</strong> Студентті шақырыңыз.<br>
-                        <strong>Транскрипция:</strong> Студент-тi ша-кы-ры-ныз.<br>
-                        <strong>Ритм:</strong> Глагол 'шақырыңыз' стоит в конце, как точка. Звучит твердо и уверенно.
-                    </div>`;
-            }, 1000);
+            const loadingId = "loading-" + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="text-gray-400 text-xs italic">Тіл-Көмекші думает...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nПользователь сказал: " + userMsg }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                
+                document.getElementById(loadingId).remove();
+                chatBox.innerHTML += `<div class="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-gray-800 whitespace-pre-line">${aiText}</div>`;
+            } catch (e) {
+                document.getElementById(loadingId).innerText = "Ошибка связи с ИИ. Проверьте ключ.";
+            } finally {
+                btn.disabled = false;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
         }
         window.sendMessage = sendMessage;
+        
+        // Отправка по Enter
+        document.getElementById('user-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
     </script>
 </body>
 </html>
