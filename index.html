@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Тьютор: Казахский язык</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 mt-10">
+        <h1 class="text-2xl font-bold text-center text-blue-600 mb-2">Тіл-Көмекші</h1>
+        <p class="text-sm text-gray-500 text-center mb-6">Казахский для профессионалов без зубрежки</p>
+
+        <div id="chat-box" class="h-80 overflow-y-auto border-b mb-4 p-2 space-y-4">
+            <div class="bg-blue-100 p-3 rounded-lg text-sm">
+                Салем! Напишите фразу на русском, которую вам нужно сказать на работе (педагогам или госслужащим), и я перестрою её «как для детей».
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <input id="user-input" type="text" placeholder="Пример: Как позвать студента?" 
+                   class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Отправить</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Для теста я использую бесплатный прокси или прямой вызов. 
+        // ВАЖНО: Позже сюда нужно будет вставить ваш API Ключ от Google Gemini.
+        
+        const SYSTEM_PROMPT = `Ты эксперт по казахскому языку. Твоя методика: обучение через интуитивное понимание, как у детей. 
+        ПРАВИЛА:
+        1. Никаких терминов (падежи, окончания, спряжения).
+        2. Всегда ставь глагол в самый конец предложения (SOV структура).
+        3. Пиши транскрипцию русскими буквами.
+        4. Объясняй ритм фразы (например: 'звучит мягко' или 'ритм как в песне').
+        5. Ориентируйся на педагогов и госслужащих Казахстана.`;
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            if (!input.value) return;
+
+            const userMsg = input.value;
+            chatBox.innerHTML += `<div class="text-right"><span class="bg-gray-200 p-2 rounded-lg inline-block text-sm">${userMsg}</span></div>`;
+            input.value = '';
+
+            // Здесь будет логика обращения к Gemini API
+            chatBox.innerHTML += `<div id="loading" class="italic text-gray-400 text-xs">ИИ думает...</div>`;
+            
+            // Имитация ответа (пока вы не вставили ключ)
+            setTimeout(() => {
+                document.getElementById('loading').remove();
+                chatBox.innerHTML += `
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-sm">
+                        <strong>Перевод:</strong> Студентті шақырыңыз.<br>
+                        <strong>Транскрипция:</strong> Студент-тi ша-кы-ры-ныз.<br>
+                        <strong>Ритм:</strong> Глагол 'шақырыңыз' стоит в конце, как точка. Звучит твердо и уверенно.
+                    </div>`;
+            }, 1000);
+        }
+        window.sendMessage = sendMessage;
+    </script>
+</body>
+</html>
