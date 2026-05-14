@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  const genAI = new GoogleGenerativeAI(process.env.Gemini_API);
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
   // Настройка делового стиля для педагогов и госслужащих
   const SYSTEM_PROMPT = `Ты — эксперт-лингвист по деловому казахскому языку. 
