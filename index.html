@@ -28,23 +28,8 @@
     </div>
 
     <script type="module">
-        const API_KEY = "";
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY;
-
-const SYSTEM_PROMPT = `Ты — эксперт-лингвист, специализирующийся на деловом казахском языке для государственных служащих и работников образования. 
-        Твоя задача — переводить рабочие фразы, соблюдая официальный стиль и профессиональную этику.
-        
-        МЕТОДИКА РАЗБОРА:
-        1. СТРОГИЙ ПОРЯДОК (SOV): Всегда ставь глагол (действие) в самый конец предложения. Это база структуры казахского языка.
-        2. ПРОФЕССИОНАЛЬНЫЙ СТИЛЬ: Используй лексику, подходящую для совещаний, учебного процесса и официальной переписки.
-        3. БЕЗ ТЕРМИНОВ: Не пиши про падежи или спряжения. Объясняй логику фразы просто.
-        4. ТРАНСКРИПЦИЯ: Пиши произношение русскими буквами, выделяя ударения или специфические звуки.
-        5. КОНТЕКСТ: Если фраза может звучать по-разному (официально или очень официально), дай наиболее подходящий вариант для госслужбы.
-
-        ФОРМАТ ОТВЕТА:
-        Вариант для работы: [фраза на казахском]
-        Как произнести: [транскрипция русскими буквами]
-        Логика фразы: [почему глагол в конце и какой «вес» у этой фразы в деловой среде]`;
+        // Мы убрали API_KEY и SYSTEM_PROMPT отсюда — теперь они в безопасности на сервере
+        const API_URL = "/api/chat"; 
 
         async function sendMessage() {
             const input = document.getElementById('user-input');
@@ -57,7 +42,7 @@ const SYSTEM_PROMPT = `Ты — эксперт-лингвист, специал�
             input.value = '';
             btn.disabled = true;
 
-            chatBox.innerHTML += `<div class="flex justify-end"><span class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%]">${userMsg}</span></div>`;
+            chatBox.innerHTML += `<div class="flex justify-end"><span class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">${userMsg}</span></div>`;
             
             const loadingId = "loading-" + Date.now();
             chatBox.innerHTML += `<div id="${loadingId}" class="text-gray-400 text-xs italic">Тіл-Көмекші думает...</div>`;
@@ -67,18 +52,19 @@ const SYSTEM_PROMPT = `Ты — эксперт-лингвист, специал�
                 const response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nПользователь сказал: " + userMsg }] }]
-                    })
+                    body: JSON.stringify({ message: userMsg }) // Отправляем только сообщение
                 });
 
                 const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
+                
+                if (data.error) throw new Error(data.error);
+
+                const aiText = data.reply; // Получаем ответ от вашего посредника на Vercel
                 
                 document.getElementById(loadingId).remove();
                 chatBox.innerHTML += `<div class="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-gray-800 whitespace-pre-line">${aiText}</div>`;
             } catch (e) {
-                document.getElementById(loadingId).innerText = "Ошибка связи с ИИ. Проверьте ключ.";
+                document.getElementById(loadingId).innerText = "Ошибка: " + e.message;
             } finally {
                 btn.disabled = false;
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -86,7 +72,6 @@ const SYSTEM_PROMPT = `Ты — эксперт-лингвист, специал�
         }
         window.sendMessage = sendMessage;
         
-        // Отправка по Enter
         document.getElementById('user-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
