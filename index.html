@@ -28,7 +28,6 @@
     </div>
 
     <script type="module">
-        // Мы убрали API_KEY и SYSTEM_PROMPT отсюда — теперь они в безопасности на сервере
         const API_URL = "/api/chat"; 
 
         async function sendMessage() {
@@ -52,14 +51,14 @@
                 const response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMsg }) // Отправляем только сообщение
+                    body: JSON.stringify({ message: userMsg })
                 });
 
                 const data = await response.json();
                 
                 if (data.error) throw new Error(data.error);
 
-                const aiText = data.reply; // Получаем ответ от вашего посредника на Vercel
+                const aiText = data.reply;
                 
                 document.getElementById(loadingId).remove();
                 chatBox.innerHTML += `<div class="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-gray-800 whitespace-pre-line">${aiText}</div>`;
