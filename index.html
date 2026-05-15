@@ -1,111 +1,566 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-export default async function handler(req, res) {
-  // CORS настройки
-  const allowedOrigins = [
-    'https://til-negizderi-kz.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:8080'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured in Vercel' });
-  }
-
-  const SYSTEM_PROMPT = `Ты — эксперт-лингвист по деловому казахскому языку. 
-Переведи на казахский язык: "${message}"
-
-ПРАВИЛА:
-1. Глагол всегда в конце предложения
-2. Официально-деловой стиль
-3. Транскрипция русскими буквами
-
-ФОРМАТ ОТВЕТА:
-Вариант для работы: [перевод на казахском]
-Как произнести: [транскрипция]
-Логика: [почему глагол в конце]`;
-
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  
-  // ✅ АКТУАЛЬНЫЕ МОДЕЛИ (2025-2026)
-  // gemini-2.5-flash - самая новая, стабильная, рекомендована Google [citation:7][citation:8]
-  // gemini-2.5-pro - для сложных задач
-  // gemini-2.0-flash-exp - экспериментальная, но работает
-  
-  const modelsToTry = [
-    "gemini-2.5-flash",      // ⭐ НОВАЯ! Стабильная, рекомендована
-    "gemini-2.0-flash-exp",  // Экспериментальная, но доступна
-    "gemini-2.5-pro"         // Мощная, если нужны сложные переводы
-  ];
-  
-  let lastError = null;
-  
-  for (const modelName of modelsToTry) {
-    try {
-      console.log(`Пробуем модель: ${modelName}`);
-      
-      const model = genAI.getGenerativeModel({ 
-        model: modelName,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изучение казахского языка по методике Тукубаева А.С.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      });
-      
-      const result = await model.generateContent(SYSTEM_PROMPT);
-      const response = await result.response;
-      const text = response.text();
-      
-      if (text && text.trim() !== '') {
-        console.log(`✅ Успех с моделью: ${modelName}`);
-        return res.status(200).json({ 
-          success: true, 
-          reply: text,
-          model: modelName
-        });
-      }
-      
-    } catch (error) {
-      console.log(`❌ Модель ${modelName} не работает:`, error.message);
-      lastError = error;
-      
-      if (error.message.includes('API key')) {
-        return res.status(401).json({ 
-          success: false,
-          error: 'Неверный API ключ. Проверьте настройки Vercel.'
-        });
-      }
-      
-      continue;
-    }
-  }
-  
-  // Если ничего не сработало
-  return res.status(503).json({ 
-    success: false,
-    error: 'Gemini API временно недоступен в вашем регионе.',
-    details: 'Попробуйте использовать VPN или обратитесь в поддержку Google Cloud.',
-    technical: lastError?.message
-  });
-}
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Левое меню */
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, #2c3e66 0%, #1a2639 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .profile {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid #ffd700;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid #ffd700;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+        }
+
+        .profile h2 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .profile p {
+            font-size: 0.9em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .method-info {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .method-info h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .method-info p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .method-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .method-info li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9em;
+        }
+
+        .method-info li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .stats {
+            padding: 25px 20px;
+        }
+
+        .stats h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Основная область с чатом */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+
+        .chat-header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chat-header h1 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .chat-header p {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message-content pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 18px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .input-area {
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Стили для форматирования ответа */
+        .message-content strong {
+            color: #667eea;
+        }
+
+        .message-content hr {
+            margin: 10px 0;
+            border: none;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .profile h2 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Левое меню -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="avatar-placeholder">
+                    <img src="as.jpg" alt="Тукубаев А.С." class="avatar">
+                </div>
+                <h2>Тукубаев А.С.</h2>
+                <p>Методика изучения<br>казахского языка</p>
+            </div>
+
+            <div class="method-info">
+                <h3>🎯 О методике</h3>
+                <p>Авторская методика Тукубаева А.С. основана на принципах:</p>
+                <ul>
+                    <li>Правильный порядок слов (глагол в конце)</li>
+                    <li>Деловой стиль общения</li>
+                    <li>Практическое применение</li>
+                    <li>Быстрое погружение в язык</li>
+                </ul>
+            </div>
+
+            <div class="stats">
+                <h3>📊 Статистика</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Фраз переведено:</span>
+                    <span class="stat-value" id="totalTranslations">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Активных пользователей:</span>
+                    <span class="stat-value">128</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Эффективность:</span>
+                    <span class="stat-value">94%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Область чата -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <h1>🤖 AI-помощник по казахскому языку</h1>
+                <p>Переведу любую фразу с русского на казахский по методике Тукубаева А.С.</p>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="message bot">
+                    <div class="message-content">
+                        👋 <strong>Здравствуйте!</strong><br><br>
+                        Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
+                        <strong>Как я работаю:</strong><br>
+                        • Перевожу фразы с русского на казахский<br>
+                        • Соблюдаю правило "глагол в конце"<br>
+                        • Даю транскрипцию для произношения<br>
+                        • Объясняю логику перевода<br><br>
+                        <strong>Напишите любую фразу, и я переведу её!</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Введите фразу для перевода на казахский..."
+                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                >
+                <button onclick="sendMessage()" id="sendButton">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let totalTranslations = localStorage.getItem('totalTranslations') || 0;
+        
+        // Обновляем счетчик на странице
+        function updateStats() {
+            document.getElementById('totalTranslations').textContent = totalTranslations;
+        }
+        updateStats();
+
+        // Отправка сообщения
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Добавляем сообщение пользователя
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Показываем индикатор печати
+            showTypingIndicator();
+            
+            // Блокируем кнопку
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Убираем индикатор печати
+                hideTypingIndicator();
+                
+                if (data.success) {
+                    addMessage(data.reply, 'bot');
+                    totalTranslations++;
+                    localStorage.setItem('totalTranslations', totalTranslations);
+                    updateStats();
+                } else {
+                    addMessage('❌ Извините, произошла ошибка: ' + (data.error || 'Неизвестная ошибка'), 'bot');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('❌ Ошибка соединения. Проверьте интернет и попробуйте снова.', 'bot');
+                console.error('Error:', error);
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+        
+        // Добавление сообщения в чат
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Форматируем текст (заменяем переносы строк на <br>)
+            contentDiv.innerHTML = formatMessage(text);
+            
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            
+            // Прокручиваем вниз
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Форматирование сообщения
+        function formatMessage(text) {
+            // Заменяем переносы строк на <br>
+            let formatted = text.replace(/\n/g, '<br>');
+            
+            // Выделяем жирным "Вариант для работы:", "Как произнести:", "Логика:"
+            formatted = formatted.replace(/(Вариант для работы:|Как произнести:|Логика:)/g, '<strong>$1</strong>');
+            
+            // Добавляем разделители
+            formatted = formatted.replace(/<br><br>/g, '<hr>');
+            
+            return formatted;
+        }
+        
+        // Индикатор печати
+        let typingIndicator = null;
+        
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('messages');
+            typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message bot';
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.innerHTML = `
+                <div class="typing-indicator" style="display: block;">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            if (typingIndicator) {
+                typingIndicator.remove();
+                typingIndicator = null;
+            }
+        }
+        
+        // Примеры фраз для демонстрации (можно добавить подсказки)
+        const examplePhrases = [
+            "Здравствуйте, как дела?",
+            "Сегодня хорошая погода",
+            "Где находится библиотека?",
+            "Спасибо за помощь",
+            "Я изучаю казахский язык"
+        ];
+        
+        // Добавляем подсказки в консоль для разработчика
+        console.log('💡 Примеры фраз:', examplePhrases);
+    </script>
+</body>
+</html>
