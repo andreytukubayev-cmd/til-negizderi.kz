@@ -1,107 +1,111 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тіл-Көмекші | AI для педагогов</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 min-h-screen flex flex-col md:flex-row">
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    <div class="w-full md:w-80 bg-slate-900 text-white p-8 flex flex-col items-center md:items-start border-r border-slate-800 shadow-2xl">
-        <div class="relative mb-6">
-            <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-600 shadow-lg">
-                <img src="/as.jpg" alt="Андрей Тукубаев" class="w-full h-full object-cover">
-            </div>
-        </div>
+export default async function handler(req, res) {
+  // CORS настройки
+  const allowedOrigins = [
+    'https://til-negizderi-kz.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:8080'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-        <h2 class="text-xl font-bold text-blue-400 mb-1 text-center md:text-left">Андрей Тукубаев</h2>
-        <p class="text-xs text-slate-400 mb-6 uppercase tracking-widest text-center md:text-left">Магистр техники и технологий</p>
-        
-        <div class="w-full h-px bg-slate-800 mb-6"></div>
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
 
-        <div class="space-y-4">
-            <h3 class="text-sm font-semibold text-white">О методике:</h3>
-            <p class="text-sm text-slate-400 leading-relaxed italic">
-                "Изучение казахского языка по методике Тукубаева Андрея Сериковича базируется на структурном подходе: глагол всегда в конце предложения, что позволяет быстро освоить официально-деловой стиль."
-            </p>
-        </div>
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY not configured in Vercel' });
+  }
 
-        <div class="mt-auto pt-10 text-[10px] text-slate-500 uppercase tracking-tighter">
-            © 2026 Тіл-Көмекші v2.5
-        </div>
-    </div>
+  const SYSTEM_PROMPT = `Ты — эксперт-лингвист по деловому казахскому языку. 
+Переведи на казахский язык: "${message}"
 
-    <div class="flex-1 flex flex-col items-center justify-center p-4">
-        <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 border border-blue-50">
-            <h1 class="text-2xl font-black text-center text-slate-800 mb-1 tracking-tight">Тіл-Көмекші</h1>
-            <p class="text-[10px] text-blue-600 font-bold text-center mb-6 uppercase tracking-[0.2em]">AI-Помощник Педагога</p>
+ПРАВИЛА:
+1. Глагол всегда в конце предложения
+2. Официально-деловой стиль
+3. Транскрипция русскими буквами
 
-            <div id="chat-box" class="h-[450px] overflow-y-auto mb-4 p-2 space-y-4 text-sm scrollbar-hide">
-                <div class="bg-blue-50 p-4 rounded-2xl rounded-tl-none border border-blue-100 text-blue-900 leading-relaxed shadow-sm">
-                    Салем! Я ваш ИИ-ассистент. Напишите рабочую фразу на русском, и я переведу её на казахский по методике <b>«глагол в конце»</b>.
-                </div>
-            </div>
+ФОРМАТ ОТВЕТА:
+Вариант для работы: [перевод на казахском]
+Как произнести: [транскрипция]
+Логика: [почему глагол в конце]`;
 
-            <div class="flex gap-2 bg-slate-100 p-2 rounded-2xl border border-slate-200">
-                <input id="user-input" type="text" placeholder="Пример: Студенты, тишина!" 
-                       class="flex-1 bg-transparent px-3 py-3 focus:outline-none text-sm text-slate-700">
-                <button onclick="sendMessage()" id="send-btn" class="bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        const API_URL = "/api/chat"; 
-
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
-            const btn = document.getElementById('send-btn');
-            
-            if (!input.value || btn.disabled) return;
-
-            const userMsg = input.value;
-            input.value = '';
-            btn.disabled = true;
-
-            chatBox.innerHTML += `<div class="flex justify-end"><span class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">${userMsg}</span></div>`;
-            
-            const loadingId = "loading-" + Date.now();
-            chatBox.innerHTML += `<div id="${loadingId}" class="text-gray-400 text-xs italic">Тіл-Көмекші думает...</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMsg })
-                });
-
-                const data = await response.json();
-                
-                if (data.error) throw new Error(data.error);
-
-                const aiText = data.reply;
-                
-                document.getElementById(loadingId).remove();
-                chatBox.innerHTML += `<div class="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-gray-800 whitespace-pre-line">${aiText}</div>`;
-            } catch (e) {
-                document.getElementById(loadingId).innerText = "Ошибка: " + e.message;
-            } finally {
-                btn.disabled = false;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  
+  // ✅ АКТУАЛЬНЫЕ МОДЕЛИ (2025-2026)
+  // gemini-2.5-flash - самая новая, стабильная, рекомендована Google [citation:7][citation:8]
+  // gemini-2.5-pro - для сложных задач
+  // gemini-2.0-flash-exp - экспериментальная, но работает
+  
+  const modelsToTry = [
+    "gemini-2.5-flash",      // ⭐ НОВАЯ! Стабильная, рекомендована
+    "gemini-2.0-flash-exp",  // Экспериментальная, но доступна
+    "gemini-2.5-pro"         // Мощная, если нужны сложные переводы
+  ];
+  
+  let lastError = null;
+  
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`Пробуем модель: ${modelName}`);
+      
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
         }
-        window.sendMessage = sendMessage;
-        
-        document.getElementById('user-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+      });
+      
+      const result = await model.generateContent(SYSTEM_PROMPT);
+      const response = await result.response;
+      const text = response.text();
+      
+      if (text && text.trim() !== '') {
+        console.log(`✅ Успех с моделью: ${modelName}`);
+        return res.status(200).json({ 
+          success: true, 
+          reply: text,
+          model: modelName
         });
-    </script>
-</body>
-</html>
+      }
+      
+    } catch (error) {
+      console.log(`❌ Модель ${modelName} не работает:`, error.message);
+      lastError = error;
+      
+      if (error.message.includes('API key')) {
+        return res.status(401).json({ 
+          success: false,
+          error: 'Неверный API ключ. Проверьте настройки Vercel.'
+        });
+      }
+      
+      continue;
+    }
+  }
+  
+  // Если ничего не сработало
+  return res.status(503).json({ 
+    success: false,
+    error: 'Gemini API временно недоступен в вашем регионе.',
+    details: 'Попробуйте использовать VPN или обратитесь в поддержку Google Cloud.',
+    technical: lastError?.message
+  });
+}
