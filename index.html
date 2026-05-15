@@ -60,8 +60,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
-            color: white;
+            overflow: hidden;
+        }
+
+        .avatar-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .profile h2 {
@@ -314,6 +319,70 @@
             transform: none;
         }
 
+        /* Модальное окно для имени */
+        .modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .modal-content input:focus {
+            border-color: #667eea;
+        }
+
+        .modal-content button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
         /* Стили для форматирования ответа */
         .message-content strong {
             color: #667eea;
@@ -371,34 +440,20 @@
                 <p>Методика изучения<br>казахского языка</p>
             </div>
 
-<div class="method-info space-y-4">
-    <h3 class="text-blue-400 font-bold flex items-center gap-2 text-lg">
-        🎯 О методике
-    </h3>
-    
-    <p class="text-sm text-slate-300 leading-relaxed">
-        Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.
-    </p>
+            <div class="method-info">
+                <h3>🎯 О методике</h3>
+                <p>Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.</p>
 
-    <ul class="space-y-3 text-sm text-slate-400">
-        <li class="flex gap-2">
-            <span class="text-blue-500 font-bold">•</span>
-            <span><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</span>
-        </li>
-        <li class="flex gap-2">
-            <span class="text-blue-500 font-bold">•</span>
-            <span><b>Деловая коммуникация:</b> Изучение структур, необходимых для профессионального общения и официального стиля.</span>
-        </li>
-        <li class="flex gap-2">
-            <span class="text-blue-500 font-bold">•</span>
-            <span><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную рабочую деятельность.</span>
-        </li>
-    </ul>
+                <ul>
+                    <li><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</li>
+                    <li><b>Деловая коммуникация:</b> Изучение структур, необходимых для профессионального общения и официального стиля.</li>
+                    <li><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную рабочую деятельность.</li>
+                </ul>
 
-    <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 italic text-[11px] text-slate-400 leading-snug">
-        "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
-    </div>
-</div>
+                <div style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; font-style: italic; font-size: 11px; margin-top: 15px;">
+                    "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
+                </div>
+            </div>
 
             <div class="stats">
                 <h3>📊 Статистика</h3>
@@ -421,7 +476,7 @@
         <div class="chat-area">
             <div class="chat-header">
                 <h1>🤖 AI-помощник по казахскому языку</h1>
-                <p>Переведу любую фразу с русского на казахский по методике Тукубаева А.С.</p>
+                <p>Помогу носителям русского языка освоить казахский язык по методике Тукубаева А.С.</p>
             </div>
 
             <div class="messages" id="messages">
@@ -429,12 +484,7 @@
                     <div class="message-content">
                         👋 <strong>Здравствуйте!</strong><br><br>
                         Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
-                        <strong>Как я работаю:</strong><br>
-                        • Перевожу фразы с русского на казахский<br>
-                        • Соблюдаю правило "глагол в конце"<br>
-                        • Даю транскрипцию для произношения<br>
-                        • Объясняю логику перевода<br><br>
-                        <strong>Напишите любую фразу, и я переведу её!</strong>
+                        <strong>Как ваше имя?</strong>
                     </div>
                 </div>
             </div>
@@ -451,7 +501,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно для ввода имени -->
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h2>👋 Добро пожаловать!</h2>
+            <p>Как мне к вам обращаться?</p>
+            <input type="text" id="userName" placeholder="Ваше имя..." autocomplete="off">
+            <button onclick="saveUserName()">Продолжить</button>
+        </div>
+    </div>
+
     <script>
+        // Переменные
+        let userName = localStorage.getItem('userName') || null;
+        let waitingForName = false;
         let totalTranslations = localStorage.getItem('totalTranslations') || 0;
         
         // Обновляем счетчик на странице
@@ -460,12 +523,59 @@
         }
         updateStats();
 
+        // Проверяем, есть ли сохраненное имя
+        function checkUserName() {
+            if (userName) {
+                // Имя есть, скрываем модальное окно
+                document.getElementById('nameModal').style.display = 'none';
+                // Показываем приветствие с именем
+                addMessage(`👋 Рад познакомиться, ${userName}! Чем могу помочь сегодня?`, 'bot');
+            } else {
+                // Имени нет, показываем модальное окно
+                document.getElementById('nameModal').style.display = 'flex';
+                waitingForName = true;
+            }
+        }
+        
+        // Сохраняем имя пользователя
+        function saveUserName() {
+            const nameInput = document.getElementById('userName');
+            const name = nameInput.value.trim();
+            
+            if (name && name.length > 0) {
+                userName = name;
+                localStorage.setItem('userName', userName);
+                document.getElementById('nameModal').style.display = 'none';
+                waitingForName = false;
+                
+                // Добавляем сообщение с именем пользователя
+                addMessage(`👋 Рад познакомиться, ${userName}! Чем могу помочь сегодня?`, 'bot');
+            } else {
+                alert('Пожалуйста, введите ваше имя');
+            }
+        }
+        
         // Отправка сообщения
         async function sendMessage() {
             const input = document.getElementById('userInput');
-            const message = input.value.trim();
+            let message = input.value.trim();
             
             if (!message) return;
+            
+            // Если ждем имя, но поле ввода уже заполнено
+            if (waitingForName) {
+                // Сохраняем имя и выходим
+                saveUserNameFromMessage(message);
+                input.value = '';
+                return;
+            }
+            
+            // Персонализируем сообщение, если есть имя пользователя
+            let messageToSend = message;
+            if (userName && !message.toLowerCase().includes(userName.toLowerCase())) {
+                // Можно добавить контекст с именем, но не обязательно
+                // messageToSend = `${userName} спрашивает: ${message}`;
+            }
             
             // Добавляем сообщение пользователя
             addMessage(message, 'user');
@@ -484,7 +594,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ 
+                        message: messageToSend,
+                        userName: userName // Отправляем имя на сервер (опционально)
+                    })
                 });
                 
                 const data = await response.json();
@@ -493,7 +606,12 @@
                 hideTypingIndicator();
                 
                 if (data.success) {
-                    addMessage(data.reply, 'bot');
+                    // Если есть имя пользователя, можно персонализировать ответ бота
+                    let reply = data.reply;
+                    if (userName && reply.includes('Пользователь')) {
+                        reply = reply.replace('Пользователь', userName);
+                    }
+                    addMessage(reply, 'bot');
                     totalTranslations++;
                     localStorage.setItem('totalTranslations', totalTranslations);
                     updateStats();
@@ -509,6 +627,25 @@
             }
         }
         
+        // Сохранение имени из сообщения
+        function saveUserNameFromMessage(name) {
+            if (name && name.trim().length > 0) {
+                userName = name.trim();
+                localStorage.setItem('userName', userName);
+                waitingForName = false;
+                
+                // Удаляем сообщение с вопросом о имени (оставляем только ответ пользователя)
+                const messages = document.getElementById('messages');
+                const botQuestion = messages.querySelector('.message.bot:last-child');
+                if (botQuestion && botQuestion.innerText.includes('Как ваше имя?')) {
+                    botQuestion.remove();
+                }
+                
+                addMessage(name, 'user');
+                addMessage(`👋 Рад познакомиться, ${userName}! Чем могу помочь сегодня?`, 'bot');
+            }
+        }
+        
         // Добавление сообщения в чат
         function addMessage(text, sender) {
             const messagesContainer = document.getElementById('messages');
@@ -518,7 +655,7 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
             
-            // Форматируем текст (заменяем переносы строк на <br>)
+            // Форматируем текст
             contentDiv.innerHTML = formatMessage(text);
             
             messageDiv.appendChild(contentDiv);
@@ -530,15 +667,9 @@
         
         // Форматирование сообщения
         function formatMessage(text) {
-            // Заменяем переносы строк на <br>
             let formatted = text.replace(/\n/g, '<br>');
-            
-            // Выделяем жирным "Вариант для работы:", "Как произнести:", "Логика:"
             formatted = formatted.replace(/(Вариант для работы:|Как произнести:|Логика:)/g, '<strong>$1</strong>');
-            
-            // Добавляем разделители
             formatted = formatted.replace(/<br><br>/g, '<hr>');
-            
             return formatted;
         }
         
@@ -568,17 +699,17 @@
             }
         }
         
-        // Примеры фраз для демонстрации (можно добавить подсказки)
-        const examplePhrases = [
-            "Здравствуйте, как дела?",
-            "Сегодня хорошая погода",
-            "Где находится библиотека?",
-            "Спасибо за помощь",
-            "Я изучаю казахский язык"
-        ];
-        
-        // Добавляем подсказки в консоль для разработчика
-        console.log('💡 Примеры фраз:', examplePhrases);
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserName();
+            
+            // Разрешаем отправку имени по Enter в модальном окне
+            document.getElementById('userName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveUserName();
+                }
+            });
+        });
     </script>
 </body>
 </html>
