@@ -33,43 +33,39 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GEMINI_API_KEY not configured in Vercel' });
   }
 
+  // Новый промпт с требованием разбора слов
   const SYSTEM_PROMPT = `Ты — эксперт-лингвист по деловому казахскому языку. 
-Переведи на казахский язык: "${message}"
+Переведи на казахский язык фразу: "${message}"
 
 ПРАВИЛА:
 1. Официально-деловой стиль
-2. Обязательно дай транскрипцию русскими буквами
-3. Не уходи от темы лингвиста
+2. Обязательно разбери каждое слово из перевода
 
-ФОРМАТ ОТВЕТА (строго соблюдай этот формат):
-✅ Вариант для работы: [перевод на казахском]
-📢 Как произнести: [транскрипция русскими буквами]
-💡 Два лаконичных варианта: [вариант 1], [вариант 2]
+ФОРМАТ ОТВЕТА (ОЧЕНЬ ВАЖНО - строго соблюдай этот формат):
+Вариант для работы: [перевод на казахском]
 
-Дай короткий, ЗАКОНЧЕННЫЙ ответ.`;
+Разбор слов:
+[казахское слово 1] = [русский перевод 1]
+[казахское слово 2] = [русский перевод 2]
+[казахское слово 3] = [русский перевод 3]
+
+Как произнести: [транскрипция русскими буквами]
+Два лаконичных варианта: [вариант 1], [вариант 2]
+
+В разборе слов каждое слово должно быть отдельной строкой в формате "слово = перевод"`;
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   
-  // Используем СТАБИЛЬНУЮ модель
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash", // Изменено с экспериментальной на стабильную
+    model: "gemini-1.5-flash",
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 1024,
-      topP: 0.95,
-      topK: 40,
+      maxOutputTokens: 2048,
     }
   });
   
   try {
-    // Добавляем таймаут для запроса
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout')), 30000)
-    );
-    
-    const generatePromise = model.generateContent(SYSTEM_PROMPT);
-    const result = await Promise.race([generatePromise, timeoutPromise]);
-    
+    const result = await model.generateContent(SYSTEM_PROMPT);
     const response = await result.response;
     const text = response.text();
     
@@ -77,29 +73,25 @@ export default async function handler(req, res) {
       throw new Error('Пустой ответ от API');
     }
     
+    // Разбираем ответ на компоненты
+    const parsedResponse = parseTranslationResponse(text);
+    
     return res.status(200).json({ 
       success: true, 
-      reply: text
+      reply: parsedResponse.formatted,
+      wordBreakdown: parsedResponse.wordBreakdown,
+      pronunciation: parsedResponse.pronunciation,
+      shortVariants: parsedResponse.shortVariants
     });
     
   } catch (error) {
     console.error('Ошибка Gemini API:', error);
     
-    // Понятное сообщение об ошибке
     let errorMessage = 'Ошибка при переводе. ';
     if (error.message.includes('API key')) {
       errorMessage += 'Проблема с ключом API.';
     } else if (error.message.includes('quota')) {
       errorMessage += 'Превышен лимит запросов. Попробуйте через минуту.';
-    } else if (error.message.includes('timeout')) {
-      errorMessage += 'Сервер долго не отвечает. Попробуйте еще раз.';
-    } else if (error.message.includes('404') || error.message.includes('not found')) {
-      errorMessage += 'Модель недоступна. Используется резервный режим.';
-      // Возвращаем fallback ответ
-      return res.status(200).json({ 
-        success: true, 
-        reply: `✅ Вариант для работы: "${message}" аудару\n📢 Как произнести: ${message} аудару\n💡 Лаконичные варианты: аударма, аударыңыз`
-      });
     } else {
       errorMessage += error.message;
     }
@@ -109,4 +101,103 @@ export default async function handler(req, res) {
       error: errorMessage 
     });
   }
+}
+
+// Функция для парсинга ответа от ИИ
+function parseTranslationResponse(text) {
+  const lines = text.split('\n');
+  let translation = '';
+  let wordBreakdown = [];
+  let pronunciation = '';
+  let shortVariants = '';
+  let formatted = '';
+  
+  let currentSection = '';
+  
+  for (let line of lines) {
+    line = line.trim();
+    
+    if (line.includes('Вариант для работы:')) {
+      translation = line.replace('Вариант для работы:', '').trim();
+      formatted += line + '\n';
+      currentSection = 'translation';
+    } 
+    else if (line.includes('Разбор слов:')) {
+      formatted += '\n📖 ' + line + '\n';
+      currentSection = 'breakdown';
+    }
+    else if (line.includes('Как произнести:')) {
+      pronunciation = line.replace('Как произнести:', '').trim();
+      formatted += '\n🔊 ' + line + '\n';
+      currentSection = 'pronunciation';
+    }
+    else if (line.includes('лаконичных варианта:') || line.includes('лаконичный вариант:')) {
+      shortVariants = line.replace(/.*лаконичных варианта:|.*лаконичный вариант:/, '').trim();
+      formatted += '\n⚡ ' + line + '\n';
+      currentSection = 'short';
+    }
+    else if (currentSection === 'breakdown' && line.includes('=')) {
+      const [word, meaning] = line.split('=').map(s => s.trim());
+      if (word && meaning) {
+        wordBreakdown.push({ word, meaning });
+        formatted += `  • ${word} = ${meaning}\n`;
+      }
+    }
+    else if (line && !line.includes('Вариант') && !line.includes('Разбор') && !line.includes('Как произнести') && !line.includes('лаконичн')) {
+      if (currentSection === 'translation' && translation === '') {
+        translation = line;
+        formatted = 'Вариант для работы: ' + line + '\n';
+      } else {
+        formatted += line + '\n';
+      }
+    }
+  }
+  
+  // Если разбор слов не получен, пробуем разобрать перевод самостоятельно
+  if (wordBreakdown.length === 0 && translation) {
+    wordBreakdown = autoBreakdown(translation);
+  }
+  
+  return {
+    translation,
+    wordBreakdown,
+    pronunciation,
+    shortVariants,
+    formatted: formatted || text
+  };
+}
+
+// Функция автоматического разбора на слова
+function autoBreakdown(translation) {
+  // Убираем знаки препинания и разбиваем на слова
+  const words = translation.split(/[\s,;:!?]+/).filter(w => w.length > 0);
+  
+  // Базовый словарь для автоматического перевода (можно расширять)
+  const basicDictionary = {
+    'сәлем': 'привет',
+    'сәлеметсіз': 'здравствуйте',
+    'бе': 'ли (вопрос)',
+    'қалай': 'как',
+    'жақсы': 'хорошо',
+    'рахмет': 'спасибо',
+    'кешіріңіз': 'извините',
+    'сау': 'здоровый',
+    'болыңыз': 'будьте',
+    'ішіңіз': 'пейте',
+    'жеңіз': 'ешьте',
+    'барыңыз': 'идите',
+    'келіңіз': 'приходите',
+    'көріңіз': 'посмотрите',
+    'айтыңыз': 'скажите',
+    'жазыңыз': 'напишите',
+    'оқыңыз': 'читайте',
+    'үйреніңіз': 'учите',
+    'түсініңіз': 'поймите'
+  };
+  
+  return words.map(word => {
+    const lowerWord = word.toLowerCase();
+    const meaning = basicDictionary[lowerWord] || '???';
+    return { word, meaning };
+  });
 }
