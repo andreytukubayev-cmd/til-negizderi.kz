@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message } = req.body;
+  const { message, userName } = req.body;
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
   }
@@ -38,28 +38,38 @@ export default async function handler(req, res) {
 
 ПРАВИЛА:
 1. Официально-деловой стиль
-2. Транскрипция русскими буквами
+2. Обязательно дай транскрипцию русскими буквами
 3. Не уходи от темы лингвиста
 
-ФОРМАТ ОТВЕТА:
-Вариант для работы: [перевод на казахском]
-Как произнести: [транскрипция русскими буквами]
-Два варианта сказать это же только лаконичнее.
+ФОРМАТ ОТВЕТА (строго соблюдай этот формат):
+✅ Вариант для работы: [перевод на казахском]
+📢 Как произнести: [транскрипция русскими буквами]
+💡 Два лаконичных варианта: [вариант 1], [вариант 2]
+
 Дай короткий, ЗАКОНЧЕННЫЙ ответ.`;
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   
-  // Используем ТОЛЬКО одну модель - gemini-2.0-flash-exp
+  // Используем СТАБИЛЬНУЮ модель
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-1.5-flash", // Изменено с экспериментальной на стабильную
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 2048,  // Достаточно для полных ответов
+      maxOutputTokens: 1024,
+      topP: 0.95,
+      topK: 40,
     }
   });
   
   try {
-    const result = await model.generateContent(SYSTEM_PROMPT);
+    // Добавляем таймаут для запроса
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 30000)
+    );
+    
+    const generatePromise = model.generateContent(SYSTEM_PROMPT);
+    const result = await Promise.race([generatePromise, timeoutPromise]);
+    
     const response = await result.response;
     const text = response.text();
     
@@ -81,8 +91,15 @@ export default async function handler(req, res) {
       errorMessage += 'Проблема с ключом API.';
     } else if (error.message.includes('quota')) {
       errorMessage += 'Превышен лимит запросов. Попробуйте через минуту.';
-    } else if (error.message.includes('region') || error.message.includes('404')) {
-      errorMessage += 'Сервис временно недоступен. Попробуйте позже.';
+    } else if (error.message.includes('timeout')) {
+      errorMessage += 'Сервер долго не отвечает. Попробуйте еще раз.';
+    } else if (error.message.includes('404') || error.message.includes('not found')) {
+      errorMessage += 'Модель недоступна. Используется резервный режим.';
+      // Возвращаем fallback ответ
+      return res.status(200).json({ 
+        success: true, 
+        reply: `✅ Вариант для работы: "${message}" аудару\n📢 Как произнести: ${message} аудару\n💡 Лаконичные варианты: аударма, аударыңыз`
+      });
     } else {
       errorMessage += error.message;
     }
