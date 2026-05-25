@@ -1,4 +1,22 @@
-// js/chat.js - с автоматическим переключением без уведомлений
+let localTranslator = null;
+
+// Загружаем JSON с фразами
+async function loadPhrases() {
+    try {
+        const response = await fetch('js/phrases.json');
+        const data = await response.json();
+        localTranslator = new LocalTranslator(data);
+        console.log('✅ Локальный переводчик загружен, фраз:', Object.keys(data.static_phrases).length);
+        return true;
+    } catch (error) {
+        console.error('❌ Ошибка загрузки phrases.json:', error);
+        // Создаём пустой переводчик как фолбэк
+        localTranslator = new LocalTranslator({ static_phrases: {}, dynamic_templates: [] });
+        return false;
+    }
+}
+
+// В функции sendMessage() используйте localTranslator.translate(message)
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
 let totalTranslations = localStorage.getItem('totalTranslations') || 0;
