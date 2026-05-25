@@ -1,4 +1,4 @@
-// api/chat.js — рабочая версия с DeepSeek (ИСПРАВЛЕНА)
+// api/chat.js — упрощённая и надёжная версия
 
 export default async function handler(req, res) {
   // CORS настройки
@@ -29,32 +29,34 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  // Используем DeepSeek API
   if (!process.env.DEEPSEEK_API_KEY) {
     console.error('DEEPSEEK_API_KEY not configured');
-    return res.status(500).json({ error: 'DEEPSEEK_API_KEY not configured in Vercel' });
+    return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const SYSTEM_PROMPT = `Ты — профессиональный переводчик с русского на казахский язык. Переведи следующую фразу точно и естественно.
+  const SYSTEM_PROMPT = `Ты — переводчик с русского на казахский.
 
-Русская фраза: "${message}"
+Переведи фразу: "${message}"
 
-ОТВЕТЬ СТРОГО В ТАКОМ ФОРМАТЕ:
+Ответь в таком формате (без лишних слов, без звёздочек, без эмодзи):
 
-Это можно сказать так: [перевод всей фразы на казахском]
+Перевод: [перевод на казахском]
 
-Разбор слов:
-[первое казахское слово] = [перевод на русский]
-[второе казахское слово] = [перевод на русский]
+Разбор:
+[слово1] = [перевод1]
+[слово2] = [перевод2]
 
-Как произнести: [транскрипция русскими буквами]
+Транскрипция: [русскими буквами]
 
-Или более разговорный вариант: [короткий вариант]
+Коротко: [разговорный вариант]
 
-ВАЖНО:
-1. Переводи СМЫСЛ фразы
-2. Разбивай переведенную фразу на отдельные слова
-3. Не используй лишних символов и эмодзи`;
+Пример правильного ответа на "Привет как дела":
+Перевод: Сәлем, қалайсың?
+Разбор:
+Сәлем = Привет
+қалайсың = как дела
+Транскрипция: Сәлем, калайсың?
+Коротко: Қалайсың?`;
 
   try {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -66,17 +68,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          {
-            role: 'system',
-            content: SYSTEM_PROMPT
-          },
-          {
-            role: 'user',
-            content: message
-          }
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: message }
         ],
         temperature: 0.7,
-        max_tokens: 2048,
+        max_tokens: 1024,
       }),
     });
 
@@ -86,14 +82,14 @@ export default async function handler(req, res) {
       console.error('DeepSeek API error:', data.error);
       return res.status(500).json({ 
         success: false, 
-        error: `DeepSeek error: ${data.error.message || 'Unknown error'}`
+        error: `API error: ${data.error.message || 'Unknown'}`
       });
     }
 
     const reply = data.choices[0].message.content;
     
-    // Парсим ответ для совместимости с фронтендом
-    const parsedResponse = parseTranslationResponse(reply);
+    // Простой парсинг ответа
+    const parsedResponse = simpleParse(reply);
     
     return res.status(200).json({ 
       success: true, 
@@ -110,50 +106,66 @@ export default async function handler(req, res) {
   }
 }
 
-// Функция парсинга ответа
-function parseTranslationResponse(text) {
+// Простая и надёжная функция парсинга
+function simpleParse(text) {
   const lines = text.split('\n');
-  let translation = '';
   let wordBreakdown = [];
-  let pronunciation = '';
-  let shortVariants = '';
   let formatted = '';
   
   for (let line of lines) {
     line = line.trim();
+    if (!line) continue;
     
-    if (line.includes('Это можно сказать так:')) {
-      translation = line.replace('Это можно сказать так:', '').trim();
-      formatted += `✅ ${line}\n`;
-    } 
-    else if (line.includes('Разбор слов:')) {
-      formatted += `\n📖 ${line}\n`;
+    // Оставляем строки как есть, но убираем лишние символы
+    let cleanedLine = line;
+    
+    // Добавляем эмодзи для красоты
+    if (line.startsWith('Перевод:')) {
+      cleanedLine = '✅ ' + line;
+    } else if (line.startsWith('Разбор:')) {
+      cleanedLine = '📖 ' + line;
+    } else if (line.startsWith('Транскрипция:')) {
+      cleanedLine = '🔊 ' + line;
+    } else if (line.startsWith('Коротко:')) {
+      cleanedLine = '💬 ' + line;
     }
-    else if (line.includes('Как произнести:')) {
-      pronunciation = line.replace('Как произнести:', '').trim();
-      formatted += `\n🔊 ${line}\n`;
-    }
-    else if (line.includes('разговорный вариант:')) {
-      shortVariants = line.replace(/.*разговорный вариант:/, '').trim();
-      formatted += `\n💬 ${line}\n`;
-    }
-    else if (line.includes('=') && !line.includes('Это можно сказать')) {
-      const [word, meaning] = line.split('=').map(s => s.trim());
-      if (word && meaning && word.length < 40) {
-        wordBreakdown.push({ word, meaning });
-        formatted += `  • ${word} = ${meaning}\n`;
+    
+    // Парсим разбор слов (строки с = )
+    if (line.includes('=') && !line.includes('Перевод') && !line.includes('Разбор')) {
+      const parts = line.split('=');
+      if (parts.length === 2) {
+        const word = parts[0].trim();
+        const meaning = parts[1].trim();
+        if (word && meaning && word.length < 30) {
+          wordBreakdown.push({ word, meaning });
+        }
       }
+      // Добавляем отступ для строк разбора
+      cleanedLine = '  • ' + line;
     }
-    else if (line && !line.includes('Это можно сказать') && !line.includes('Разбор') && !line.includes('Как произнести') && !line.includes('разговорный')) {
-      formatted += `${line}\n`;
+    
+    formatted += cleanedLine + '\n';
+  }
+  
+  // Если не нашли разбор слов, но есть перевод
+  if (wordBreakdown.length === 0) {
+    // Пробуем найти перевод и разбить его на слова
+    for (let line of lines) {
+      if (line.startsWith('Перевод:')) {
+        const translation = line.replace('Перевод:', '').trim();
+        const words = translation.split(/[\s,;:!?]+/).filter(w => w.length > 0);
+        for (let word of words.slice(0, 6)) { // не больше 6 слов
+          if (word.length > 1 && !wordBreakdown.find(w => w.word === word)) {
+            wordBreakdown.push({ word, meaning: '?' });
+          }
+        }
+        break;
+      }
     }
   }
   
   return {
-    translation,
-    wordBreakdown,
-    pronunciation,
-    shortVariants,
-    formatted: formatted || text
+    formatted: formatted || text,
+    wordBreakdown: wordBreakdown
   };
 }
