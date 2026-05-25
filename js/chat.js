@@ -55,13 +55,12 @@ function saveUserName() {
     }
 }
 
+// Функция для парсинга ответа от ИИ
 // Функция для парсинга ответа от ИИ (DeepSeek)
 function formatAIResponse(text) {
     const lines = text.split('\n');
     let translation = '';
     let breakdown = [];
-    let pronunciation = '';
-    let shortVariant = '';
     let formatted = '';
     
     for (let line of lines) {
@@ -85,35 +84,32 @@ function formatAIResponse(text) {
                 formatted += `  • ${word} = ${meaning}\n`;
             }
         }
-        // Транскрипция
+        // Транскрипция — только если есть текст
         else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:')) {
-            pronunciation = line.replace(/^(🔊 )?Транскрипция:\s*/, '');
-            formatted += `\n🔊 **Как произнести:** ${pronunciation}\n`;
+            const pron = line.replace(/^(🔊 )?Транскрипция:\s*/, '');
+            if (pron && pron.trim() !== '') {
+                formatted += `\n🔊 **Как произнести:** ${pron}\n`;
+            }
         }
-        // Разговорный вариант (разные варианты написания)
+        // Разговорный вариант — только если есть текст
         else if (line.startsWith('Коротко:') || 
                  line.startsWith('Разговорный:') || 
                  line.startsWith('Разговорный вариант:') ||
                  line.startsWith('💬 Разговорный вариант:')) {
-            shortVariant = line.replace(/^(💬 )?(Разговорный вариант:|Разговорный:|Коротко:)\s*/, '');
-            formatted += `\n💬 **Разговорный вариант:** ${shortVariant}\n`;
+            const short = line.replace(/^(💬 )?(Разговорный вариант:|Разговорный:|Коротко:)\s*/, '');
+            if (short && short.trim() !== '') {
+                formatted += `\n💬 **Разговорный вариант:** ${short}\n`;
+            }
         }
-    }
-    
-    // Если разговорный вариант не найден — добавляем сообщение
-    if (!shortVariant && translation) {
-        formatted += `\n💬 **Разговорный вариант:** (можно сказать так же, как в основном варианте)\n`;
     }
     
     return {
         formatted: formatted,
         translation: translation,
-        breakdown: breakdown,
-        pronunciation: pronunciation,
-        shortVariant: shortVariant
+        breakdown: breakdown
     };
 }
-
+// Форматирование локального ответа (из JSON словаря)
 // Форматирование локального ответа (из JSON словаря)
 function formatLocalResponse(result) {
     let output = `✅ **${result.translation}**\n\n`;
@@ -126,13 +122,15 @@ function formatLocalResponse(result) {
         output += `\n`;
     }
     
-    output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
+    // Транскрипция — только если есть и не пустая
+    if (result.pronunciation && result.pronunciation.trim() !== '' && result.pronunciation !== result.translation) {
+        output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
+    }
     
+    // Разговорный вариант — только если есть и не пустой
     const shortVariant = result.short || result.shortVariant || '';
-    if (shortVariant && shortVariant !== result.translation) {
+    if (shortVariant && shortVariant.trim() !== '' && shortVariant !== result.translation) {
         output += `\n💬 **Разговорный вариант:** ${shortVariant}`;
-    } else {
-        output += `\n💬 **Разговорный вариант:** (можно сказать так же, как в основном варианте)`;
     }
     
     return output;
@@ -263,22 +261,33 @@ function formatMessageWithTooltips(text, wordBreakdown) {
             let highlightedTranslation = highlightWords(translation, wordMap);
             formatted += `✅ ${highlightedTranslation}<br>`;
         } 
-        else if (line.includes('📖 **Разбор слов:**') || line.includes('Разбор слов:')) {
+        else if (line.includes('📖') && (line.includes('Разбор слов') || line.includes('**Разбор слов**'))) {
             formatted += `<br><strong>📖 Разбор слов:</strong><br>`;
         }
         else if (line.includes('•') && line.includes('=')) {
             formatted += `<div style="margin-left: 20px; color: #555;">${line}</div>`;
         }
-        else if (line.includes('🔊 **Как произнести:**') || line.includes('Как произнести:')) {
-            formatted += `<br><strong>🔊 Как произнести:</strong><br>`;
+        else if (line.includes('🔊') && (line.includes('Как произнести') || line.includes('**Как произнести**'))) {
+            // Проверяем, есть ли содержимое после заголовка
+            const lineIndex = lines.indexOf(line);
+            const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
+            if (nextLine && nextLine.trim() && !nextLine.includes('💬')) {
+                formatted += `<br><strong>🔊 Как произнести:</strong><br>`;
+            }
         }
-        else if (line.includes('💬 **Разговорный вариант:**') || line.includes('Коротко:')) {
-            formatted += `<br><strong>💬 Разговорный вариант:</strong><br>`;
+        else if (line.includes('💬') && (line.includes('Разговорный вариант') || line.includes('**Разговорный вариант**'))) {
+            // Проверяем, есть ли содержимое после заголовка
+            const lineIndex = lines.indexOf(line);
+            const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
+            if (nextLine && nextLine.trim()) {
+                formatted += `<br><strong>💬 Разговорный вариант:</strong><br>`;
+            }
         }
-        else if (line.trim()) {
+        else if (line.trim() && !line.includes('🔊') && !line.includes('💬') && !line.includes('**Как произнести**') && !line.includes('**Разговорный вариант**')) {
             formatted += `${line}<br>`;
         }
     }
+    
     return formatted;
 }
 
