@@ -1,5 +1,4 @@
-// api/chat.js — рабочая версия с DeepSeek
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// api/chat.js — рабочая версия с DeepSeek (ИСПРАВЛЕНА)
 
 export default async function handler(req, res) {
   // CORS настройки
@@ -47,17 +46,15 @@ export default async function handler(req, res) {
 Разбор слов:
 [первое казахское слово] = [перевод на русский]
 [второе казахское слово] = [перевод на русский]
-[третье казахское слово] = [перевод на русский]
 
 Как произнести: [транскрипция русскими буквами]
 
-Или более разгооворный вариант: [короткий вариант],
+Или более разговорный вариант: [короткий вариант]
 
 ВАЖНО:
 1. Переводи СМЫСЛ фразы
-2. Для фразы "Кто сегодня дежурный в классе?" перевод: "Бүгін сыныпта кім кезекші?"
-3. Для фразы "Меня зовут Андрей" перевод: "Менің атым Андрей"
-4. Разбивай переведенную фразу на отдельные слова
+2. Разбивай переведенную фразу на отдельные слова
+3. Не используй лишних символов и эмодзи`;
 
   try {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -125,8 +122,8 @@ function parseTranslationResponse(text) {
   for (let line of lines) {
     line = line.trim();
     
-    if (line.includes('Вариант для работы:')) {
-      translation = line.replace('Вариант для работы:', '').trim();
+    if (line.includes('Это можно сказать так:')) {
+      translation = line.replace('Это можно сказать так:', '').trim();
       formatted += `✅ ${line}\n`;
     } 
     else if (line.includes('Разбор слов:')) {
@@ -136,18 +133,18 @@ function parseTranslationResponse(text) {
       pronunciation = line.replace('Как произнести:', '').trim();
       formatted += `\n🔊 ${line}\n`;
     }
-    else if (line.includes('лаконичных варианта:') || line.includes('лаконичный вариант:')) {
-      shortVariants = line.replace(/.*лаконичных варианта:|.*лаконичный вариант:/, '').trim();
-      formatted += `\n⚡ ${line}\n`;
+    else if (line.includes('разговорный вариант:')) {
+      shortVariants = line.replace(/.*разговорный вариант:/, '').trim();
+      formatted += `\n💬 ${line}\n`;
     }
-    else if (line.includes('=') && !line.includes('Вариант')) {
+    else if (line.includes('=') && !line.includes('Это можно сказать')) {
       const [word, meaning] = line.split('=').map(s => s.trim());
       if (word && meaning && word.length < 40) {
         wordBreakdown.push({ word, meaning });
         formatted += `  • ${word} = ${meaning}\n`;
       }
     }
-    else if (line && !line.includes('Вариант') && !line.includes('Разбор') && !line.includes('Как произнести') && !line.includes('лаконичн')) {
+    else if (line && !line.includes('Это можно сказать') && !line.includes('Разбор') && !line.includes('Как произнести') && !line.includes('разговорный')) {
       formatted += `${line}\n`;
     }
   }
