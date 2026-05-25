@@ -1,10 +1,11 @@
-// chat.js - ГИБРИДНАЯ ВЕРСИЯ
+// js/chat.js - с автоматическим переключением без уведомлений
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
 let totalTranslations = localStorage.getItem('totalTranslations') || 0;
-let useAI = localStorage.getItem('useAI') !== 'false'; // По умолчанию ИИ включён
-let aiAvailable = true; // Флаг доступности ИИ
-let currentMode = 'hybrid'; // hybrid, ai_only, local_only
+
+// Флаги для автоматического переключения
+let aiAvailable = true;
+let lastAICheck = 0;
 
 updateStats();
 
@@ -15,66 +16,37 @@ function updateStats() {
 function checkUserName() {
     if (userName) {
         document.getElementById('nameModal').style.display = 'none';
-        addMessage(`👋 Рад познакомиться, ${userName}!`, 'bot');
-        showModeSelector();
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык. Напиши мне что-нибудь на русском, я уже готов начать!`, 'bot');
     } else {
         document.getElementById('nameModal').style.display = 'flex';
         waitingForName = true;
     }
 }
 
-function showModeSelector() {
-    const mode = useAI ? '🌐 ИИ (DeepSeek)' : '📚 Локальный режим';
-    addMessage(`Сейчас активен режим: ${mode}`, 'bot');
-    addMessage(`💡 Напишите:\n• "включи ИИ" — для перевода через DeepSeek\n• "выключи ИИ" — для локального обучения\n• "гибрид" — автоматический выбор`, 'bot');
-}
-
 function saveUserName() {
     const nameInput = document.getElementById('userName');
     const name = nameInput.value.trim();
+    
     if (name && name.length > 0) {
         userName = name;
         localStorage.setItem('userName', userName);
         document.getElementById('nameModal').style.display = 'none';
         waitingForName = false;
-        addMessage(`👋 Рад познакомиться, ${userName}!`, 'bot');
-        showModeSelector();
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык. Напиши мне что-нибудь на русском, я уже готов начать!`, 'bot');
+    } else {
+        alert('Пожалуйста, введите ваше имя');
     }
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — ГИБРИДНАЯ
+// ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — с автоматическим переключением
 async function sendMessage() {
     const input = document.getElementById('userInput');
     let message = input.value.trim();
     
     if (!message) return;
+    
     if (waitingForName) {
         saveUserNameFromMessage(message);
-        input.value = '';
-        return;
-    }
-    
-    // Обработка команд
-    if (message.toLowerCase() === 'включи ии') {
-        useAI = true;
-        aiAvailable = true;
-        localStorage.setItem('useAI', 'true');
-        addMessage('✅ ИИ включён. Теперь использую DeepSeek для переводов.', 'bot');
-        input.value = '';
-        return;
-    }
-    
-    if (message.toLowerCase() === 'выключи ии' || message.toLowerCase() === 'локальный') {
-        useAI = false;
-        localStorage.setItem('useAI', 'false');
-        addMessage('📚 Переключился на локальный режим. Изучаем казахский вместе!', 'bot');
-        input.value = '';
-        return;
-    }
-    
-    if (message.toLowerCase() === 'гибрид') {
-        currentMode = 'hybrid';
-        addMessage('🔄 Гибридный режим: сначала пробую ИИ, если недоступен — локальный перевод.', 'bot');
         input.value = '';
         return;
     }
@@ -86,61 +58,72 @@ async function sendMessage() {
     const sendButton = document.getElementById('sendButton');
     sendButton.disabled = true;
     
-    let success = false;
     let reply = '';
     let wordBreakdown = [];
+    let success = false;
     
-    // ПЫТАЕМСЯ ИСПОЛЬЗОВАТЬ ИИ (если включён)
-    if (useAI && aiAvailable) {
+    // Пробуем DeepSeek (с таймаутом 5 секунд)
+    if (aiAvailable) {
         try {
+            // Создаём промис с таймаутом
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message, userName: userName })
+                body: JSON.stringify({ message: message, userName: userName }),
+                signal: controller.signal
             });
             
-            const data = await response.json();
+            clearTimeout(timeoutId);
             
-            if (data.success) {
-                success = true;
-                reply = data.reply;
-                wordBreakdown = data.wordBreakdown || [];
-                aiAvailable = true;
-            } else if (data.error && data.error.includes('busy')) {
-                // DeepSeek перегружен — переключаемся на локальный
-                console.log('DeepSeek busy, switching to local');
-                aiAvailable = false;
-                success = false;
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    success = true;
+                    reply = data.reply;
+                    wordBreakdown = data.wordBreakdown || [];
+                    aiAvailable = true; // ИИ работает
+                } else if (data.error && (data.error.includes('busy') || data.error.includes('Service is too busy'))) {
+                    // DeepSeek перегружен — отключаем ИИ на время
+                    aiAvailable = false;
+                    lastAICheck = Date.now();
+                    success = false;
+                }
             } else {
                 success = false;
             }
         } catch (error) {
-            console.error('AI error:', error);
+            // Ошибка сети или таймаут — отключаем ИИ на время
+            console.log('AI unavailable, using local mode');
             aiAvailable = false;
+            lastAICheck = Date.now();
             success = false;
         }
     }
     
-    // ЕСЛИ ИИ НЕ СРАБОТАЛ — ИСПОЛЬЗУЕМ ЛОКАЛЬНЫЙ
+    // Если ИИ не ответил — используем локальный переводчик (тихо, без уведомлений)
     if (!success) {
         const localResult = localTranslator.translate(message);
         reply = formatLocalResponse(localResult);
         wordBreakdown = localResult.breakdown || [];
         
-        // Добавляем примечание о режиме
-        if (useAI && !aiAvailable) {
-            reply += '\n\n⚠️ DeepSeek временно недоступен. Использую локальный режим.';
+        // Каждые 2 минуты пробуем снова включить ИИ
+        if (!aiAvailable && (Date.now() - lastAICheck) > 120000) {
+            aiAvailable = true;
         }
     }
     
     hideTypingIndicator();
     
-    // Персонализация
+    // Персонализация ответа
     if (userName && reply.includes('Пользователь')) {
         reply = reply.replace('Пользователь', userName);
     }
     
     addMessage(reply, 'bot', wordBreakdown);
+    
     totalTranslations++;
     localStorage.setItem('totalTranslations', totalTranslations);
     updateStats();
@@ -148,7 +131,7 @@ async function sendMessage() {
     sendButton.disabled = false;
 }
 
-// Форматирование локального ответа
+// Форматирование локального ответа (как ИИ, без упоминаний о локальном режиме)
 function formatLocalResponse(result) {
     let output = `✅ **${result.translation}**\n\n`;
     
@@ -161,35 +144,17 @@ function formatLocalResponse(result) {
     }
     
     output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
-    output += `\n💬 **Коротко:** ${result.short}`;
-    
-    if (result.isLearning) {
-        output += `\n\n📚 Я учусь переводить такие фразы. Попробуйте спросить иначе!`;
-    }
+    output += `\n💬 **Разговорный вариант:** ${result.short}`;
     
     return output;
 }
 
-function saveUserNameFromMessage(name) {
-    if (name && name.trim().length > 0) {
-        userName = name.trim();
-        localStorage.setItem('userName', userName);
-        waitingForName = false;
-        const messages = document.getElementById('messages');
-        const botQuestion = messages.querySelector('.message.bot:last-child');
-        if (botQuestion && botQuestion.innerText.includes('Как ваше имя?')) {
-            botQuestion.remove();
-        }
-        addMessage(name, 'user');
-        addMessage(`👋 Рад познакомиться, ${userName}!`, 'bot');
-        showModeSelector();
-    }
-}
-
+// Форматирование ответа с подсказками (для обоих режимов)
 function addMessage(text, sender, wordBreakdown = null) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
+    
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     
@@ -220,17 +185,17 @@ function formatMessageWithTooltips(text, wordBreakdown) {
             let highlightedTranslation = highlightWords(translation, wordMap);
             formatted += `✅ ${highlightedTranslation}<br>`;
         } 
-        else if (line.includes('Разбор слов:')) {
-            formatted += `<br><strong>📖 ${line}</strong><br>`;
+        else if (line.includes('📖 **Разбор слов:**') || line.includes('Разбор слов:')) {
+            formatted += `<br><strong>📖 Разбор слов:</strong><br>`;
         }
         else if (line.includes('•') && line.includes('=')) {
             formatted += `<div style="margin-left: 20px; color: #555;">${line}</div>`;
         }
-        else if (line.includes('Как произнести:')) {
-            formatted += `<br><strong>🔊 ${line}</strong><br>`;
+        else if (line.includes('🔊 **Как произнести:**') || line.includes('Как произнести:')) {
+            formatted += `<br><strong>🔊 Как произнести:</strong><br>`;
         }
-        else if (line.includes('Коротко:')) {
-            formatted += `<br><strong>💬 ${line}</strong><br>`;
+        else if (line.includes('💬 **Разговорный вариант:**') || line.includes('Коротко:')) {
+            formatted += `<br><strong>💬 Разговорный вариант:</strong><br>`;
         }
         else if (line.trim()) {
             formatted += `${line}<br>`;
@@ -283,6 +248,7 @@ function addTooltipStyles() {
             pointer-events: none;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: normal;
         }
         .kazakh-word:hover::before {
             opacity: 1;
@@ -316,6 +282,21 @@ function formatMessage(text) {
     let formatted = text.replace(/\n/g, '<br>');
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     return formatted;
+}
+
+function saveUserNameFromMessage(name) {
+    if (name && name.trim().length > 0) {
+        userName = name.trim();
+        localStorage.setItem('userName', userName);
+        waitingForName = false;
+        const messages = document.getElementById('messages');
+        const botQuestion = messages.querySelector('.message.bot:last-child');
+        if (botQuestion && botQuestion.innerText.includes('Как ваше имя?')) {
+            botQuestion.remove();
+        }
+        addMessage(name, 'user');
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык. Просто пишите фразы на русском, а я буду переводить.`, 'bot');
+    }
 }
 
 let typingIndicator = null;
