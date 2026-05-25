@@ -1,4 +1,13 @@
+// js/chat.js - полная версия с парсингом ИИ и локальным переводчиком
+
 let localTranslator = null;
+let userName = localStorage.getItem('userName') || null;
+let waitingForName = false;
+let totalTranslations = localStorage.getItem('totalTranslations') || 0;
+
+// Флаги для автоматического переключения
+let aiAvailable = true;
+let lastAICheck = 0;
 
 // Загружаем JSON с фразами
 async function loadPhrases() {
@@ -10,20 +19,10 @@ async function loadPhrases() {
         return true;
     } catch (error) {
         console.error('❌ Ошибка загрузки phrases.json:', error);
-        // Создаём пустой переводчик как фолбэк
         localTranslator = new LocalTranslator({ static_phrases: {}, dynamic_templates: [] });
         return false;
     }
 }
-
-// В функции sendMessage() используйте localTranslator.translate(message)
-let userName = localStorage.getItem('userName') || null;
-let waitingForName = false;
-let totalTranslations = localStorage.getItem('totalTranslations') || 0;
-
-// Флаги для автоматического переключения
-let aiAvailable = true;
-let lastAICheck = 0;
 
 updateStats();
 
@@ -56,6 +55,89 @@ function saveUserName() {
     }
 }
 
+// Функция для парсинга ответа от ИИ (DeepSeek)
+function formatAIResponse(text) {
+    const lines = text.split('\n');
+    let translation = '';
+    let breakdown = [];
+    let pronunciation = '';
+    let shortVariant = '';
+    let formatted = '';
+    
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        
+        // Перевод (разные варианты написания)
+        if (line.startsWith('Перевод:') || line.startsWith('✅ Перевод:') || line.startsWith('Вариант для работы:')) {
+            translation = line.replace(/^(✅ )?(Перевод:|Вариант для работы:)\s*/, '');
+            formatted += `✅ **${translation}**\n\n`;
+        }
+        // Разбор слов (разные варианты написания)
+        else if (line.startsWith('Разбор:') || line.startsWith('Разбор слов:')) {
+            formatted += `📖 **Разбор слов:**\n`;
+        }
+        // Строки с = (разбор отдельных слов)
+        else if (line.includes('=') && !line.startsWith('Транскрипция') && !line.startsWith('🔊')) {
+            const [word, meaning] = line.split('=').map(s => s.trim());
+            if (word && meaning) {
+                breakdown.push({ word, meaning });
+                formatted += `  • ${word} = ${meaning}\n`;
+            }
+        }
+        // Транскрипция
+        else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:')) {
+            pronunciation = line.replace(/^(🔊 )?Транскрипция:\s*/, '');
+            formatted += `\n🔊 **Как произнести:** ${pronunciation}\n`;
+        }
+        // Разговорный вариант (разные варианты написания)
+        else if (line.startsWith('Коротко:') || 
+                 line.startsWith('Разговорный:') || 
+                 line.startsWith('Разговорный вариант:') ||
+                 line.startsWith('💬 Разговорный вариант:')) {
+            shortVariant = line.replace(/^(💬 )?(Разговорный вариант:|Разговорный:|Коротко:)\s*/, '');
+            formatted += `\n💬 **Разговорный вариант:** ${shortVariant}\n`;
+        }
+    }
+    
+    // Если разговорный вариант не найден — добавляем сообщение
+    if (!shortVariant && translation) {
+        formatted += `\n💬 **Разговорный вариант:** (можно сказать так же, как в основном варианте)\n`;
+    }
+    
+    return {
+        formatted: formatted,
+        translation: translation,
+        breakdown: breakdown,
+        pronunciation: pronunciation,
+        shortVariant: shortVariant
+    };
+}
+
+// Форматирование локального ответа (из JSON словаря)
+function formatLocalResponse(result) {
+    let output = `✅ **${result.translation}**\n\n`;
+    
+    if (result.breakdown && result.breakdown.length > 0) {
+        output += `📖 **Разбор слов:**\n`;
+        result.breakdown.forEach(item => {
+            output += `• ${item.word} = ${item.meaning}\n`;
+        });
+        output += `\n`;
+    }
+    
+    output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
+    
+    const shortVariant = result.short || result.shortVariant || '';
+    if (shortVariant && shortVariant !== result.translation) {
+        output += `\n💬 **Разговорный вариант:** ${shortVariant}`;
+    } else {
+        output += `\n💬 **Разговорный вариант:** (можно сказать так же, как в основном варианте)`;
+    }
+    
+    return output;
+}
+
 // ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — с автоматическим переключением
 async function sendMessage() {
     const input = document.getElementById('userInput');
@@ -83,7 +165,6 @@ async function sendMessage() {
     // Пробуем DeepSeek (с таймаутом 5 секунд)
     if (aiAvailable) {
         try {
-            // Создаём промис с таймаутом
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
             
@@ -100,11 +181,11 @@ async function sendMessage() {
                 const data = await response.json();
                 if (data.success) {
                     success = true;
-                    reply = data.reply;
-                    wordBreakdown = data.wordBreakdown || [];
-                    aiAvailable = true; // ИИ работает
+                    const parsedAI = formatAIResponse(data.reply);
+                    reply = parsedAI.formatted;
+                    wordBreakdown = parsedAI.breakdown || data.wordBreakdown || [];
+                    aiAvailable = true;
                 } else if (data.error && (data.error.includes('busy') || data.error.includes('Service is too busy'))) {
-                    // DeepSeek перегружен — отключаем ИИ на время
                     aiAvailable = false;
                     lastAICheck = Date.now();
                     success = false;
@@ -113,7 +194,6 @@ async function sendMessage() {
                 success = false;
             }
         } catch (error) {
-            // Ошибка сети или таймаут — отключаем ИИ на время
             console.log('AI unavailable, using local mode');
             aiAvailable = false;
             lastAICheck = Date.now();
@@ -121,13 +201,12 @@ async function sendMessage() {
         }
     }
     
-    // Если ИИ не ответил — используем локальный переводчик (тихо, без уведомлений)
+    // Если ИИ не ответил — используем локальный переводчик
     if (!success) {
         const localResult = localTranslator.translate(message);
         reply = formatLocalResponse(localResult);
         wordBreakdown = localResult.breakdown || [];
         
-        // Каждые 2 минуты пробуем снова включить ИИ
         if (!aiAvailable && (Date.now() - lastAICheck) > 120000) {
             aiAvailable = true;
         }
@@ -135,7 +214,6 @@ async function sendMessage() {
     
     hideTypingIndicator();
     
-    // Персонализация ответа
     if (userName && reply.includes('Пользователь')) {
         reply = reply.replace('Пользователь', userName);
     }
@@ -147,24 +225,6 @@ async function sendMessage() {
     updateStats();
     
     sendButton.disabled = false;
-}
-
-// Форматирование локального ответа (как ИИ, без упоминаний о локальном режиме)
-function formatLocalResponse(result) {
-    let output = `✅ **${result.translation}**\n\n`;
-    
-    if (result.breakdown && result.breakdown.length > 0) {
-        output += `📖 **Разбор слов:**\n`;
-        result.breakdown.forEach(item => {
-            output += `• ${item.word} = ${item.meaning}\n`;
-        });
-        output += `\n`;
-    }
-    
-    output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
-    output += `\n💬 **Разговорный вариант:** ${result.short}`;
-    
-    return output;
 }
 
 // Форматирование ответа с подсказками (для обоих режимов)
@@ -336,11 +396,15 @@ function hideTypingIndicator() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadPhrases();
     checkUserName();
+    
     document.getElementById('userName').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') saveUserName();
     });
+    
     document.getElementById('userInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
     });
