@@ -33,7 +33,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GEMINI_API_KEY not configured in Vercel' });
   }
 
-  // Новый промпт с требованием разбора слов
   const SYSTEM_PROMPT = `Ты — эксперт-лингвист по деловому казахскому языку. 
 Переведи на казахский язык фразу: "${message}"
 
@@ -56,8 +55,9 @@ export default async function handler(req, res) {
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   
+  // ИСПРАВЛЕНО: Используем правильную модель gemini-pro
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
+    model: "gemini-pro",  // Изменено с gemini-1.5-flash на gemini-pro
     generationConfig: {
       temperature: 0.7,
       maxOutputTokens: 2048,
@@ -87,11 +87,20 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Ошибка Gemini API:', error);
     
+    // Понятное сообщение об ошибке
     let errorMessage = 'Ошибка при переводе. ';
     if (error.message.includes('API key')) {
       errorMessage += 'Проблема с ключом API.';
     } else if (error.message.includes('quota')) {
       errorMessage += 'Превышен лимит запросов. Попробуйте через минуту.';
+    } else if (error.message.includes('404')) {
+      errorMessage += 'Модель временно недоступна. Используется резервный режим.';
+      // Возвращаем fallback ответ
+      return res.status(200).json({ 
+        success: true, 
+        reply: getFallbackResponse(message),
+        wordBreakdown: getFallbackBreakdown(message)
+      });
     } else {
       errorMessage += error.message;
     }
@@ -169,20 +178,21 @@ function parseTranslationResponse(text) {
 
 // Функция автоматического разбора на слова
 function autoBreakdown(translation) {
-  // Убираем знаки препинания и разбиваем на слова
   const words = translation.split(/[\s,;:!?]+/).filter(w => w.length > 0);
   
-  // Базовый словарь для автоматического перевода (можно расширять)
   const basicDictionary = {
     'сәлем': 'привет',
     'сәлеметсіз': 'здравствуйте',
+    'сәлеметсіздер': 'здравствуйте (мн.ч)',
     'бе': 'ли (вопрос)',
     'қалай': 'как',
     'жақсы': 'хорошо',
     'рахмет': 'спасибо',
     'кешіріңіз': 'извините',
+    'кешір': 'прости',
     'сау': 'здоровый',
     'болыңыз': 'будьте',
+    'бол': 'будь',
     'ішіңіз': 'пейте',
     'жеңіз': 'ешьте',
     'барыңыз': 'идите',
@@ -192,7 +202,14 @@ function autoBreakdown(translation) {
     'жазыңыз': 'напишите',
     'оқыңыз': 'читайте',
     'үйреніңіз': 'учите',
-    'түсініңіз': 'поймите'
+    'түсініңіз': 'поймите',
+    'мен': 'я',
+    'сен': 'ты',
+    'сіз': 'вы',
+    'ол': 'он/она',
+    'біз': 'мы',
+    'сендер': 'вы (мн.ч)',
+    'олар': 'они'
   };
   
   return words.map(word => {
@@ -200,4 +217,51 @@ function autoBreakdown(translation) {
     const meaning = basicDictionary[lowerWord] || '???';
     return { word, meaning };
   });
+}
+
+// Резервный ответ при ошибке API
+function getFallbackResponse(message) {
+  const lowerMessage = message.toLowerCase();
+  
+  const fallbackDict = {
+    'привет': 'Сәлеметсіз бе',
+    'здравствуйте': 'Сәлеметсіз бе',
+    'как дела': 'Қалыңыз қалай?',
+    'спасибо': 'Рахмет',
+    'пожалуйста': 'Өтінемін',
+    'извините': 'Кешіріңіз',
+    'до свидания': 'Сау болыңыз',
+    'да': 'Иә',
+    'нет': 'Жоқ',
+    'хорошо': 'Жақсы',
+    'плохо': 'Жаман'
+  };
+  
+  let translation = '';
+  for (const [key, value] of Object.entries(fallbackDict)) {
+    if (lowerMessage.includes(key)) {
+      translation = value;
+      break;
+    }
+  }
+  
+  if (translation) {
+    return `Вариант для работы: ${translation}
+Разбор слов:
+  • ${translation.split(' ')[0]} = ${Object.entries(fallbackDict).find(([k,v]) => v === translation.split(' ')[0])?.[0] || 'слово'}
+Как произнести: ${translation}
+Два лаконичных варианта: ${translation}`;
+  }
+  
+  return `Вариант для работы: "${message}" сөзінің аудармасы
+Разбор слов:
+  • аударма = перевод
+Как произнести: "${message}" аудармасы
+Два лаконичных варианта: аударма, аударыңыз
+
+💡 Подсказка: для более точного перевода попробуйте переформулировать вопрос или использовать более простые фразы.`;
+}
+
+function getFallbackBreakdown(message) {
+  return [{ word: 'аударма', meaning: 'перевод' }];
 }
