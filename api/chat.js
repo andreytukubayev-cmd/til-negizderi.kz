@@ -1,3 +1,4 @@
+// api/chat.js — рабочая версия с DeepSeek
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
@@ -24,21 +25,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message, userName } = req.body;
+  const { message } = req.body;
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured in Vercel' });
+  // Используем DeepSeek API
+  if (!process.env.DEEPSEEK_API_KEY) {
+    console.error('DEEPSEEK_API_KEY not configured');
+    return res.status(500).json({ error: 'DEEPSEEK_API_KEY not configured in Vercel' });
   }
 
-  // Улучшенный промпт для лучшего перевода
   const SYSTEM_PROMPT = `Ты — профессиональный переводчик с русского на казахский язык. Переведи следующую фразу точно и естественно.
 
 Русская фраза: "${message}"
-
-Твоя задача - дать КАЧЕСТВЕННЫЙ перевод на казахский язык. НЕ используй слова "аударма", "сөзінің" и т.д. в переводе. Дай именно перевод фразы.
 
 ОТВЕТЬ СТРОГО В ТАКОМ ФОРМАТЕ:
 
@@ -53,62 +53,69 @@ export default async function handler(req, res) {
 
 Два лаконичных варианта: [короткий вариант 1], [короткий вариант 2]
 
-ВАЖНЫЕ ПРАВИЛА:
-1. Переводи СМЫСЛ фразы, а не слова по отдельности
-2. В разборе слов разбей переведенную фразу на отдельные слова
-3. Если фраза представляет имя (например "Меня зовут Андрей"), переведи её правильно: "Менің атым Андрей"
-4. Не используй в переводе слова "аударма", "сөзінің" - это не перевод, а служебные слова
-5. Будь естественным и полезным`;
+ВАЖНО:
+1. Переводи СМЫСЛ фразы
+2. Для фразы "Кто сегодня дежурный в классе?" перевод: "Бүгін сыныпта кім кезекші?"
+3. Для фразы "Меня зовут Андрей" перевод: "Менің атым Андрей"
+4. Разбивай переведенную фразу на отдельные слова
+5. Не используй в переводе слова "аударма", "сөзінің"`;
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  
-  // Пробуем разные модели по очереди
-  const modelsToTry = ["gemini-pro", "gemini-1.0-pro"];
-  let lastError = null;
-  
-  for (const modelName of modelsToTry) {
-    try {
-      const model = genAI.getGenerativeModel({ 
-        model: modelName,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        }
+  try {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error('DeepSeek API error:', data.error);
+      return res.status(500).json({ 
+        success: false, 
+        error: `DeepSeek error: ${data.error.message || 'Unknown error'}`
       });
-      
-      const result = await model.generateContent(SYSTEM_PROMPT);
-      const response = await result.response;
-      const text = response.text();
-      
-      if (text && !text.includes('аудармасы') && text.length > 20) {
-        // Успешно получили ответ
-        const parsedResponse = parseTranslationResponse(text, message);
-        
-        return res.status(200).json({ 
-          success: true, 
-          reply: parsedResponse.formatted,
-          wordBreakdown: parsedResponse.wordBreakdown,
-          pronunciation: parsedResponse.pronunciation,
-          shortVariants: parsedResponse.shortVariants
-        });
-      }
-    } catch (error) {
-      console.log(`Модель ${modelName} не сработала:`, error.message);
-      lastError = error;
     }
+
+    const reply = data.choices[0].message.content;
+    
+    // Парсим ответ для совместимости с фронтендом
+    const parsedResponse = parseTranslationResponse(reply);
+    
+    return res.status(200).json({ 
+      success: true, 
+      reply: parsedResponse.formatted,
+      wordBreakdown: parsedResponse.wordBreakdown
+    });
+
+  } catch (error) {
+    console.error('DeepSeek error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: `Ошибка: ${error.message}`
+    });
   }
-  
-  // Если все модели не сработали, используем интеллектуальный fallback
-  const fallbackResponse = getIntelligentFallback(message);
-  return res.status(200).json({ 
-    success: true, 
-    reply: fallbackResponse.formatted,
-    wordBreakdown: fallbackResponse.wordBreakdown
-  });
 }
 
-// Улучшенная функция парсинга
-function parseTranslationResponse(text, originalMessage) {
+// Функция парсинга ответа
+function parseTranslationResponse(text) {
   const lines = text.split('\n');
   let translation = '';
   let wordBreakdown = [];
@@ -121,8 +128,6 @@ function parseTranslationResponse(text, originalMessage) {
     
     if (line.includes('Вариант для работы:')) {
       translation = line.replace('Вариант для работы:', '').trim();
-      // Очищаем от мусора
-      translation = translation.replace(/["']/g, '');
       formatted += `✅ ${line}\n`;
     } 
     else if (line.includes('Разбор слов:')) {
@@ -136,23 +141,16 @@ function parseTranslationResponse(text, originalMessage) {
       shortVariants = line.replace(/.*лаконичных варианта:|.*лаконичный вариант:/, '').trim();
       formatted += `\n⚡ ${line}\n`;
     }
-    else if (line.includes('=') && !line.includes('Вариант') && !line.includes('Разбор')) {
+    else if (line.includes('=') && !line.includes('Вариант')) {
       const [word, meaning] = line.split('=').map(s => s.trim());
-      if (word && meaning && word.length < 30) {
+      if (word && meaning && word.length < 40) {
         wordBreakdown.push({ word, meaning });
         formatted += `  • ${word} = ${meaning}\n`;
       }
     }
-  }
-  
-  // Если не удалось распарсить разбор слов, но есть перевод
-  if (wordBreakdown.length === 0 && translation) {
-    wordBreakdown = autoBreakdown(translation);
-    // Добавляем разбор слов в formatted
-    formatted += '\n📖 Разбор слов:\n';
-    wordBreakdown.forEach(({word, meaning}) => {
-      formatted += `  • ${word} = ${meaning}\n`;
-    });
+    else if (line && !line.includes('Вариант') && !line.includes('Разбор') && !line.includes('Как произнести') && !line.includes('лаконичн')) {
+      formatted += `${line}\n`;
+    }
   }
   
   return {
@@ -162,175 +160,4 @@ function parseTranslationResponse(text, originalMessage) {
     shortVariants,
     formatted: formatted || text
   };
-}
-
-// Интеллектуальный fallback для распространенных фраз
-function getIntelligentFallback(message) {
-  const lowerMessage = message.toLowerCase();
-  
-  // Расширенный словарь с правильными переводами
-  const translations = {
-    'меня зовут': {
-      translation: 'Менің атым',
-      breakdown: [
-        { word: 'Менің', meaning: 'мой' },
-        { word: 'атым', meaning: 'имя' }
-      ],
-      pronunciation: 'Мениң атым',
-      variants: 'Мен ...мын/мін, Атым ...'
-    },
-    'как тебя зовут': {
-      translation: 'Сенің атың кім?',
-      breakdown: [
-        { word: 'Сенің', meaning: 'твой' },
-        { word: 'атың', meaning: 'имя' },
-        { word: 'кім', meaning: 'кто' }
-      ],
-      pronunciation: 'Сениң атың ким?',
-      variants: 'Атың кім?, Қалай аталасың?'
-    },
-    'как дела': {
-      translation: 'Қалыңыз қалай?',
-      breakdown: [
-        { word: 'Қалыңыз', meaning: 'ваше состояние' },
-        { word: 'қалай', meaning: 'как' }
-      ],
-      pronunciation: 'Калыңыз калай?',
-      variants: 'Жағдайыңыз қалай?, Амансыз ба?'
-    },
-    'спасибо': {
-      translation: 'Рахмет',
-      breakdown: [{ word: 'Рахмет', meaning: 'спасибо' }],
-      pronunciation: 'Рахмет',
-      variants: 'Көп рахмет, Алғыс'
-    },
-    'извините': {
-      translation: 'Кешіріңіз',
-      breakdown: [{ word: 'Кешіріңіз', meaning: 'извините' }],
-      pronunciation: 'Кешириңиз',
-      variants: 'Кешіріңізші, Өкінішке орай'
-    },
-    'привет': {
-      translation: 'Сәлеметсіз бе',
-      breakdown: [
-        { word: 'Сәлеметсіз', meaning: 'здравствуйте' },
-        { word: 'бе', meaning: '(вопросительная частица)' }
-      ],
-      pronunciation: 'Сәлеметсиз бе',
-      variants: 'Сәлем, Армысыз'
-    },
-    'до свидания': {
-      translation: 'Сау болыңыз',
-      breakdown: [
-        { word: 'Сау', meaning: 'здоровый' },
-        { word: 'болыңыз', meaning: 'будьте' }
-      ],
-      pronunciation: 'Сау болыңыз',
-      variants: 'Көріскенше, Қош болыңыз'
-    },
-    'доброе утро': {
-      translation: 'Қайырлы таң',
-      breakdown: [
-        { word: 'Қайырлы', meaning: 'добрый' },
-        { word: 'таң', meaning: 'утро' }
-      ],
-      pronunciation: 'Кайырлы таң',
-      variants: 'Таңыңыз қайырлы болсын'
-    },
-    'добрый день': {
-      translation: 'Қайырлы күн',
-      breakdown: [
-        { word: 'Қайырлы', meaning: 'добрый' },
-        { word: 'күн', meaning: 'день' }
-      ],
-      pronunciation: 'Кайырлы күн',
-      variants: 'Күніңіз қайырлы болсын'
-    },
-    'добрый вечер': {
-      translation: 'Қайырлы кеш',
-      breakdown: [
-        { word: 'Қайырлы', meaning: 'добрый' },
-        { word: 'кеш', meaning: 'вечер' }
-      ],
-      pronunciation: 'Кайырлы кеш',
-      variants: 'Кешіңіз қайырлы болсын'
-    }
-  };
-  
-  // Ищем подходящий перевод
-  for (const [key, value] of Object.entries(translations)) {
-    if (lowerMessage.includes(key)) {
-      // Если фраза содержит имя (например "меня зовут Андрей")
-      if (key === 'меня зовут' && lowerMessage.includes('меня зовут')) {
-        const name = message.match(/меня зовут\s+(\w+)/i)?.[1];
-        if (name) {
-          const fullTranslation = `${value.translation} ${name}`;
-          return {
-            formatted: `✅ Вариант для работы: ${fullTranslation}\n\n📖 Разбор слов:\n  • ${value.breakdown[0].word} = ${value.breakdown[0].meaning}\n  • ${value.breakdown[1].word} = ${value.breakdown[1].meaning}\n  • ${name} = ${name} (имя)\n\n🔊 Как произнести: ${value.pronunciation} ${name}\n\n⚡ Два лаконичных варианта: Мен ...мын/мін, Атым ...`,
-            wordBreakdown: [...value.breakdown, { word: name, meaning: `${name} (имя)` }]
-          };
-        }
-      }
-      
-      return {
-        formatted: `✅ Вариант для работы: ${value.translation}\n\n📖 Разбор слов:\n${value.breakdown.map(b => `  • ${b.word} = ${b.meaning}`).join('\n')}\n\n🔊 Как произнести: ${value.pronunciation}\n\n⚡ Два лаконичных варианта: ${value.variants}`,
-        wordBreakdown: value.breakdown
-      };
-    }
-  }
-  
-  // Если ничего не найдено
-  return {
-    formatted: `✅ Вариант для работы: "${message}" - бұл сөздің аудармасы әзірге қосылмаған
-
-📖 Разбор слов:
-  • әзірге = пока
-  • қосылмаған = не добавлено
-
-🔊 Как произнести: "${message}" - бул создин аудармасы эзирге косылмаган
-
-⚡ Два лаконичных варианта: Кешіріңіз, әзірге жоқ, Кейін қосылады
-
-💡 Совет: Попробуйте спросить конкретную фразу, например "как сказать 'привет' на казахском?"`,
-    wordBreakdown: [
-      { word: 'әзірге', meaning: 'пока' },
-      { word: 'қосылмаған', meaning: 'не добавлено' }
-    ]
-  };
-}
-
-// Автоматический разбор слов (если Gemini не дал разбор)
-function autoBreakdown(translation) {
-  const words = translation.split(/[\s,;:!?]+/).filter(w => w.length > 0 && !w.includes('"'));
-  
-  const dictionary = {
-    'Менің': 'мой',
-    'атым': 'имя',
-    'Сенің': 'твой',
-    'атың': 'имя',
-    'кім': 'кто',
-    'Қалыңыз': 'ваше состояние',
-    'қалай': 'как',
-    'Рахмет': 'спасибо',
-    'Кешіріңіз': 'извините',
-    'Сәлеметсіз': 'здравствуйте',
-    'бе': '(вопросительная частица)',
-    'Сау': 'здоровый',
-    'болыңыз': 'будьте',
-    'Қайырлы': 'добрый',
-    'таң': 'утро',
-    'күн': 'день',
-    'кеш': 'вечер'
-  };
-  
-  const breakdown = [];
-  for (const word of words) {
-    if (dictionary[word]) {
-      breakdown.push({ word, meaning: dictionary[word] });
-    } else if (word.length > 0 && !/^\d+$/.test(word)) {
-      breakdown.push({ word, meaning: 'слово' });
-    }
-  }
-  
-  return breakdown;
 }
