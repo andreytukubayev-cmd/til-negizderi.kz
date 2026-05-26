@@ -1,4 +1,4 @@
-// js/chat.js - с сохранением статистики пользователя
+// js/chat.js - с двумя режимами через меню
 
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
@@ -23,7 +23,6 @@ function incrementUserStat(userName) {
     return allStats[userName];
 }
 
-// Обновляем отображение статистики
 function updateStats() {
     if (userName) {
         let userStat = getUserStat(userName);
@@ -55,9 +54,9 @@ async function loadPhrases() {
 function checkUserName() {
     if (userName) {
         document.getElementById('nameModal').style.display = 'none';
-        updateStats(); // Показываем статистику пользователя
+        updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
-        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
+        addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
     } else {
         document.getElementById('nameModal').style.display = 'flex';
         waitingForName = true;
@@ -73,9 +72,9 @@ function saveUserName() {
         localStorage.setItem('userName', userName);
         document.getElementById('nameModal').style.display = 'none';
         waitingForName = false;
-        updateStats(); // Показываем статистику нового пользователя
+        updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
-        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
+        addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
     } else {
         alert('Пожалуйста, введите ваше имя');
     }
@@ -154,13 +153,9 @@ function formatLocalResponse(result) {
     return output;
 }
 
-// НОВАЯ ФУНКЦИЯ: Обсуждение ситуации
+// Функция для режима "Обсудить ситуацию"
 async function discussSituation(message) {
     showTypingIndicator();
-    const sendButton = document.getElementById('discussBtn');
-    const translateBtn = document.getElementById('translateBtn');
-    sendButton.disabled = true;
-    translateBtn.disabled = true;
     
     let reply = '';
     let wordBreakdown = [];
@@ -232,17 +227,12 @@ async function discussSituation(message) {
     hideTypingIndicator();
     addMessage(reply, 'bot', wordBreakdown);
     
-    // Увеличиваем статистику (обсуждение тоже считаем)
     if (userName) {
         incrementUserStat(userName);
         updateStats();
     }
-    
-    sendButton.disabled = false;
-    translateBtn.disabled = false;
 }
 
-// Форматирование ответа для режима "обсудить ситуацию"
 function formatDiscussResponse(text) {
     let formatted = text
         .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
@@ -255,7 +245,6 @@ function formatDiscussResponse(text) {
     return formatted;
 }
 
-// Локальный fallback для ситуаций
 function getLocalDiscussFallback(message) {
     const lowerMsg = message.toLowerCase();
     
@@ -299,7 +288,7 @@ function getLocalDiscussFallback(message) {
 💬 **Коротко:** Көмектесесіз бе?`;
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — режим "Перевести"
+// ГЛАВНАЯ ФУНКЦИЯ — режим "Перевести"
 async function sendTranslate() {
     const input = document.getElementById('userInput');
     let message = input.value.trim();
@@ -315,11 +304,6 @@ async function sendTranslate() {
     addMessage(message, 'user');
     input.value = '';
     showTypingIndicator();
-    
-    const translateBtn = document.getElementById('translateBtn');
-    const discussBtn = document.getElementById('discussBtn');
-    translateBtn.disabled = true;
-    discussBtn.disabled = true;
     
     let reply = '';
     let wordBreakdown = [];
@@ -392,14 +376,10 @@ async function sendTranslate() {
     
     addMessage(reply, 'bot', wordBreakdown);
     
-    // Увеличиваем статистику при успешном переводе
     if (userName) {
         incrementUserStat(userName);
         updateStats();
     }
-    
-    translateBtn.disabled = false;
-    discussBtn.disabled = false;
 }
 
 // Форматирование ответа с подсказками
@@ -557,9 +537,9 @@ function saveUserNameFromMessage(name) {
             botQuestion.remove();
         }
         addMessage(name, 'user');
-        updateStats(); // Показываем статистику пользователя
+        updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык.`, 'bot');
-        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
+        addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
     }
 }
 
@@ -591,7 +571,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.key === 'Enter') saveUserName();
     });
     
-    // Показываем меню выбора при нажатии на кнопку отправки
+    // Элементы меню
     const sendBtn = document.getElementById('sendBtn');
     const actionMenu = document.getElementById('actionMenu');
     const actionMenuOverlay = document.getElementById('actionMenuOverlay');
@@ -612,38 +592,43 @@ document.addEventListener('DOMContentLoaded', async function() {
         actionMenu.classList.add('active');
     }
     
-    sendBtn.addEventListener('click', showActionMenu);
+    if (sendBtn) sendBtn.addEventListener('click', showActionMenu);
+    if (actionMenuOverlay) actionMenuOverlay.addEventListener('click', closeActionMenu);
     
-    actionMenuOverlay.addEventListener('click', closeActionMenu);
+    if (actionTranslate) {
+        actionTranslate.addEventListener('click', () => {
+            closeActionMenu();
+            sendTranslate();
+        });
+    }
     
-    actionTranslate.addEventListener('click', () => {
-        closeActionMenu();
-        sendTranslate();
-    });
-    
-    actionDiscuss.addEventListener('click', () => {
-        closeActionMenu();
-        const input = document.getElementById('userInput');
-        const message = input.value.trim();
-        if (!message) {
-            addMessage('💡 Напишите ситуацию, например: "Что сказать когда зашел в аудиторию?"', 'bot');
-            return;
-        }
-        if (waitingForName) {
-            saveUserNameFromMessage(message);
+    if (actionDiscuss) {
+        actionDiscuss.addEventListener('click', () => {
+            closeActionMenu();
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) {
+                addMessage('💡 Напишите ситуацию, например: "Что сказать когда зашел в аудиторию?"', 'bot');
+                return;
+            }
+            if (waitingForName) {
+                saveUserNameFromMessage(message);
+                input.value = '';
+                return;
+            }
+            addMessage(message, 'user');
             input.value = '';
-            return;
-        }
-        addMessage(message, 'user');
-        input.value = '';
-        discussSituation(message);
-    });
+            discussSituation(message);
+        });
+    }
     
-    // Enter также открывает меню (не отправляет сразу)
-    document.getElementById('userInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            showActionMenu();
-        }
-    });
+    const userInput = document.getElementById('userInput');
+    if (userInput) {
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                showActionMenu();
+            }
+        });
+    }
 });
