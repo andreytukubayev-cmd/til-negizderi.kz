@@ -7,15 +7,19 @@
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
 </head>
 <body>
+    <!-- Кнопка гамбургера (для мобильных) -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
     <div class="container">
         <!-- Левое меню -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="profile">
                 <div class="avatar-placeholder">
                     <img src="as.jpg" alt="Тукубаев А.С." class="avatar">
                 </div>
                 <h2>Тукубаев А.С.</h2>
-                <p>Методика изучения<br>казахского языка для педагогов и госслужащих</p>
+                <p>Методика изучения<br>казахского языка</p>
             </div>
 
             <div class="method-info">
@@ -38,14 +42,6 @@
                 <div class="stat-item">
                     <span class="stat-label">Фраз переведено:</span>
                     <span class="stat-value" id="totalTranslations">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Активных пользователей:</span>
-                    <span class="stat-value">128</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Эффективность:</span>
-                    <span class="stat-value">94%</span>
                 </div>
             </div>
         </div>
@@ -89,8 +85,37 @@
         </div>
     </div>
 
-    <!-- Подключение скриптов -->
     <script src="js/localTranslator.js"></script>
     <script src="js/chat.js"></script>
+    
+    <script>
+        // Скрипт для работы выдвижного меню
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+        
+        function openMenu() {
+            sidebar.classList.add('open');
+            menuOverlay.classList.add('active');
+        }
+        
+        function closeMenu() {
+            sidebar.classList.remove('open');
+            menuOverlay.classList.remove('active');
+        }
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', openMenu);
+        }
+        
+        if (menuOverlay) {
+            menuOverlay.addEventListener('click', closeMenu);
+        }
+        
+        // Закрываем меню при клике на ссылку внутри (опционально)
+        document.querySelectorAll('.sidebar a, .sidebar .stat-item, .sidebar .method-info li').forEach(el => {
+            el.addEventListener('click', closeMenu);
+        });
+    </script>
 </body>
 </html>
