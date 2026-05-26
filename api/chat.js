@@ -1,4 +1,4 @@
-// api/chat.js — с поддержкой двух режимов
+// api/chat.js — исправленная версия без транскрипции
 
 export default async function handler(req, res) {
   // CORS настройки
@@ -35,12 +35,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  // Используем переданный systemPrompt или стандартный для перевода
+  // Используем переданный systemPrompt или стандартный для перевода (БЕЗ ТРАНСКРИПЦИИ)
   const finalSystemPrompt = systemPrompt || `Ты — переводчик с русского на казахский язык.
 
 Переведи фразу: "${message}"
 
-ОТВЕТЬ ТОЛЬКО В ЭТОМ ФОРМАТЕ, НИЧЕГО НЕ ПРОПУСКАЯ:
+ОТВЕТЬ ТОЛЬКО В ЭТОМ ФОРМАТЕ:
 
 Перевод: [перевод на казахском]
 
@@ -48,11 +48,9 @@ export default async function handler(req, res) {
 [слово1] = [перевод1]
 [слово2] = [перевод2]
 
-Транскрипция: [русскими буквами]
-
 Разговорный вариант: [короткая разговорная форма]
 
-ВАЖНО: ВСЕГДА заполняй все 4 поля. Если короткой формы нет, напиши ту же фразу.`;
+ВАЖНО: Не добавляй транскрипцию и произношение. Только перевод, разбор слов и разговорный вариант.`;
 
   try {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -102,7 +100,7 @@ export default async function handler(req, res) {
   }
 }
 
-// Функция парсинга ответа
+// Функция парсинга ответа (без транскрипции)
 function simpleParse(text) {
   const lines = text.split('\n');
   let wordBreakdown = [];
@@ -112,24 +110,28 @@ function simpleParse(text) {
     line = line.trim();
     if (!line) continue;
     
+    // Пропускаем строки с транскрипцией (на всякий случай)
+    if (line.startsWith('Транскрипция:') || line.startsWith('🔊')) {
+      continue;
+    }
+    
     let cleanedLine = line;
     
     if (line.startsWith('Перевод:')) {
       cleanedLine = '✅ ' + line;
-    } else if (line.startsWith('Разбор:')) {
+    } else if (line.startsWith('Разбор слов:') || line.startsWith('Разбор:')) {
       cleanedLine = '📖 ' + line;
-    } else if (line.startsWith('Транскрипция:')) {
-      cleanedLine = '🔊 ' + line;
-    } else if (line.startsWith('Коротко:')) {
+    } else if (line.startsWith('Разговорный вариант:') || line.startsWith('Коротко:')) {
       cleanedLine = '💬 ' + line;
     }
     
+    // Парсим разбор слов (строки с = )
     if (line.includes('=') && !line.includes('Перевод') && !line.includes('Разбор')) {
       const parts = line.split('=');
       if (parts.length === 2) {
         const word = parts[0].trim();
         const meaning = parts[1].trim();
-        if (word && meaning && word.length < 30) {
+        if (word && meaning && word.length < 40) {
           wordBreakdown.push({ word, meaning });
         }
       }
@@ -139,6 +141,7 @@ function simpleParse(text) {
     formatted += cleanedLine + '\n';
   }
   
+  // Если не нашли разбор слов, пробуем разбить перевод на слова
   if (wordBreakdown.length === 0) {
     for (let line of lines) {
       if (line.startsWith('Перевод:')) {
@@ -154,8 +157,11 @@ function simpleParse(text) {
     }
   }
   
+  // Убираем лишние пустые строки
+  let cleanFormatted = formatted.replace(/\n{3,}/g, '\n\n');
+  
   return {
-    formatted: formatted || text,
+    formatted: cleanFormatted || text,
     wordBreakdown: wordBreakdown
   };
 }
