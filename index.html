@@ -2,76 +2,72 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="stylesheet.css">
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
 </head>
 <body>
-    <!-- Кнопка гамбургера (для мобильных) -->
-    <button class="menu-toggle" id="menuToggle">☰</button>
+    <!-- Оверлей для затемнения -->
     <div class="menu-overlay" id="menuOverlay"></div>
 
-    <div class="container">
-        <!-- Левое меню -->
-        <div class="sidebar" id="sidebar">
-            <div class="profile">
-                <div class="avatar-placeholder">
-                    <img src="as.jpg" alt="Тукубаев А.С." class="avatar">
-                </div>
-                <h2>Тукубаев А.С.</h2>
-                <p>Методика изучения<br>казахского языка</p>
+    <!-- Левое меню (выдвижное) -->
+    <div class="sidebar" id="sidebar">
+        <div class="profile">
+            <div class="avatar-placeholder">
+                <img src="as.jpg" alt="Тукубаев А.С." class="avatar">
             </div>
+            <h2>Тукубаев А.С.</h2>
+            <p>Методика изучения<br>казахского языка</p>
+        </div>
 
-            <div class="method-info">
-                <h3>🎯 О методике</h3>
-                <p>Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.</p>
+        <div class="method-info">
+            <h3>🎯 О методике</h3>
+            <p>Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.</p>
 
-                <ul>
-                    <li><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</li>
-                    <li><b>Деловая коммуникация:</b> Изучение структур, необходимых для профессионального общения и официального стиля.</li>
-                    <li><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную рабочую деятельность.</li>
-                </ul>
+            <ul>
+                <li><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</li>
+                <li><b>Деловая коммуникация:</b> Изучение структур, необходимых для профессионального общения и официального стиля.</li>
+                <li><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную рабочую деятельность.</li>
+            </ul>
 
-                <div style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; font-style: italic; font-size: 11px; margin-top: 15px;">
-                    "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
-                </div>
+            <div style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; font-style: italic; font-size: 11px; margin-top: 15px;">
+                "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
             </div>
+        </div>
 
-            <div class="stats">
-                <h3>📊 Статистика</h3>
-                <div class="stat-item">
-                    <span class="stat-label">Фраз переведено:</span>
-                    <span class="stat-value" id="totalTranslations">0</span>
+        <div class="stats">
+            <h3>📊 Статистика</h3>
+            <div class="stat-item">
+                <span class="stat-label">Фраз переведено:</span>
+                <span class="stat-value" id="totalTranslations">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основная область чата -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="header-text">
+                <h1>🤖 AI-помощник по казахскому языку</h1>
+                <p>Перевод и ситуации по методике Тукубаева А.С.</p>
+            </div>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="message bot">
+                <div class="message-content">
+                    👋 <strong>Здравствуйте!</strong><br><br>
+                    Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
+                    <strong>Как ваше имя?</strong>
                 </div>
             </div>
         </div>
 
-        <!-- Область чата -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <h1>🤖 AI-помощник по казахскому языку</h1>
-                <p>Помогу носителям русского языка освоить казахский язык по методике Тукубаева А.С.</p>
-            </div>
-
-            <div class="messages" id="messages">
-                <div class="message bot">
-                    <div class="message-content">
-                        👋 <strong>Здравствуйте!</strong><br><br>
-                        Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
-                        <strong>Как ваше имя?</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-area">
-                <input 
-                    type="text" 
-                    id="userInput" 
-                    placeholder="Напишите фразу на русском..."
-                >
-                <button id="translateBtn">🔄 Перевести</button>
-                <button id="discussBtn">💬 Обсудить ситуацию</button>
-            </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Напишите фразу на русском...">
+            <button id="translateBtn">🔄 Перевести</button>
+            <button id="discussBtn">💬 Обсудить</button>
         </div>
     </div>
 
@@ -89,7 +85,7 @@
     <script src="js/chat.js"></script>
     
     <script>
-        // Скрипт для работы выдвижного меню
+        // Управление выдвижным меню
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const menuOverlay = document.getElementById('menuOverlay');
@@ -97,24 +93,41 @@
         function openMenu() {
             sidebar.classList.add('open');
             menuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
         
         function closeMenu() {
             sidebar.classList.remove('open');
             menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
         }
         
         if (menuToggle) {
-            menuToggle.addEventListener('click', openMenu);
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebar.classList.contains('open')) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            });
         }
         
         if (menuOverlay) {
             menuOverlay.addEventListener('click', closeMenu);
         }
         
-        // Закрываем меню при клике на ссылку внутри (опционально)
-        document.querySelectorAll('.sidebar a, .sidebar .stat-item, .sidebar .method-info li').forEach(el => {
-            el.addEventListener('click', closeMenu);
+        // Закрываем меню при свайпе влево
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            if (sidebar.classList.contains('open') && (touchEndX - touchStartX) < -50) {
+                closeMenu();
+            }
         });
     </script>
 </body>
