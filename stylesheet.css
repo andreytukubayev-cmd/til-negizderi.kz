@@ -18,53 +18,42 @@ body {
     position: relative;
 }
 
-/* Левое меню - выдвижное на мобильных */
+/* Левое меню - выдвижное */
 .sidebar {
-    width: 320px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100%;
     background: linear-gradient(180deg, #2c3e66 0%, #1a2639 100%);
     color: white;
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
     overflow-y: auto;
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
-    z-index: 100;
-}
-
-/* Кнопка гамбургера (скрыта на десктопе) */
-.menu-toggle {
-    display: none;
-    position: fixed;
-    top: 15px;
-    left: 15px;
     z-index: 200;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
 }
 
-.menu-toggle:hover {
-    transform: scale(1.05);
+.sidebar.open {
+    transform: translateX(0);
 }
 
-/* Оверлей для затемнения при открытом меню */
+/* Оверлей */
 .menu-overlay {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 90;
+    z-index: 150;
+    display: none;
+}
+
+.menu-overlay.active {
+    display: block;
 }
 
 .profile {
@@ -184,25 +173,54 @@ body {
     display: flex;
     flex-direction: column;
     background: #f5f5f5;
-    min-width: 0;
+    width: 100%;
 }
 
 .chat-header {
     background: white;
-    padding: 20px 30px;
+    padding: 15px 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-.chat-header h1 {
+/* Кнопка гамбургера в шапке */
+.menu-toggle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-toggle:hover {
+    transform: scale(1.05);
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-text h1 {
     color: #333;
-    font-size: 1.5em;
+    font-size: 1.2em;
+    margin: 0;
 }
 
-.chat-header p {
+.header-text p {
     color: #666;
-    font-size: 0.9em;
-    margin-top: 5px;
+    font-size: 0.8em;
+    margin-top: 4px;
 }
 
 .messages {
@@ -260,15 +278,6 @@ body {
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.message-content pre {
-    background: #f4f4f4;
-    padding: 10px;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 8px 0;
-    font-size: 0.9em;
-}
-
 .typing-indicator {
     display: none;
     padding: 12px 18px;
@@ -309,7 +318,7 @@ body {
 
 .input-area {
     background: white;
-    padding: 20px;
+    padding: 15px 20px;
     border-top: 1px solid #e0e0e0;
     display: flex;
     gap: 10px;
@@ -343,22 +352,16 @@ body {
     white-space: nowrap;
 }
 
-.input-area button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
 .input-area button:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
 
 .input-area button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
 }
 
-/* Модальное окно для имени */
+/* Модальное окно */
 .modal {
     display: flex;
     position: fixed;
@@ -422,15 +425,8 @@ body {
     font-size: 1em;
 }
 
-/* Стили для форматирования ответа */
 .message-content strong {
     color: #667eea;
-}
-
-.message-content hr {
-    margin: 10px 0;
-    border: none;
-    border-top: 1px solid #e0e0e0;
 }
 
 /* Scrollbar */
@@ -447,57 +443,59 @@ body {
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
+/* ============================================ */
+/* ДЕСКТОПНАЯ ВЕРСИЯ (ширина > 768px) */
+/* ============================================ */
+@media (min-width: 769px) {
+    .sidebar {
+        position: relative;
+        transform: translateX(0);
+        width: 320px;
+    }
+    
+    .menu-toggle {
+        display: none;
+    }
+    
+    .menu-overlay {
+        display: none !important;
+    }
+    
+    .chat-header {
+        padding: 20px 30px;
+    }
+    
+    .header-text h1 {
+        font-size: 1.5em;
+    }
+    
+    .header-text p {
+        font-size: 0.9em;
+    }
 }
 
 /* ============================================ */
-/* МОБИЛЬНАЯ АДАПТАЦИЯ (выдвижное меню) */
+/* МОБИЛЬНАЯ ВЕРСИЯ (ширина < 768px) */
 /* ============================================ */
 @media (max-width: 768px) {
-    /* Кнопка гамбургера */
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* Меню скрыто за экраном */
     .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
-        transform: translateX(-100%);
-        z-index: 150;
         width: 280px;
     }
     
-    /* Открытое меню */
-    .sidebar.open {
-        transform: translateX(0);
+    .menu-toggle {
+        display: flex;
     }
     
-    /* Оверлей */
-    .menu-overlay {
-        display: block;
-    }
-    
-    .menu-overlay.active {
-        display: block;
-    }
-    
-    /* Шапка чата с отступом для кнопки */
     .chat-header {
-        padding: 15px 15px 15px 70px;
+        padding: 12px 15px;
     }
     
-    .chat-header h1 {
-        font-size: 1.1em;
+    .header-text h1 {
+        font-size: 1em;
     }
     
-    .chat-header p {
-        font-size: 0.75em;
+    .header-text p {
+        font-size: 0.7em;
     }
     
     .messages {
@@ -526,7 +524,6 @@ body {
         font-size: 0.75em;
     }
     
-    /* Адаптация профиля внутри меню */
     .profile {
         padding: 20px 15px;
     }
@@ -547,17 +544,9 @@ body {
     .method-info h3, .stats h3 {
         font-size: 1em;
     }
-    
-    .method-info p, .method-info li {
-        font-size: 0.8em;
-    }
 }
 
 @media (max-width: 480px) {
-    .chat-header {
-        padding: 12px 12px 12px 60px;
-    }
-    
     .input-area button {
         padding: 8px 10px;
         font-size: 0.7em;
@@ -566,9 +555,5 @@ body {
     .message-content {
         max-width: 90%;
         font-size: 0.85em;
-    }
-    
-    .sidebar {
-        width: 260px;
     }
 }
