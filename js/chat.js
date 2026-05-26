@@ -591,16 +591,42 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.key === 'Enter') saveUserName();
     });
     
-    document.getElementById('userInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendTranslate();
-    });
+    // Показываем меню выбора при нажатии на кнопку отправки
+    const sendBtn = document.getElementById('sendBtn');
+    const actionMenu = document.getElementById('actionMenu');
+    const actionMenuOverlay = document.getElementById('actionMenuOverlay');
+    const actionTranslate = document.getElementById('actionTranslate');
+    const actionDiscuss = document.getElementById('actionDiscuss');
     
-    document.getElementById('translateBtn').addEventListener('click', sendTranslate);
-    document.getElementById('discussBtn').addEventListener('click', () => {
+    function closeActionMenu() {
+        actionMenu.classList.remove('active');
+    }
+    
+    function showActionMenu() {
         const input = document.getElementById('userInput');
         const message = input.value.trim();
         if (!message) {
-            addMessage('💡 Напишите ситуацию, например: "Что сказать когда зашел в аудиторию с коллегами?"', 'bot');
+            addMessage('💡 Напишите фразу или ситуацию, а затем выберите действие.', 'bot');
+            return;
+        }
+        actionMenu.classList.add('active');
+    }
+    
+    sendBtn.addEventListener('click', showActionMenu);
+    
+    actionMenuOverlay.addEventListener('click', closeActionMenu);
+    
+    actionTranslate.addEventListener('click', () => {
+        closeActionMenu();
+        sendTranslate();
+    });
+    
+    actionDiscuss.addEventListener('click', () => {
+        closeActionMenu();
+        const input = document.getElementById('userInput');
+        const message = input.value.trim();
+        if (!message) {
+            addMessage('💡 Напишите ситуацию, например: "Что сказать когда зашел в аудиторию?"', 'bot');
             return;
         }
         if (waitingForName) {
@@ -611,5 +637,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         addMessage(message, 'user');
         input.value = '';
         discussSituation(message);
+    });
+    
+    // Enter также открывает меню (не отправляет сразу)
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            showActionMenu();
+        }
     });
 });
