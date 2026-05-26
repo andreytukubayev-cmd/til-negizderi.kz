@@ -64,12 +64,32 @@
             </div>
         </div>
 
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Напишите фразу на русском...">
-            <button id="translateBtn">🔄 Перевести</button>
-            <button id="discussBtn">💬 Обсудить</button>
-        </div>
+       <div class="input-area">
+    <input type="text" id="userInput" placeholder="Напишите фразу на русском..." />
+    <button id="sendBtn">📤 Отправить</button>
+</div>
+
+<!-- Всплывающее меню выбора действия -->
+<div class="action-menu" id="actionMenu">
+    <div class="action-menu-overlay" id="actionMenuOverlay"></div>
+    <div class="action-menu-content">
+        <div class="action-menu-title">Выберите действие</div>
+        <button id="actionTranslate" class="action-btn translate-btn">
+            <span class="action-icon">🔄</span>
+            <div class="action-text">
+                <div class="action-name">Перевести</div>
+                <div class="action-desc">Точный перевод с разбором слов</div>
+            </div>
+        </button>
+        <button id="actionDiscuss" class="action-btn discuss-btn">
+            <span class="action-icon">💬</span>
+            <div class="action-text">
+                <div class="action-name">Обсудить ситуацию</div>
+                <div class="action-desc">Получить совет и пример диалога</div>
+            </div>
+        </button>
     </div>
+</div>
 
     <!-- Модальное окно для ввода имени -->
     <div id="nameModal" class="modal">
