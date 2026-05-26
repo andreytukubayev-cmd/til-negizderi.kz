@@ -1,4 +1,4 @@
-// js/chat.js - полная версия с парсингом ИИ и локальным переводчиком
+// js/chat.js - с двумя режимами: перевод и обсуждение ситуаций
 
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
@@ -8,6 +8,7 @@ let totalTranslations = localStorage.getItem('totalTranslations') || 0;
 // Флаги для автоматического переключения
 let aiAvailable = true;
 let lastAICheck = 0;
+let currentMode = 'translate'; // 'translate' или 'discuss'
 
 // Загружаем JSON с фразами
 async function loadPhrases() {
@@ -33,7 +34,8 @@ function updateStats() {
 function checkUserName() {
     if (userName) {
         document.getElementById('nameModal').style.display = 'none';
-        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык. Напиши мне что-нибудь на русском, я уже готов начать!`, 'bot');
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
+        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     } else {
         document.getElementById('nameModal').style.display = 'flex';
         waitingForName = true;
@@ -49,13 +51,13 @@ function saveUserName() {
         localStorage.setItem('userName', userName);
         document.getElementById('nameModal').style.display = 'none';
         waitingForName = false;
-        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык. Напиши мне что-нибудь на русском, я уже готов начать!`, 'bot');
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
+        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     } else {
         alert('Пожалуйста, введите ваше имя');
     }
 }
 
-// Функция для парсинга ответа от ИИ
 // Функция для парсинга ответа от ИИ (DeepSeek)
 function formatAIResponse(text) {
     const lines = text.split('\n');
@@ -67,16 +69,13 @@ function formatAIResponse(text) {
         line = line.trim();
         if (!line) continue;
         
-        // Перевод (разные варианты написания)
         if (line.startsWith('Перевод:') || line.startsWith('✅ Перевод:') || line.startsWith('Вариант для работы:')) {
             translation = line.replace(/^(✅ )?(Перевод:|Вариант для работы:)\s*/, '');
             formatted += `✅ **${translation}**\n\n`;
         }
-        // Разбор слов (разные варианты написания)
         else if (line.startsWith('Разбор:') || line.startsWith('Разбор слов:')) {
             formatted += `📖 **Разбор слов:**\n`;
         }
-        // Строки с = (разбор отдельных слов)
         else if (line.includes('=') && !line.startsWith('Транскрипция') && !line.startsWith('🔊')) {
             const [word, meaning] = line.split('=').map(s => s.trim());
             if (word && meaning) {
@@ -84,14 +83,12 @@ function formatAIResponse(text) {
                 formatted += `  • ${word} = ${meaning}\n`;
             }
         }
-        // Транскрипция — только если есть текст
         else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:')) {
             const pron = line.replace(/^(🔊 )?Транскрипция:\s*/, '');
             if (pron && pron.trim() !== '') {
                 formatted += `\n🔊 **Как произнести:** ${pron}\n`;
             }
         }
-        // Разговорный вариант — только если есть текст
         else if (line.startsWith('Коротко:') || 
                  line.startsWith('Разговорный:') || 
                  line.startsWith('Разговорный вариант:') ||
@@ -109,8 +106,8 @@ function formatAIResponse(text) {
         breakdown: breakdown
     };
 }
-// Форматирование локального ответа (из JSON словаря)
-// Форматирование локального ответа (из JSON словаря)
+
+// Форматирование локального ответа
 function formatLocalResponse(result) {
     let output = `✅ **${result.translation}**\n\n`;
     
@@ -122,12 +119,10 @@ function formatLocalResponse(result) {
         output += `\n`;
     }
     
-    // Транскрипция — только если есть и не пустая
     if (result.pronunciation && result.pronunciation.trim() !== '' && result.pronunciation !== result.translation) {
         output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
     }
     
-    // Разговорный вариант — только если есть и не пустой
     const shortVariant = result.short || result.shortVariant || '';
     if (shortVariant && shortVariant.trim() !== '' && shortVariant !== result.translation) {
         output += `\n💬 **Разговорный вариант:** ${shortVariant}`;
@@ -136,8 +131,168 @@ function formatLocalResponse(result) {
     return output;
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — с автоматическим переключением
-async function sendMessage() {
+// НОВАЯ ФУНКЦИЯ: Обсуждение ситуации (генерация идеи диалога)
+async function discussSituation(message) {
+    showTypingIndicator();
+    const sendButton = document.getElementById('discussBtn');
+    const translateBtn = document.getElementById('translateBtn');
+    sendButton.disabled = true;
+    translateBtn.disabled = true;
+    
+    let reply = '';
+    let wordBreakdown = [];
+    
+    // Пробуем DeepSeek
+    if (aiAvailable) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            
+            const discussPrompt = `Ты — эксперт по казахскому языку для госслужащих и педагогов. 
+Пользователь спрашивает: "${message}"
+
+Твоя задача: дать совет, как лучше сказать на казахском в этой ситуации, и привести пример диалога.
+
+ОТВЕТЬ В ТАКОМ ФОРМАТЕ:
+
+💡 **Совет:** [краткий совет, что уместно сказать]
+
+📝 **Пример фразы:** [основная фраза на казахском]
+Разбор: [разбор слов через запятую]
+Произношение: [транскрипция]
+
+🗣️ **Мини-диалог:**
+— [первая реплика на казахском] (перевод)
+— [ответ на казахском] (перевод)
+
+💬 **Коротко:** [короткий вариант]
+
+Важно: дай практичный, применимый в работе совет.`;
+            
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: message,
+                    systemPrompt: discussPrompt,
+                    userName: userName 
+                }),
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    reply = data.reply;
+                    // Парсим ответ для красивого форматирования
+                    reply = formatDiscussResponse(reply);
+                    wordBreakdown = [];
+                    aiAvailable = true;
+                } else {
+                    throw new Error('API error');
+                }
+            } else {
+                throw new Error('Network error');
+            }
+        } catch (error) {
+            console.log('AI unavailable for discuss, using local fallback');
+            aiAvailable = false;
+            lastAICheck = Date.now();
+            reply = getLocalDiscussFallback(message);
+        }
+    } else {
+        reply = getLocalDiscussFallback(message);
+    }
+    
+    // Периодически пробуем включить ИИ
+    if (!aiAvailable && (Date.now() - lastAICheck) > 120000) {
+        aiAvailable = true;
+    }
+    
+    hideTypingIndicator();
+    addMessage(reply, 'bot', wordBreakdown);
+    
+    sendButton.disabled = false;
+    translateBtn.disabled = false;
+}
+
+// Форматирование ответа для режима "обсудить ситуацию"
+function formatDiscussResponse(text) {
+    // Простое форматирование — заменяем маркеры на эмодзи
+    let formatted = text
+        .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
+        .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
+        .replace(/🗣️ \*\*Мини-диалог:\*\*/g, '\n🗣️ **Мини-диалог:**')
+        .replace(/💬 \*\*Коротко:\*\*/g, '\n💬 **Коротко:**')
+        .replace(/Разбор:/g, '  📖 Разбор:')
+        .replace(/Произношение:/g, '  🔊 Произношение:');
+    
+    return formatted;
+}
+
+// Локальный fallback для ситуаций
+function getLocalDiscussFallback(message) {
+    const lowerMsg = message.toLowerCase();
+    
+    // Базовые ситуации
+    if (lowerMsg.includes('зашел') || lowerMsg.includes('заходить') || lowerMsg.includes('войти')) {
+        return `💡 **Совет:** Когда вы заходите в аудиторию или кабинет, уместно поздороваться и представиться, если вы впервые.
+
+📝 **Пример фразы:** Сәлеметсіз бе! Менің атым ${userName || 'Асет'}.
+  📖 Разбор: Сәлеметсіз бе = здравствуйте, Менің атым = меня зовут
+  🔊 Произношение: Сәлеметсіз бе! Мениң атым ${userName || 'Асет'}.
+
+🗣️ **Мини-диалог:**
+— Сәлеметсіз бе! Кіруге бола ма? (Здравствуйте! Можно войти?)
+— Иә, кіріңіз. (Да, входите.)
+
+💬 **Коротко:** Сәлем! Кіруге бола ма?`;
+    }
+    
+    if (lowerMsg.includes('совещание') || lowerMsg.includes('планерка')) {
+        return `💡 **Совет:** На совещании важно вежливо попросить слово или задать вопрос.
+
+📝 **Пример фразы:** Сөз сұраймын. (Прошу слово)
+  📖 Разбор: Сөз = слово, сұраймын = прошу
+  🔊 Произношение: Сөз сураймын
+
+🗣️ **Мини-диалог:**
+— Сөз сұраймын, келесі мәселе бойынша. (Прошу слово по следующему вопросу)
+— Иә, айтыңыз. (Да, говорите.)
+
+💬 **Коротко:** Сөз бересіз бе?`;
+    }
+    
+    if (lowerMsg.includes('коллега') || lowerMsg.includes('обратиться')) {
+        return `💡 **Совет:** Чтобы вежливо обратиться к коллеге, используйте имя и вежливую форму.
+
+📝 **Пример фразы:** ${userName || 'Айгүл'} ханым, көмектесе аласыз ба? (${userName || 'Айгуль'}, можете помочь?)
+  📖 Разбор: ханым = госпожа, көмектесе аласыз ба = можете помочь
+  🔊 Произношение: ${userName || 'Айгүл'} ханым, көмектесе аласыз ба?
+
+🗣️ **Мини-диалог:**
+— Кешіріңіз, көмектесе аласыз ба? (Извините, можете помочь?)
+— Әрине, қандай көмек керек? (Конечно, какая помощь нужна?)
+
+💬 **Коротко:** Көмектесесіз бе?`;
+    }
+    
+    return `💡 **Совет:** Я учусь подбирать фразы для разных ситуаций. Попробуйте спросить конкретнее, например:
+• "Что сказать когда зашел в аудиторию?"
+• "Как обратиться к коллеге?"
+• "Что сказать на совещании?"
+
+📝 **А пока, вот универсальная вежливая фраза:** Кешіріңіз, көмектесе аласыз ба?
+  🔊 Произношение: Кешириңиз, көмектесе аласыз ба?
+  📖 Перевод: Извините, не могли бы вы помочь?
+
+💬 **Коротко:** Көмектесесіз бе?`;
+}
+
+// ГЛАВНАЯ ФУНКЦИЯ ОТПРАВКИ — режим "Перевести"
+async function sendTranslate() {
     const input = document.getElementById('userInput');
     let message = input.value.trim();
     
@@ -153,23 +308,38 @@ async function sendMessage() {
     input.value = '';
     showTypingIndicator();
     
-    const sendButton = document.getElementById('sendButton');
-    sendButton.disabled = true;
+    const translateBtn = document.getElementById('translateBtn');
+    const discussBtn = document.getElementById('discussBtn');
+    translateBtn.disabled = true;
+    discussBtn.disabled = true;
     
     let reply = '';
     let wordBreakdown = [];
     let success = false;
     
-    // Пробуем DeepSeek (с таймаутом 5 секунд)
+    // Пробуем DeepSeek
     if (aiAvailable) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
             
+            const translatePrompt = `Ты — переводчик с русского на казахский. Переведи фразу: "${message}"
+Ответь строго в формате:
+Перевод: [перевод]
+Разбор слов:
+[слово1] = [перевод1]
+[слово2] = [перевод2]
+Транскрипция: [русскими буквами]
+Разговорный вариант: [коротко]`;
+            
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message, userName: userName }),
+                body: JSON.stringify({ 
+                    message: message,
+                    systemPrompt: translatePrompt,
+                    userName: userName 
+                }),
                 signal: controller.signal
             });
             
@@ -181,11 +351,9 @@ async function sendMessage() {
                     success = true;
                     const parsedAI = formatAIResponse(data.reply);
                     reply = parsedAI.formatted;
-                    wordBreakdown = parsedAI.breakdown || data.wordBreakdown || [];
+                    wordBreakdown = parsedAI.breakdown || [];
                     aiAvailable = true;
-                } else if (data.error && (data.error.includes('busy') || data.error.includes('Service is too busy'))) {
-                    aiAvailable = false;
-                    lastAICheck = Date.now();
+                } else {
                     success = false;
                 }
             } else {
@@ -222,10 +390,11 @@ async function sendMessage() {
     localStorage.setItem('totalTranslations', totalTranslations);
     updateStats();
     
-    sendButton.disabled = false;
+    translateBtn.disabled = false;
+    discussBtn.disabled = false;
 }
 
-// Форматирование ответа с подсказками (для обоих режимов)
+// Форматирование ответа с подсказками
 function addMessage(text, sender, wordBreakdown = null) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
@@ -268,7 +437,6 @@ function formatMessageWithTooltips(text, wordBreakdown) {
             formatted += `<div style="margin-left: 20px; color: #555;">${line}</div>`;
         }
         else if (line.includes('🔊') && (line.includes('Как произнести') || line.includes('**Как произнести**'))) {
-            // Проверяем, есть ли содержимое после заголовка
             const lineIndex = lines.indexOf(line);
             const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
             if (nextLine && nextLine.trim() && !nextLine.includes('💬')) {
@@ -276,7 +444,6 @@ function formatMessageWithTooltips(text, wordBreakdown) {
             }
         }
         else if (line.includes('💬') && (line.includes('Разговорный вариант') || line.includes('**Разговорный вариант**'))) {
-            // Проверяем, есть ли содержимое после заголовка
             const lineIndex = lines.indexOf(line);
             const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
             if (nextLine && nextLine.trim()) {
@@ -382,7 +549,8 @@ function saveUserNameFromMessage(name) {
             botQuestion.remove();
         }
         addMessage(name, 'user');
-        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык. Просто пишите фразы на русском, а я буду переводить.`, 'bot');
+        addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык.`, 'bot');
+        addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     }
 }
 
@@ -405,7 +573,7 @@ function hideTypingIndicator() {
     }
 }
 
-// Инициализация при загрузке страницы
+// Инициализация
 document.addEventListener('DOMContentLoaded', async function() {
     await loadPhrases();
     checkUserName();
@@ -415,6 +583,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     document.getElementById('userInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') sendTranslate();
+    });
+    
+    document.getElementById('translateBtn').addEventListener('click', sendTranslate);
+    document.getElementById('discussBtn').addEventListener('click', () => {
+        const input = document.getElementById('userInput');
+        const message = input.value.trim();
+        if (!message) {
+            addMessage('💡 Напишите ситуацию, например: "Что сказать когда зашел в аудиторию с коллегами?"', 'bot');
+            return;
+        }
+        if (waitingForName) {
+            saveUserNameFromMessage(message);
+            input.value = '';
+            return;
+        }
+        addMessage(message, 'user');
+        input.value = '';
+        discussSituation(message);
     });
 });
