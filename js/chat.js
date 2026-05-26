@@ -1,11 +1,5 @@
 // js/chat.js - с двумя режимами через меню
-// Принудительная прокрутка вниз
-function scrollToBottom() {
-    const messagesContainer = document.getElementById('messages');
-    if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-}
+
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
@@ -35,6 +29,22 @@ function updateStats() {
         document.getElementById('totalTranslations').textContent = userStat;
     } else {
         document.getElementById('totalTranslations').textContent = '0';
+    }
+}
+
+// ГЛАВНАЯ ФУНКЦИЯ ПРОКРУТКИ - ИСПРАВЛЕНА
+function forceScrollToBottom() {
+    const messagesContainer = document.getElementById('messages');
+    if (messagesContainer) {
+        // Мгновенная прокрутка
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Дополнительная прокрутка с задержкой для асинхронного контента
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 50);
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 150);
     }
 }
 
@@ -237,6 +247,8 @@ async function discussSituation(message) {
         incrementUserStat(userName);
         updateStats();
     }
+    
+    forceScrollToBottom(); // Прокрутка после ответа
 }
 
 function formatDiscussResponse(text) {
@@ -386,9 +398,11 @@ async function sendTranslate() {
         incrementUserStat(userName);
         updateStats();
     }
+    
+    forceScrollToBottom(); // Прокрутка после ответа
 }
 
-// Форматирование ответа с подсказками (для обоих режимов)
+// Форматирование ответа с подсказками - ИСПРАВЛЕНА (добавлена прокрутка)
 function addMessage(text, sender, wordBreakdown = null) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
@@ -407,11 +421,10 @@ function addMessage(text, sender, wordBreakdown = null) {
     messageDiv.appendChild(contentDiv);
     messagesContainer.appendChild(messageDiv);
     
-    // Прокрутка вниз с небольшой задержкой
-    setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 10);
+    // Прокрутка вниз
+    forceScrollToBottom();
 }
+
 function formatMessageWithTooltips(text, wordBreakdown) {
     const wordMap = {};
     wordBreakdown.forEach(item => {
@@ -549,6 +562,7 @@ function saveUserNameFromMessage(name) {
         updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык.`, 'bot');
         addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
+        forceScrollToBottom();
     }
 }
 
@@ -561,10 +575,7 @@ function showTypingIndicator() {
     typingIndicator.id = 'typingIndicator';
     typingIndicator.innerHTML = `<div class="typing-indicator" style="display: block;"><span></span><span></span><span></span></div>`;
     messagesContainer.appendChild(typingIndicator);
-    
-    setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 10);
+    forceScrollToBottom();
 }
 
 function hideTypingIndicator() {
