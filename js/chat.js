@@ -249,37 +249,89 @@ async function discussSituation(message) {
 }
 
 function formatDiscussResponse(text) {
-    let formatted = text
-        .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
-        .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
-        .replace(/🗣️ \*\*Мини-диалог:\*\*/g, '\n🗣️ **Мини-диалог:**')
-        .replace(/💬 \*\*Коротко:\*\*/g, '\n💬 **Коротко:**');
+    const lines = text.split('\n');
+    let result = [];
+    let inBreakdown = false;
     
-    // Обработка разбора слов - форматируем красиво
-    formatted = formatted.replace(/Разбор:\s*(.+?)(?=\n|$)/g, (match, words) => {
-        const wordPairs = words.split(',').map(pair => pair.trim());
-        let formattedBreakdown = '\n📖 **Разбор слов:**\n';
-        wordPairs.forEach(pair => {
-            const [kaz, rus] = pair.split('=').map(s => s.trim());
-            if (kaz && rus) {
-                formattedBreakdown += `  • **${kaz}** — ${rus}\n`;
-            } else if (pair) {
-                formattedBreakdown += `  • ${pair}\n`;
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        
+        // Пропускаем строки с произношением
+        if (line.includes('Произношение:') || line.includes('🔊')) {
+            continue;
+        }
+        
+        // Заголовок совета
+        if (line.includes('**Совет:**') || line.includes('Совет:')) {
+            result.push('💡 **Совет:**');
+            let content = line.replace(/💡\s*\*\*Совет:\*\*/, '').replace(/Совет:/, '').trim();
+            if (content) result.push(content);
+            continue;
+        }
+        
+        // Заголовок примера фразы
+        if (line.includes('**Пример фразы:**') || line.includes('Пример фразы:')) {
+            result.push('\n📝 **Пример фразы:**');
+            let content = line.replace(/📝\s*\*\*Пример фразы:\*\*/, '').replace(/Пример фразы:/, '').trim();
+            if (content) result.push(content);
+            continue;
+        }
+        
+        // Заголовок разбора
+        if (line.includes('**Разбор**') || line.includes('Разбор:') || line.includes('Разбор слов:')) {
+            result.push('\n📖 **Разбор слов:**');
+            inBreakdown = true;
+            continue;
+        }
+        
+        // Строки разбора (с • или * или без)
+        if (inBreakdown && (line.startsWith('•') || line.startsWith('*') || line.includes('=') || line.includes('—'))) {
+            // Очищаем строку
+            let cleanLine = line.replace(/^[•*]\s*/, '');
+            
+            // Разбираем формат "слово = перевод" или "слово — перевод"
+            let match = cleanLine.match(/^([^=—]+)[=—]\s*(.+)$/);
+            if (match) {
+                let word = match[1].trim();
+                let meaning = match[2].trim();
+                result.push(`  • **${word}** — ${meaning}`);
+            } else if (cleanLine) {
+                result.push(`  • ${cleanLine}`);
             }
-        });
-        return formattedBreakdown;
-    });
+            continue;
+        }
+        
+        // Мини-диалог
+        if (line.includes('**Мини-диалог:**') || line.includes('Мини-диалог:')) {
+            result.push('\n🗣️ **Мини-диалог:**');
+            inBreakdown = false;
+            continue;
+        }
+        
+        // Короткий вариант
+        if (line.includes('**Коротко:**') || line.includes('Коротко:')) {
+            result.push('\n💬 **Коротко:**');
+            let content = line.replace(/💬\s*\*\*Коротко:\*\*/, '').replace(/Коротко:/, '').trim();
+            if (content) result.push(content);
+            inBreakdown = false;
+            continue;
+        }
+        
+        // Обычный текст (реплики диалога)
+        if (!inBreakdown && line && !line.includes('**')) {
+            result.push(line);
+        }
+    }
     
-    // Удаляем строку с произношением (если есть)
-    formatted = formatted.replace(/🔊 Произношение:.*?(?=\n|$)/g, '');
-    formatted = formatted.replace(/Произношение:.*?(?=\n|$)/g, '');
+    // Собираем результат
+    let output = result.join('\n');
     
-    // Удаляем пустые строки
-    formatted = formatted.replace(/\n\s*\n/g, '\n');
+    // Убираем множественные пустые строки
+    output = output.replace(/\n{3,}/g, '\n\n');
     
-    return formatted;
+    return output;
 }
-
 function getLocalDiscussFallback(message) {
     const lowerMsg = message.toLowerCase();
     
