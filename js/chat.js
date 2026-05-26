@@ -97,6 +97,7 @@ function saveUserName() {
 }
 
 // Функция для парсинга ответа от ИИ (DeepSeek)
+// Функция для парсинга ответа от ИИ (DeepSeek) - без произношения
 function formatAIResponse(text) {
     const lines = text.split('\n');
     let translation = '';
@@ -118,14 +119,14 @@ function formatAIResponse(text) {
             const [word, meaning] = line.split('=').map(s => s.trim());
             if (word && meaning) {
                 breakdown.push({ word, meaning });
-                formatted += `  • ${word} = ${meaning}\n`;
+                formatted += `  • **${word}** — ${meaning}\n`;
             }
         }
-        else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:')) {
-            const pron = line.replace(/^(🔊 )?Транскрипция:\s*/, '');
-            if (pron && pron.trim() !== '') {
-                formatted += `\n🔊 **Как произнести:** ${pron}\n`;
-            }
+        // Пропускаем транскрипцию/произношение
+        else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:') || 
+                 line.startsWith('Произношение:') || line.startsWith('🔊 Произношение:')) {
+            // Пропускаем - не добавляем в вывод
+            continue;
         }
         else if (line.startsWith('Коротко:') || 
                  line.startsWith('Разговорный:') || 
@@ -145,20 +146,16 @@ function formatAIResponse(text) {
     };
 }
 
-// Форматирование локального ответа
+// Форматирование локального ответа - без произношения
 function formatLocalResponse(result) {
     let output = `✅ **${result.translation}**\n\n`;
     
     if (result.breakdown && result.breakdown.length > 0) {
         output += `📖 **Разбор слов:**\n`;
         result.breakdown.forEach(item => {
-            output += `• ${item.word} = ${item.meaning}\n`;
+            output += `  • **${item.word}** — ${item.meaning}\n`;
         });
         output += `\n`;
-    }
-    
-    if (result.pronunciation && result.pronunciation.trim() !== '' && result.pronunciation !== result.translation) {
-        output += `🔊 **Как произнести:** ${result.pronunciation}\n`;
     }
     
     const shortVariant = result.short || result.shortVariant || '';
@@ -256,9 +253,29 @@ function formatDiscussResponse(text) {
         .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
         .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
         .replace(/🗣️ \*\*Мини-диалог:\*\*/g, '\n🗣️ **Мини-диалог:**')
-        .replace(/💬 \*\*Коротко:\*\*/g, '\n💬 **Коротко:**')
-        .replace(/Разбор:/g, '  📖 Разбор:')
-        .replace(/Произношение:/g, '  🔊 Произношение:');
+        .replace(/💬 \*\*Коротко:\*\*/g, '\n💬 **Коротко:**');
+    
+    // Обработка разбора слов - форматируем красиво
+    formatted = formatted.replace(/Разбор:\s*(.+?)(?=\n|$)/g, (match, words) => {
+        const wordPairs = words.split(',').map(pair => pair.trim());
+        let formattedBreakdown = '\n📖 **Разбор слов:**\n';
+        wordPairs.forEach(pair => {
+            const [kaz, rus] = pair.split('=').map(s => s.trim());
+            if (kaz && rus) {
+                formattedBreakdown += `  • **${kaz}** — ${rus}\n`;
+            } else if (pair) {
+                formattedBreakdown += `  • ${pair}\n`;
+            }
+        });
+        return formattedBreakdown;
+    });
+    
+    // Удаляем строку с произношением (если есть)
+    formatted = formatted.replace(/🔊 Произношение:.*?(?=\n|$)/g, '');
+    formatted = formatted.replace(/Произношение:.*?(?=\n|$)/g, '');
+    
+    // Удаляем пустые строки
+    formatted = formatted.replace(/\n\s*\n/g, '\n');
     
     return formatted;
 }
