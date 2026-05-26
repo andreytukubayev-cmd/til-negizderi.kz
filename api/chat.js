@@ -1,4 +1,4 @@
-// api/chat.js — упрощённая и надёжная версия
+// api/chat.js — с поддержкой двух режимов
 
 export default async function handler(req, res) {
   // CORS настройки
@@ -24,7 +24,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message } = req.body;
+  const { message, userName, systemPrompt } = req.body;
+  
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
   }
@@ -34,7 +35,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-const SYSTEM_PROMPT = `Ты — переводчик с русского на казахский.
+  // Используем переданный systemPrompt или стандартный для перевода
+  const finalSystemPrompt = systemPrompt || `Ты — переводчик с русского на казахский язык.
 
 Переведи фразу: "${message}"
 
@@ -62,7 +64,7 @@ const SYSTEM_PROMPT = `Ты — переводчик с русского на к
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: finalSystemPrompt },
           { role: 'user', content: message }
         ],
         temperature: 0.7,
@@ -82,7 +84,7 @@ const SYSTEM_PROMPT = `Ты — переводчик с русского на к
 
     const reply = data.choices[0].message.content;
     
-    // Простой парсинг ответа
+    // Парсинг ответа
     const parsedResponse = simpleParse(reply);
     
     return res.status(200).json({ 
@@ -100,7 +102,7 @@ const SYSTEM_PROMPT = `Ты — переводчик с русского на к
   }
 }
 
-// Простая и надёжная функция парсинга
+// Функция парсинга ответа
 function simpleParse(text) {
   const lines = text.split('\n');
   let wordBreakdown = [];
@@ -110,10 +112,8 @@ function simpleParse(text) {
     line = line.trim();
     if (!line) continue;
     
-    // Оставляем строки как есть, но убираем лишние символы
     let cleanedLine = line;
     
-    // Добавляем эмодзи для красоты
     if (line.startsWith('Перевод:')) {
       cleanedLine = '✅ ' + line;
     } else if (line.startsWith('Разбор:')) {
@@ -124,7 +124,6 @@ function simpleParse(text) {
       cleanedLine = '💬 ' + line;
     }
     
-    // Парсим разбор слов (строки с = )
     if (line.includes('=') && !line.includes('Перевод') && !line.includes('Разбор')) {
       const parts = line.split('=');
       if (parts.length === 2) {
@@ -134,21 +133,18 @@ function simpleParse(text) {
           wordBreakdown.push({ word, meaning });
         }
       }
-      // Добавляем отступ для строк разбора
       cleanedLine = '  • ' + line;
     }
     
     formatted += cleanedLine + '\n';
   }
   
-  // Если не нашли разбор слов, но есть перевод
   if (wordBreakdown.length === 0) {
-    // Пробуем найти перевод и разбить его на слова
     for (let line of lines) {
       if (line.startsWith('Перевод:')) {
         const translation = line.replace('Перевод:', '').trim();
         const words = translation.split(/[\s,;:!?]+/).filter(w => w.length > 0);
-        for (let word of words.slice(0, 6)) { // не больше 6 слов
+        for (let word of words.slice(0, 6)) {
           if (word.length > 1 && !wordBreakdown.find(w => w.word === word)) {
             wordBreakdown.push({ word, meaning: '?' });
           }
