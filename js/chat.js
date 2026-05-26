@@ -1,5 +1,11 @@
 // js/chat.js - с двумя режимами через меню
-
+// Принудительная прокрутка вниз
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('messages');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+}
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
@@ -382,7 +388,7 @@ async function sendTranslate() {
     }
 }
 
-// Форматирование ответа с подсказками
+// Форматирование ответа с подсказками (для обоих режимов)
 function addMessage(text, sender, wordBreakdown = null) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
@@ -400,9 +406,12 @@ function addMessage(text, sender, wordBreakdown = null) {
     
     messageDiv.appendChild(contentDiv);
     messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Прокрутка вниз с небольшой задержкой
+    setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 10);
 }
-
 function formatMessageWithTooltips(text, wordBreakdown) {
     const wordMap = {};
     wordBreakdown.forEach(item => {
@@ -552,7 +561,10 @@ function showTypingIndicator() {
     typingIndicator.id = 'typingIndicator';
     typingIndicator.innerHTML = `<div class="typing-indicator" style="display: block;"><span></span><span></span><span></span></div>`;
     messagesContainer.appendChild(typingIndicator);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 10);
 }
 
 function hideTypingIndicator() {
