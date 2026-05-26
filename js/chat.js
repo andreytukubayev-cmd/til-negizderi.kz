@@ -32,13 +32,11 @@ function updateStats() {
     }
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ ПРОКРУТКИ - ИСПРАВЛЕНА
+// ГЛАВНАЯ ФУНКЦИЯ ПРОКРУТКИ
 function forceScrollToBottom() {
     const messagesContainer = document.getElementById('messages');
     if (messagesContainer) {
-        // Мгновенная прокрутка
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        // Дополнительная прокрутка с задержкой для асинхронного контента
         setTimeout(() => {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, 50);
@@ -96,7 +94,6 @@ function saveUserName() {
     }
 }
 
-// Функция для парсинга ответа от ИИ (DeepSeek)
 // Функция для парсинга ответа от ИИ (DeepSeek) - без произношения
 function formatAIResponse(text) {
     const lines = text.split('\n');
@@ -125,7 +122,6 @@ function formatAIResponse(text) {
         // Пропускаем транскрипцию/произношение
         else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:') || 
                  line.startsWith('Произношение:') || line.startsWith('🔊 Произношение:')) {
-            // Пропускаем - не добавляем в вывод
             continue;
         }
         else if (line.startsWith('Коротко:') || 
@@ -185,17 +181,21 @@ async function discussSituation(message) {
 
 ОТВЕТЬ В ТАКОМ ФОРМАТЕ:
 
-💡 **Совет:** [краткий совет, что уместно сказать]
+💡 **Совет:** [краткий совет]
 
 📝 **Пример фразы:** [основная фраза на казахском]
-Разбор: [разбор слов через запятую]
-Произношение: [транскрипция]
+
+📖 **Разбор слов:**
+[слово1] = [перевод1]
+[слово2] = [перевод2]
 
 🗣️ **Мини-диалог:**
-— [первая реплика на казахском] (перевод)
+— [реплика на казахском] (перевод)
 — [ответ на казахском] (перевод)
 
-💬 **Коротко:** [короткий вариант]`;
+💬 **Коротко:** [короткий вариант]
+
+ВАЖНО: Не добавляй транскрипцию и произношение.`;
             
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -245,93 +245,33 @@ async function discussSituation(message) {
         updateStats();
     }
     
-    forceScrollToBottom(); // Прокрутка после ответа
+    forceScrollToBottom();
 }
 
 function formatDiscussResponse(text) {
-    const lines = text.split('\n');
-    let result = [];
-    let inBreakdown = false;
+    // Удаляем строки с произношением
+    let cleaned = text.replace(/🔊 Произношение:.*?(?=\n|$)/g, '');
+    cleaned = cleaned.replace(/Произношение:.*?(?=\n|$)/g, '');
     
-    for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-        
-        // Пропускаем строки с произношением
-        if (line.includes('Произношение:') || line.includes('🔊')) {
-            continue;
-        }
-        
-        // Заголовок совета
-        if (line.includes('**Совет:**') || line.includes('Совет:')) {
-            result.push('💡 **Совет:**');
-            let content = line.replace(/💡\s*\*\*Совет:\*\*/, '').replace(/Совет:/, '').trim();
-            if (content) result.push(content);
-            continue;
-        }
-        
-        // Заголовок примера фразы
-        if (line.includes('**Пример фразы:**') || line.includes('Пример фразы:')) {
-            result.push('\n📝 **Пример фразы:**');
-            let content = line.replace(/📝\s*\*\*Пример фразы:\*\*/, '').replace(/Пример фразы:/, '').trim();
-            if (content) result.push(content);
-            continue;
-        }
-        
-        // Заголовок разбора
-        if (line.includes('**Разбор**') || line.includes('Разбор:') || line.includes('Разбор слов:')) {
-            result.push('\n📖 **Разбор слов:**');
-            inBreakdown = true;
-            continue;
-        }
-        
-        // Строки разбора (с • или * или без)
-        if (inBreakdown && (line.startsWith('•') || line.startsWith('*') || line.includes('=') || line.includes('—'))) {
-            // Очищаем строку
-            let cleanLine = line.replace(/^[•*]\s*/, '');
-            
-            // Разбираем формат "слово = перевод" или "слово — перевод"
-            let match = cleanLine.match(/^([^=—]+)[=—]\s*(.+)$/);
-            if (match) {
-                let word = match[1].trim();
-                let meaning = match[2].trim();
-                result.push(`  • **${word}** — ${meaning}`);
-            } else if (cleanLine) {
-                result.push(`  • ${cleanLine}`);
-            }
-            continue;
-        }
-        
-        // Мини-диалог
-        if (line.includes('**Мини-диалог:**') || line.includes('Мини-диалог:')) {
-            result.push('\n🗣️ **Мини-диалог:**');
-            inBreakdown = false;
-            continue;
-        }
-        
-        // Короткий вариант
-        if (line.includes('**Коротко:**') || line.includes('Коротко:')) {
-            result.push('\n💬 **Коротко:**');
-            let content = line.replace(/💬\s*\*\*Коротко:\*\*/, '').replace(/Коротко:/, '').trim();
-            if (content) result.push(content);
-            inBreakdown = false;
-            continue;
-        }
-        
-        // Обычный текст (реплики диалога)
-        if (!inBreakdown && line && !line.includes('**')) {
-            result.push(line);
-        }
-    }
+    // Заменяем заголовки
+    cleaned = cleaned
+        .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
+        .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
+        .replace(/📖 \*\*Разбор слов:\*\*/g, '\n📖 **Разбор слов:**')
+        .replace(/🗣️ \*\*Мини-диалог:\*\*/g, '\n🗣️ **Мини-диалог:**')
+        .replace(/💬 \*\*Коротко:\*\*/g, '\n💬 **Коротко:**')
+        .replace(/Разбор слов:/g, '\n📖 **Разбор слов:**')
+        .replace(/Разбор:/g, '\n📖 **Разбор слов:**');
     
-    // Собираем результат
-    let output = result.join('\n');
+    // Форматируем строки вида "слово = перевод" или "слово — перевод"
+    cleaned = cleaned.replace(/^([•*]?)\s*([а-яёәіңғүұқөһa-z]+)\s*[=—]\s*(.+)$/gmi, '  • **$2** — $3');
     
-    // Убираем множественные пустые строки
-    output = output.replace(/\n{3,}/g, '\n\n');
+    // Убираем лишние пустые строки
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
     
-    return output;
+    return cleaned;
 }
+
 function getLocalDiscussFallback(message) {
     const lowerMsg = message.toLowerCase();
     
@@ -339,8 +279,12 @@ function getLocalDiscussFallback(message) {
         return `💡 **Совет:** Когда вы заходите в аудиторию или кабинет, уместно поздороваться и представиться, если вы впервые.
 
 📝 **Пример фразы:** Сәлеметсіз бе! Менің атым ${userName || 'Асет'}.
-  📖 Разбор: Сәлеметсіз бе = здравствуйте, Менің атым = меня зовут
-  🔊 Произношение: Сәлеметсіз бе! Мениң атым ${userName || 'Асет'}.
+
+📖 **Разбор слов:**
+  • **Сәлеметсіз** — здравствуйте
+  • **бе** — вопросительная частица
+  • **Менің** — мой
+  • **атым** — имя
 
 🗣️ **Мини-диалог:**
 — Сәлеметсіз бе! Кіруге бола ма? (Здравствуйте! Можно войти?)
@@ -352,9 +296,11 @@ function getLocalDiscussFallback(message) {
     if (lowerMsg.includes('совещание') || lowerMsg.includes('планерка')) {
         return `💡 **Совет:** На совещании важно вежливо попросить слово или задать вопрос.
 
-📝 **Пример фразы:** Сөз сұраймын. (Прошу слово)
-  📖 Разбор: Сөз = слово, сұраймын = прошу
-  🔊 Произношение: Сөз сураймын
+📝 **Пример фразы:** Сөз сұраймын.
+
+📖 **Разбор слов:**
+  • **Сөз** — слово
+  • **сұраймын** — прошу
 
 🗣️ **Мини-диалог:**
 — Сөз сұраймын, келесі мәселе бойынша. (Прошу слово по следующему вопросу)
@@ -368,9 +314,11 @@ function getLocalDiscussFallback(message) {
 • "Как обратиться к коллеге?"
 • "Что сказать на совещании?"
 
-📝 **А пока, вот универсальная вежливая фраза:** Кешіріңіз, көмектесе аласыз ба?
-  🔊 Произношение: Кешириңиз, көмектесе аласыз ба?
-  📖 Перевод: Извините, не могли бы вы помочь?
+📝 **Пример фразы:** Кешіріңіз, көмектесе аласыз ба?
+
+📖 **Разбор слов:**
+  • **Кешіріңіз** — извините
+  • **көмектесе аласыз ба** — не могли бы вы помочь
 
 💬 **Коротко:** Көмектесесіз бе?`;
 }
@@ -407,8 +355,9 @@ async function sendTranslate() {
 Разбор слов:
 [слово1] = [перевод1]
 [слово2] = [перевод2]
-Транскрипция: [русскими буквами]
-Разговорный вариант: [коротко]`;
+Разговорный вариант: [коротко]
+
+ВАЖНО: Не добавляй транскрипцию и произношение.`;
             
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -468,10 +417,10 @@ async function sendTranslate() {
         updateStats();
     }
     
-    forceScrollToBottom(); // Прокрутка после ответа
+    forceScrollToBottom();
 }
 
-// Форматирование ответа с подсказками - ИСПРАВЛЕНА (добавлена прокрутка)
+// Форматирование ответа с подсказками
 function addMessage(text, sender, wordBreakdown = null) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
@@ -490,7 +439,6 @@ function addMessage(text, sender, wordBreakdown = null) {
     messageDiv.appendChild(contentDiv);
     messagesContainer.appendChild(messageDiv);
     
-    // Прокрутка вниз
     forceScrollToBottom();
 }
 
@@ -512,24 +460,13 @@ function formatMessageWithTooltips(text, wordBreakdown) {
         else if (line.includes('📖') && (line.includes('Разбор слов') || line.includes('**Разбор слов**'))) {
             formatted += `<br><strong>📖 Разбор слов:</strong><br>`;
         }
-        else if (line.includes('•') && line.includes('=')) {
+        else if (line.includes('•') && (line.includes('—') || line.includes('='))) {
             formatted += `<div style="margin-left: 20px; color: #555;">${line}</div>`;
         }
-        else if (line.includes('🔊') && (line.includes('Как произнести') || line.includes('**Как произнести**'))) {
-            const lineIndex = lines.indexOf(line);
-            const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
-            if (nextLine && nextLine.trim() && !nextLine.includes('💬')) {
-                formatted += `<br><strong>🔊 Как произнести:</strong><br>`;
-            }
-        }
         else if (line.includes('💬') && (line.includes('Разговорный вариант') || line.includes('**Разговорный вариант**'))) {
-            const lineIndex = lines.indexOf(line);
-            const nextLine = lineIndex + 1 < lines.length ? lines[lineIndex + 1] : '';
-            if (nextLine && nextLine.trim()) {
-                formatted += `<br><strong>💬 Разговорный вариант:</strong><br>`;
-            }
+            formatted += `<br><strong>💬 Разговорный вариант:</strong><br>`;
         }
-        else if (line.trim() && !line.includes('🔊') && !line.includes('💬') && !line.includes('**Как произнести**') && !line.includes('**Разговорный вариант**')) {
+        else if (line.trim()) {
             formatted += `${line}<br>`;
         }
     }
@@ -663,7 +600,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.key === 'Enter') saveUserName();
     });
     
-    // Элементы меню
     const sendBtn = document.getElementById('sendBtn');
     const actionMenu = document.getElementById('actionMenu');
     const actionMenuOverlay = document.getElementById('actionMenuOverlay');
