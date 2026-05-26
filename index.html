@@ -71,10 +71,10 @@
                 <input 
                     type="text" 
                     id="userInput" 
-                    placeholder="Введите фразу для перевода на казахский..."
-                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                    placeholder="Напишите фразу на русском..."
                 >
-                <button onclick="sendMessage()" id="sendButton">Отправить</button>
+                <button id="translateBtn">🔄 Перевести</button>
+                <button id="discussBtn">💬 Обсудить ситуацию</button>
             </div>
         </div>
     </div>
@@ -88,9 +88,9 @@
             <button onclick="saveUserName()">Продолжить</button>
         </div>
     </div>
-<!-- Сначала подключаем localTranslator.js (класс) -->
-<script src="js/localTranslator.js"></script>
-<!-- Потом chat.js (который загрузит JSON) -->
-<script src="js/chat.js"></script>
+
+    <!-- Подключение скриптов -->
+    <script src="js/localTranslator.js"></script>
+    <script src="js/chat.js"></script>
 </body>
 </html>
