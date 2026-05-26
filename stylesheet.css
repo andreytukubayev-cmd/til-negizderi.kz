@@ -344,6 +344,60 @@ body {
 .input-area button:active {
     transform: scale(0.97);
 }
+/* Стили для кнопок в меню выбора */
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 12px;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Эффект при наведении (на ПК) */
+.action-btn:hover {
+    background: #e8e8e8;
+    transform: scale(1.02);
+}
+
+/* Эффект при нажатии (клик или тап) */
+.action-btn:active {
+    transform: scale(0.98);
+    background: #ddd;
+}
+
+/* Для тач-устройств - подсветка при касании */
+.action-btn:focus {
+    outline: none;
+    background: #e0e0e0;
+}
+
+/* Убираем рамку при фокусе */
+.action-btn:focus-visible {
+    outline: 2px solid #667eea;
+}
+
+/* Анимация для иконки при наведении */
+.action-btn:hover .action-icon {
+    transform: scale(1.05);
+}
+
+.action-icon {
+    font-size: 1.5em;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 20px;
+    transition: transform 0.2s ease;
+}
 
 /* Модальное окно */
 .modal {
