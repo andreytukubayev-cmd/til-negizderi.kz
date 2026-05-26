@@ -62,18 +62,9 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 4px solid #ffd700;
-    margin-bottom: 20px;
-    object-fit: cover;
-}
-
 .avatar-placeholder {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     border: 4px solid #ffd700;
     margin: 0 auto 20px;
@@ -91,32 +82,32 @@ body {
 }
 
 .profile h2 {
-    font-size: 1.3em;
+    font-size: 1.2em;
     margin-bottom: 10px;
     color: #ffd700;
 }
 
 .profile p {
-    font-size: 0.9em;
+    font-size: 0.85em;
     opacity: 0.9;
     line-height: 1.4;
 }
 
 .method-info {
-    padding: 25px 20px;
+    padding: 20px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .method-info h3 {
     color: #ffd700;
     margin-bottom: 15px;
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 .method-info p {
-    line-height: 1.6;
+    line-height: 1.5;
     margin-bottom: 15px;
-    font-size: 0.9em;
+    font-size: 0.85em;
 }
 
 .method-info ul {
@@ -125,10 +116,10 @@ body {
 }
 
 .method-info li {
-    margin: 10px 0;
-    padding-left: 20px;
+    margin: 8px 0;
+    padding-left: 18px;
     position: relative;
-    font-size: 0.9em;
+    font-size: 0.85em;
 }
 
 .method-info li:before {
@@ -136,30 +127,29 @@ body {
     position: absolute;
     left: 0;
     color: #ffd700;
-    font-weight: bold;
 }
 
 .stats {
-    padding: 25px 20px;
+    padding: 20px;
 }
 
 .stats h3 {
     color: #ffd700;
     margin-bottom: 15px;
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 .stat-item {
     display: flex;
     justify-content: space-between;
-    margin: 12px 0;
+    margin: 10px 0;
     padding: 8px;
     background: rgba(255,255,255,0.1);
     border-radius: 8px;
 }
 
 .stat-label {
-    font-size: 0.9em;
+    font-size: 0.85em;
 }
 
 .stat-value {
@@ -174,6 +164,7 @@ body {
     flex-direction: column;
     background: #f5f5f5;
     width: 100%;
+    height: 100vh;
 }
 
 .chat-header {
@@ -186,7 +177,6 @@ body {
     gap: 15px;
 }
 
-/* Кнопка гамбургера в шапке */
 .menu-toggle {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
@@ -196,15 +186,10 @@ body {
     border-radius: 50%;
     font-size: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.menu-toggle:hover {
-    transform: scale(1.05);
 }
 
 .header-text {
@@ -219,31 +204,17 @@ body {
 
 .header-text p {
     color: #666;
-    font-size: 0.8em;
+    font-size: 0.75em;
     margin-top: 4px;
 }
 
-/* Принудительные стили для прокрутки */
 .messages {
     flex: 1;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    padding: 20px;
+    overflow-y: auto;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    height: 100%;
-    min-height: 0; /* Важно для flex-контейнеров */
-}
-
-.chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #f5f5f5;
-    width: 100%;
-    min-height: 0; /* Важно для flex-контейнеров */
-    height: 100%;
+    gap: 12px;
 }
 
 .message {
@@ -271,12 +242,12 @@ body {
 }
 
 .message-content {
-    max-width: 70%;
-    padding: 12px 18px;
+    max-width: 75%;
+    padding: 10px 16px;
     border-radius: 18px;
-    line-height: 1.5;
+    line-height: 1.45;
     word-wrap: break-word;
-    overflow-wrap: break-word;
+    font-size: 0.95em;
 }
 
 .message.user .message-content {
@@ -293,12 +264,11 @@ body {
 }
 
 .typing-indicator {
-    display: none;
-    padding: 12px 18px;
+    display: inline-block;
+    padding: 10px 16px;
     background: white;
     border-radius: 18px;
     border-bottom-left-radius: 4px;
-    width: fit-content;
 }
 
 .typing-indicator span {
@@ -332,7 +302,7 @@ body {
 
 .input-area {
     background: white;
-    padding: 15px 20px;
+    padding: 12px 15px;
     border-top: 1px solid #e0e0e0;
     display: flex;
     gap: 10px;
@@ -341,12 +311,11 @@ body {
 
 .input-area input {
     flex: 1;
-    padding: 12px 18px;
+    padding: 10px 16px;
     border: 2px solid #e0e0e0;
     border-radius: 25px;
-    font-size: 1em;
+    font-size: 0.95em;
     outline: none;
-    transition: border-color 0.3s;
     min-width: 0;
 }
 
@@ -355,25 +324,72 @@ body {
 }
 
 .input-area button {
-    padding: 12px 20px;
+    padding: 10px 18px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 25px;
     cursor: pointer;
     font-size: 0.9em;
-    transition: transform 0.2s, box-shadow 0.2s;
     white-space: nowrap;
 }
 
 .input-area button:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
 }
 
-.input-area button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+/* Модальное окно */
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
 }
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 350px;
+    width: 85%;
+}
+
+.modal-content h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 15px 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1em;
+}
+
+.modal-content button {
+    padding: 10px 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.message-content strong {
+    color: #667eea;
+}
+
 /* Всплывающее меню выбора действия */
 .action-menu {
     position: fixed;
@@ -409,7 +425,6 @@ body {
     padding: 20px;
     transform: translateY(100%);
     transition: transform 0.3s ease;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
 }
 
 .action-menu.active .action-menu-content {
@@ -418,169 +433,65 @@ body {
 
 .action-menu-title {
     text-align: center;
-    font-size: 1em;
+    font-size: 0.95em;
     color: #666;
-    padding-bottom: 15px;
+    padding-bottom: 12px;
     border-bottom: 1px solid #e0e0e0;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     width: 100%;
-    padding: 15px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     background: #f5f5f5;
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-}
-
-.action-btn:active {
-    transform: scale(0.98);
 }
 
 .action-icon {
-    font-size: 2em;
-    width: 50px;
-    height: 50px;
+    font-size: 1.5em;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: white;
-    border-radius: 25px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 20px;
 }
 
 .action-text {
     flex: 1;
+    text-align: left;
 }
 
 .action-name {
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 1em;
     color: #333;
-    margin-bottom: 4px;
 }
 
 .action-desc {
-    font-size: 0.75em;
+    font-size: 0.7em;
     color: #888;
-}
-
-.translate-btn .action-icon {
-    background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-}
-
-.discuss-btn .action-icon {
-    background: linear-gradient(135deg, #11998e20 0%, #38ef7d20 100%);
-}
-
-/* Скрываем на десктопе? Нет, оставляем - удобно */
-@media (max-width: 768px) {
-    .action-menu-content {
-        padding: 15px;
-    }
-    
-    .action-btn {
-        padding: 12px;
-    }
-    
-    .action-icon {
-        font-size: 1.5em;
-        width: 40px;
-        height: 40px;
-    }
-    
-    .action-name {
-        font-size: 1em;
-    }
-}
-
-/* Модальное окно */
-.modal {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-content h2 {
-    color: #667eea;
-    margin-bottom: 20px;
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    margin: 15px 0;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 1em;
-    outline: none;
-}
-
-.modal-content input:focus {
-    border-color: #667eea;
-}
-
-.modal-content button {
-    padding: 12px 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1em;
-}
-
-.message-content strong {
-    color: #667eea;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #e0e0e0;
 }
 
 ::-webkit-scrollbar-thumb {
     background: #888;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 /* ============================================ */
@@ -590,7 +501,7 @@ body {
     .sidebar {
         position: relative;
         transform: translateX(0);
-        width: 320px;
+        width: 300px;
     }
     
     .menu-toggle {
@@ -602,15 +513,23 @@ body {
     }
     
     .chat-header {
-        padding: 20px 30px;
+        padding: 20px 25px;
     }
     
     .header-text h1 {
-        font-size: 1.5em;
+        font-size: 1.4em;
     }
     
     .header-text p {
-        font-size: 0.9em;
+        font-size: 0.85em;
+    }
+    
+    .messages {
+        padding: 20px;
+    }
+    
+    .input-area {
+        padding: 15px 20px;
     }
 }
 
@@ -618,16 +537,12 @@ body {
 /* МОБИЛЬНАЯ ВЕРСИЯ (ширина < 768px) */
 /* ============================================ */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 280px;
-    }
-    
     .menu-toggle {
         display: flex;
     }
     
     .chat-header {
-        padding: 12px 15px;
+        padding: 10px 15px;
     }
     
     .header-text h1 {
@@ -635,23 +550,21 @@ body {
     }
     
     .header-text p {
-        font-size: 0.7em;
+        font-size: 0.65em;
     }
     
     .messages {
-        padding: 12px;
-        gap: 10px;
+        padding: 10px;
     }
     
     .message-content {
         max-width: 85%;
-        padding: 10px 14px;
+        padding: 8px 14px;
         font-size: 0.9em;
     }
     
     .input-area {
-        padding: 12px;
-        gap: 8px;
+        padding: 10px 12px;
     }
     
     .input-area input {
@@ -660,40 +573,26 @@ body {
     }
     
     .input-area button {
-        padding: 10px 12px;
-        font-size: 0.75em;
+        padding: 10px 14px;
+        font-size: 0.8em;
     }
     
-    .profile {
-        padding: 20px 15px;
-    }
-    
-    .avatar-placeholder {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .profile h2 {
-        font-size: 1.1em;
-    }
-    
-    .method-info, .stats {
+    .action-menu-content {
         padding: 15px;
     }
     
-    .method-info h3, .stats h3 {
-        font-size: 1em;
+    .action-btn {
+        padding: 10px;
     }
 }
 
 @media (max-width: 480px) {
     .input-area button {
-        padding: 8px 10px;
-        font-size: 0.7em;
+        padding: 8px 12px;
+        font-size: 0.75em;
     }
     
     .message-content {
         max-width: 90%;
-        font-size: 0.85em;
     }
 }
