@@ -1,14 +1,41 @@
-// js/chat.js - с двумя режимами: перевод и обсуждение ситуаций
+// js/chat.js - с сохранением статистики пользователя
 
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
-let totalTranslations = localStorage.getItem('totalTranslations') || 0;
+
+// Функции для работы со статистикой
+function saveUserStat(userName, count) {
+    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
+    allStats[userName] = count;
+    localStorage.setItem('kazakhStats', JSON.stringify(allStats));
+}
+
+function getUserStat(userName) {
+    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
+    return allStats[userName] || 0;
+}
+
+function incrementUserStat(userName) {
+    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
+    allStats[userName] = (allStats[userName] || 0) + 1;
+    localStorage.setItem('kazakhStats', JSON.stringify(allStats));
+    return allStats[userName];
+}
+
+// Обновляем отображение статистики
+function updateStats() {
+    if (userName) {
+        let userStat = getUserStat(userName);
+        document.getElementById('totalTranslations').textContent = userStat;
+    } else {
+        document.getElementById('totalTranslations').textContent = '0';
+    }
+}
 
 // Флаги для автоматического переключения
 let aiAvailable = true;
 let lastAICheck = 0;
-let currentMode = 'translate'; // 'translate' или 'discuss'
 
 // Загружаем JSON с фразами
 async function loadPhrases() {
@@ -25,15 +52,10 @@ async function loadPhrases() {
     }
 }
 
-updateStats();
-
-function updateStats() {
-    document.getElementById('totalTranslations').textContent = totalTranslations;
-}
-
 function checkUserName() {
     if (userName) {
         document.getElementById('nameModal').style.display = 'none';
+        updateStats(); // Показываем статистику пользователя
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
         addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     } else {
@@ -51,6 +73,7 @@ function saveUserName() {
         localStorage.setItem('userName', userName);
         document.getElementById('nameModal').style.display = 'none';
         waitingForName = false;
+        updateStats(); // Показываем статистику нового пользователя
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
         addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     } else {
@@ -131,7 +154,7 @@ function formatLocalResponse(result) {
     return output;
 }
 
-// НОВАЯ ФУНКЦИЯ: Обсуждение ситуации (генерация идеи диалога)
+// НОВАЯ ФУНКЦИЯ: Обсуждение ситуации
 async function discussSituation(message) {
     showTypingIndicator();
     const sendButton = document.getElementById('discussBtn');
@@ -142,7 +165,6 @@ async function discussSituation(message) {
     let reply = '';
     let wordBreakdown = [];
     
-    // Пробуем DeepSeek
     if (aiAvailable) {
         try {
             const controller = new AbortController();
@@ -165,9 +187,7 @@ async function discussSituation(message) {
 — [первая реплика на казахском] (перевод)
 — [ответ на казахском] (перевод)
 
-💬 **Коротко:** [короткий вариант]
-
-Важно: дай практичный, применимый в работе совет.`;
+💬 **Коротко:** [короткий вариант]`;
             
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -186,7 +206,6 @@ async function discussSituation(message) {
                 const data = await response.json();
                 if (data.success) {
                     reply = data.reply;
-                    // Парсим ответ для красивого форматирования
                     reply = formatDiscussResponse(reply);
                     wordBreakdown = [];
                     aiAvailable = true;
@@ -206,7 +225,6 @@ async function discussSituation(message) {
         reply = getLocalDiscussFallback(message);
     }
     
-    // Периодически пробуем включить ИИ
     if (!aiAvailable && (Date.now() - lastAICheck) > 120000) {
         aiAvailable = true;
     }
@@ -214,13 +232,18 @@ async function discussSituation(message) {
     hideTypingIndicator();
     addMessage(reply, 'bot', wordBreakdown);
     
+    // Увеличиваем статистику (обсуждение тоже считаем)
+    if (userName) {
+        incrementUserStat(userName);
+        updateStats();
+    }
+    
     sendButton.disabled = false;
     translateBtn.disabled = false;
 }
 
 // Форматирование ответа для режима "обсудить ситуацию"
 function formatDiscussResponse(text) {
-    // Простое форматирование — заменяем маркеры на эмодзи
     let formatted = text
         .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
         .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
@@ -236,7 +259,6 @@ function formatDiscussResponse(text) {
 function getLocalDiscussFallback(message) {
     const lowerMsg = message.toLowerCase();
     
-    // Базовые ситуации
     if (lowerMsg.includes('зашел') || lowerMsg.includes('заходить') || lowerMsg.includes('войти')) {
         return `💡 **Совет:** Когда вы заходите в аудиторию или кабинет, уместно поздороваться и представиться, если вы впервые.
 
@@ -263,20 +285,6 @@ function getLocalDiscussFallback(message) {
 — Иә, айтыңыз. (Да, говорите.)
 
 💬 **Коротко:** Сөз бересіз бе?`;
-    }
-    
-    if (lowerMsg.includes('коллега') || lowerMsg.includes('обратиться')) {
-        return `💡 **Совет:** Чтобы вежливо обратиться к коллеге, используйте имя и вежливую форму.
-
-📝 **Пример фразы:** ${userName || 'Айгүл'} ханым, көмектесе аласыз ба? (${userName || 'Айгуль'}, можете помочь?)
-  📖 Разбор: ханым = госпожа, көмектесе аласыз ба = можете помочь
-  🔊 Произношение: ${userName || 'Айгүл'} ханым, көмектесе аласыз ба?
-
-🗣️ **Мини-диалог:**
-— Кешіріңіз, көмектесе аласыз ба? (Извините, можете помочь?)
-— Әрине, қандай көмек керек? (Конечно, какая помощь нужна?)
-
-💬 **Коротко:** Көмектесесіз бе?`;
     }
     
     return `💡 **Совет:** Я учусь подбирать фразы для разных ситуаций. Попробуйте спросить конкретнее, например:
@@ -317,7 +325,6 @@ async function sendTranslate() {
     let wordBreakdown = [];
     let success = false;
     
-    // Пробуем DeepSeek
     if (aiAvailable) {
         try {
             const controller = new AbortController();
@@ -367,7 +374,6 @@ async function sendTranslate() {
         }
     }
     
-    // Если ИИ не ответил — используем локальный переводчик
     if (!success) {
         const localResult = localTranslator.translate(message);
         reply = formatLocalResponse(localResult);
@@ -386,9 +392,11 @@ async function sendTranslate() {
     
     addMessage(reply, 'bot', wordBreakdown);
     
-    totalTranslations++;
-    localStorage.setItem('totalTranslations', totalTranslations);
-    updateStats();
+    // Увеличиваем статистику при успешном переводе
+    if (userName) {
+        incrementUserStat(userName);
+        updateStats();
+    }
     
     translateBtn.disabled = false;
     discussBtn.disabled = false;
@@ -549,6 +557,7 @@ function saveUserNameFromMessage(name) {
             botQuestion.remove();
         }
         addMessage(name, 'user');
+        updateStats(); // Показываем статистику пользователя
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу вам выучить казахский язык.`, 'bot');
         addMessage(`💡 У меня есть два режима:\n• 🔄 **Перевести** — точный перевод фразы\n• 💬 **Обсудить ситуацию** — подберу подходящую фразу для рабочей ситуации`, 'bot');
     }
