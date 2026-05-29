@@ -37,9 +37,9 @@
             </div>
 
             <div class="stats">
-                <h3>📊 Ваша статистика</h3>
+                <h3 id="statsTitle">📊 Ваша статистика</h3>
                 <div class="stat-item">
-                    <span class="stat-label"Переведено фраз:</span>
+                    <span class="stat-label">Переведено фраз:</span>
                     <span class="stat-value" id="totalTranslations">0</span>
                 </div>
             </div>
@@ -140,6 +140,27 @@
         if (menuOverlay) {
             menuOverlay.addEventListener('click', closeMenu);
         }
+        
+        // Функция для обновления заголовка статистики с именем пользователя
+        function updateStatsTitle() {
+            const statsTitle = document.getElementById('statsTitle');
+            const userName = localStorage.getItem('userName');
+            if (statsTitle && userName) {
+                statsTitle.innerHTML = `📊 Ваша статистика, ${userName}`;
+            } else if (statsTitle) {
+                statsTitle.innerHTML = `📊 Ваша статистика`;
+            }
+        }
+        
+        // Вызываем при загрузке
+        updateStatsTitle();
+        
+        // Следим за изменениями в localStorage
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'userName') {
+                updateStatsTitle();
+            }
+        });
     </script>
 </body>
 </html>
