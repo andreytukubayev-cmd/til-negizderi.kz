@@ -1,161 +1,172 @@
-root {
-    --accent-color #00b4d8;
-    --wheel-shadow 0px 15px 35px rgba(0, 0, 0, 0.15), inset 0px 2px 4px rgba(255,255,255,0.6);
+:root {
+    --lull-accent: #00b4d8;
+    --lull-shadow: 0px 15px 35px rgba(0, 0, 0, 0.15), inset 0px 2px 4px rgba(255,255,255,0.6);
 
-     Цвета слоев 
-    --color-out-0 #ffadad; --color-out-1 #ffd6a5; --color-out-2 #fdffb6;
-    --color-out-3 #caffbf; --color-out-4 #9bf6ff; --color-out-5 #a0c4ff;
-    --color-mid-0 #f4f5f7; --color-mid-1 #eaecf0; --color-mid-2 #e1e4ea;
-    --color-mid-3 #d8dce4; --color-mid-4 #cfd4dc; --color-mid-5 #c6cbd6;
-    --color-inn-0 #ffffff; --color-inn-1 #f8f9fa; --color-inn-2 #f1f3f5;
-    --color-inn-3 #e9ecef; --color-inn-4 #dee2e6; --color-inn-5 #ced4da;
+    /* Цвета слоев */
+    --color-out-0: #ffadad; --color-out-1: #ffd6a5; --color-out-2: #fdffb6;
+    --color-out-3: #caffbf; --color-out-4: #9bf6ff; --color-out-5: #a0c4ff;
+    --color-mid-0: #f4f5f7; --color-mid-1: #eaecf0; --color-mid-2: #e1e4ea;
+    --color-mid-3: #d8dce4; --color-mid-4: #cfd4dc; --color-mid-5: #c6cbd6;
+    --color-inn-0: #ffffff; --color-inn-1: #f8f9fa; --color-inn-2: #f1f3f5;
+    --color-inn-3: #e9ecef; --color-inn-4: #dee2e6; --color-inn-5: #ced4da;
 }
 
- Управление отображением вкладок 
+/* УПРАВЛЕНИЕ ОТОБРАЖЕНИЕМ ВКЛАДОК */
 .tab-content {
-    display none;
-    flex-direction column;
-    height calc(100% - 70px);  Вычитаем шапку 
-    width 100%;
-}
-.tab-content.active {
-    display flex;
+    display: none !important; /* Жестко скрываем по умолчанию */
+    width: 100%;
+    height: calc(100vh - 80px); /* Привязываем к высоте экрана за вычетом шапки */
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
- Кнопки переключения в шапке 
+.tab-content.active {
+    display: flex !important; /* Показываем только активную вкладку */
+}
+
+/* Специфичные настройки для чата, чтобы он не схлопывался */
+#ai-chat-tab.active {
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* КНОПКИ В ШАПКЕ */
 .tab-navigation {
-    display flex;
-    gap 10px;
-    margin-left auto;  Прижимает к правому краю шапки 
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    padding-right: 15px;
 }
 .tab-nav-btn {
-    background rgba(0, 0, 0, 0.05);
-    border none;
-    padding 8px 16px;
-    border-radius 12px;
-    font-weight 700;
-    color #4a5568;
-    cursor pointer;
-    transition all 0.2s ease;
+    background: #f1f3f5;
+    border: 1px solid #dee2e6;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 .tab-nav-btn.active {
-    background var(--accent-color);
-    color #fff;
-    box-shadow 0 4px 10px rgba(0, 180, 216, 0.3);
+    background: var(--lull-accent);
+    color: #fff;
+    border-color: var(--lull-accent);
+    box-shadow: 0 4px 10px rgba(0, 180, 216, 0.2);
 }
 
- Контейнер внутренностей колеса 
+/* КОНТЕЙНЕР ДЛЯ КОЛЕСА ЛУЛЛИЯ */
 .wheel-layout-container {
-    display flex;
-    flex-direction column;
-    align-items center;
-    justify-content flex-start;
-    gap 25px;
-    padding 20px;
-    overflow-y auto;
-    height 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
- ФИЗИЧЕСКИЙ БОДИ УСТРОЙСТВА 
+/* ФИЗИЧЕСКИЙ КОРПУС УСТРОЙСТВА */
 .device-body {
-    position relative;
-    width 646px;
-    height 646px;
-    background #e6e9ef;
-    border-radius 50%;
-    display flex;
-    align-items center;
-    justify-content center;
-    box-shadow 0 10px 30px rgba(0,0,0,0.08);
-    border 3px solid #f8f9fa;
-    transform scale(0.85);  Слегка масштабируем, чтобы гарантированно влезло на средние мониторы 
-    margin -40px 0;  Компенсируем масштаб 
+    position: relative;
+    width: 646px;
+    height: 646px;
+    background: #e6e9ef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 3px solid #f8f9fa;
+    transform: scale(0.75); /* Уменьшаем базовый масштаб, чтобы гарантированно влезть в окно */
+    margin: -70px 0; /* Компенсируем отступы масштаба */
+    flex-shrink: 0;
 }
 
 .pointer-needle {
-    position absolute;
-    top -8px;
-    width 0;
-    height 0;
-    border-left 10px solid transparent;
-    border-right 10px solid transparent;
-    border-top 18px solid var(--accent-color);
-    z-index 11;
-    filter drop-shadow(0px 3px 5px rgba(0, 180, 216, 0.5));
+    position: absolute;
+    top: -8px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 18px solid var(--lull-accent);
+    z-index: 11;
+    filter: drop-shadow(0px 3px 5px rgba(0, 180, 216, 0.5));
 }
 
 .wheel {
-    position absolute;
-    border-radius 50%;
-    transition transform 0.4s cubic-bezier(0.1, 0.8, 0.25, 1.15);
-    cursor grab;
-    box-shadow var(--wheel-shadow);
-    overflow hidden;
+    position: absolute;
+    border-radius: 50%;
+    transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.25, 1.15);
+    cursor: grab;
+    box-shadow: var(--lull-shadow);
+    overflow: hidden;
 }
-.wheelactive { cursor grabbing; }
+.wheel:active { cursor: grabbing; }
 
-.outer-wheel  { width 640px; height 640px; z-index 1; background #bbb; }
-.middle-wheel { width 530px; height 530px; z-index 2; background #ccc; border 3px solid #ffffff; }
-.inner-wheel  { width 390px; height 390px; z-index 3; background #ddd; border 3px solid #ffffff; }
+.outer-wheel  { width: 640px; height: 640px; z-index: 1; background: #bbb; }
+.middle-wheel { width: 530px; height: 530px; z-index: 2; background: #ccc; border: 3px solid #ffffff; }
+.inner-wheel  { width: 390px; height: 390px; z-index: 3; background: #ddd; border: 3px solid #ffffff; }
 
 .center-cap {
-    position absolute;
-    width 64px;
-    height 64px;
-    border-radius 50%;
-    background conic-gradient(from 0deg, #999, #eee, #999, #eee, #999);
-    box-shadow 0px 4px 10px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,0.6);
-    z-index 10;
-    cursor pointer;
-    border 2px solid #ffffff;
-    display flex;
-    align-items center;
-    justify-content center;
-    font-size 10px;
-    font-weight 900;
-    color #2b2d42;
-    text-transform uppercase;
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #999, #eee, #999, #eee, #999);
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,0.6);
+    z-index: 10;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #2b2d42;
+    text-transform: uppercase;
 }
-.center-capactive { transform scale(0.94); }
+.center-cap:active { transform: scale(0.94); }
 
-.segment-cell { position absolute; width 100%; height 100%; top 0; left 0; overflow visible; }
-.wheel-svg { width 100%; height 100%; position absolute; top 0; left 0; pointer-events none; }
-.svg-text-kk { font-size 14px; font-weight 800; fill #1a1d24; }
-.svg-text-ru { font-size 11px; font-weight 600; fill #4a5568; }
+.segment-cell { position: absolute; width: 100%; height: 100%; top: 0; left: 0; overflow: visible; }
+.wheel-svg { width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; }
+.svg-text-kk { font-size: 14px; font-weight: 800; fill: #1a1d24; }
+.svg-text-ru { font-size: 11px; font-weight: 600; fill: #4a5568; }
 
 .wheel-divider {
-    position absolute;
-    width 2px;
-    height 50%;
-    background linear-gradient(to top, transparent, rgba(0,0,0,0.08) 25%, #ffffff 100%);
-    transform-origin bottom center;
-    bottom 50%;
-    z-index 5;
+    position: absolute;
+    width: 2px;
+    height: 50%;
+    background: linear-gradient(to top, transparent, rgba(0,0,0,0.08) 25%, #ffffff 100%);
+    transform-origin: bottom center;
+    bottom: 50%;
+    z-index: 5;
 }
 
- КОМПАКТНЫЙ ВСТРОЕННЫЙ ДЕШБОРД РЕЗУЛЬТАТОВ 
+/* НИЖНИЙ ДЕШБОРД РЕЗУЛЬТАТОВ */
 .wheel-dashboard {
-    display flex;
-    flex-direction row;
-    gap 12px;
-    width 100%;
-    max-width 700px;
-    margin-top 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+    max-width: 750px;
+    box-sizing: border-box;
 }
 .wheel-dash-cell {
-    flex 1;
-    background #f8f9fa;
-    padding 12px 14px;
-    border-radius 14px;
-    border 1px solid #e9ecef;
-    box-shadow inset 2px 2px 5px rgba(0,0,0,0.03);
+    flex: 1;
+    background: #ffffff;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
-.w-label { font-size 9px; text-transform uppercase; color var(--accent-color); font-weight 800; margin-bottom 4px; }
-.w-kk { font-size 13px; font-weight 800; color #1a1c23; }
-.w-ru { font-size 11px; color #5c677d; }
+.w-label { font-size: 9px; text-transform: uppercase; color: var(--lull-accent); font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px; }
+.w-kk { font-size: 13px; font-weight: 800; color: #1a1c23; margin-bottom: 2px; }
+.w-ru { font-size: 11px; color: #5c677d; }
 
- Адаптивное сжатие колеса для мелких экранов 
-@media (max-width 768px) {
-    .device-body { transform scale(0.55); margin -140px 0; }
-    .wheel-dashboard { flex-direction column; gap 8px; }
+/* Медиа-запрос для ноутбуков и ПК с небольшим экраном */
+@media (max-height: 850px) {
+    .device-body { transform: scale(0.65); margin: -100px 0; }
 }
