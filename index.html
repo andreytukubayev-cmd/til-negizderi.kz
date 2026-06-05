@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="stylesheet.css">
-    <link rel="stylesheet" href="wheel.css">
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
 </head>
 <body>
@@ -56,13 +55,12 @@
                 </div>
                 
                 <div class="tab-navigation">
-                    <button class="tab-nav-btn active" onclick="switchTab('ai-chat', this)">💬 ИИ-Чат</button>
-                    <button class="tab-nav-btn" onclick="switchTab('lull-wheel', this)">🎡 Колеса Луллия</button>
+                    <a href="constructor.html" class="tab-nav-btn constructor-link" style="text-decoration: none;">⚙️ Конструктор диалогов</a>
                 </div>
             </div>
 
-            <div id="ai-chat-tab" class="tab-content active">
-                <div class="messages" id="messages" style="flex-grow: 1;">
+            <div class="chat-main-layout">
+                <div class="messages" id="messages">
                     <div class="message bot">
                         <div class="message-content">
                             👋 <strong>Здравствуйте!</strong><br><br>
@@ -77,40 +75,6 @@
                     <button id="sendBtn">📤 Отправить</button>
                 </div>
             </div>
-
-            <div id="lull-wheel-tab" class="tab-content">
-                <div class="wheel-layout-container">
-                    
-                    <div class="device-body">
-                        <div class="pointer-needle"></div>
-                        
-                        <div class="wheel outer-wheel" id="outerWheel"></div>
-                        <div class="wheel middle-wheel" id="middleWheel"></div>
-                        <div class="wheel inner-wheel" id="innerWheel"></div>
-                        
-                        <div class="center-cap" id="spinBtn">Авто</div>
-                    </div>
-                    
-                    <div class="wheel-dashboard">
-                        <div class="wheel-dash-cell">
-                            <div class="w-label">1. ВОПРОС (ВНУТРЕННЕЕ КОЛЬЦО)</div>
-                            <div class="w-kk" id="resKkInner">-</div>
-                            <div class="w-ru" id="resRuInner">-</div>
-                        </div>
-                        <div class="wheel-dash-cell">
-                            <div class="w-label">2. ОТВЕТ (СРЕДНЕЕ КОЛЬЦО)</div>
-                            <div class="w-kk" id="resKkMiddle">-</div>
-                            <div class="w-ru" id="resRuMiddle">-</div>
-                        </div>
-                        <div class="wheel-dash-cell">
-                            <div class="w-label">3. РЕАКЦИЯ (ВНЕШНЕЕ КОЛЬЦО)</div>
-                            <div class="w-kk" id="resKkOuter">-</div>
-                            <div class="w-ru" id="resRuOuter">-</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div> 
 
@@ -146,35 +110,8 @@
 
     <script src="js/localTranslator.js"></script>
     <script src="js/chat.js"></script>
-    <script src="data/001-wheelDialogs.js"></script>
-    <script src="engine.js"></script>
     
     <script>
-        // Логика переключения табов
-        function switchTab(tabId, element) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab-nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            const targetTab = document.getElementById(`${tabId}-tab`);
-            if (targetTab) {
-                targetTab.classList.add('active');
-            }
-            
-            if (element) {
-                element.classList.add('active');
-            } else {
-                const buttons = document.querySelectorAll('.tab-nav-btn');
-                if (tabId === 'ai-chat') buttons[0].classList.add('active');
-                if (tabId === 'lull-wheel') buttons[1].classList.add('active');
-            }
-        }
-
-        // Боковое меню и статистика
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const menuOverlay = document.getElementById('menuOverlay');
