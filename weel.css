@@ -166,7 +166,7 @@
 .w-kk { font-size: 13px; font-weight: 800; color: #1a1c23; margin-bottom: 2px; }
 .w-ru { font-size: 11px; color: #5c677d; }
 
-/* Медиа-запрос для ноутбуков и ПК с небольшим экраном */
+/* Медиа-запрос для ноутбуков*/
 @media (max-height: 850px) {
     .device-body { transform: scale(0.65); margin: -100px 0; }
 }
