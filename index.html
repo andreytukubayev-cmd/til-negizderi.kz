@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="stylesheet.css">
+    <link rel="stylesheet" href="wheel.css">
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
 </head>
 <body>
@@ -21,39 +22,22 @@
             </div>
 
             <div class="method-info">
-    <h3>🎯 О методике</h3>
+                <h3>🎯 О методике</h3>
+                <p style="text-align: justify; margin-bottom: 5px;">
+                    В когнитивной психологии и нейробиологии уровень рабочей памяти обычно оценивается через распределение в популяции и объем удерживаемых единиц информации.
+                </p>
 
-    <p style="text-align: justify; margin-bottom: 5px;">
-        В когнитивной психологии и нейробиологии уровень рабочей памяти (включая её компонент — фонологическую петлю) обычно оценивается через распределение в популяции (колоколообразная кривая Гаусса) и объем удерживаемых единиц информации.
-    </p>
-
-    <details style="margin-bottom: 15px; cursor: pointer;">
-        <summary style="font-weight: bold; color: #00bcd4; margin-bottom: 15px; padding: 5px 0; font-size: 13px;">
-            📖 Развернуть/свернуть...
-        </summary>
-        
-        <div style="padding-left: 12px; border-left: 2px solid rgba(255,255,255,0.15); margin-top: 10px;">
-          <p style="text-align: justify; margin-bottom: 20px;">   
-          Понятие «магического числа 7±2» (Джордж Миллер) для рабочей памяти сейчас пересмотрено. Современные исследования (например, Нэльсона Коуэна) доказывают, что чистый объем рабочей памяти (без применения фокусов кодирования и мнемотехник) у обычного человека составляет всего 4±1 единицы информации. Однако, устоявшиеся методики обучения языкам продолжают опираться на сильную фонологическую и рабочую память, хотя людей с таким типом памяти около 10-15%. В результате такого обучения, из группы в 20 слушателей, более-менее комфортно себя чувствуют лишь 2-3 человека.<br><br>
-Ситуация усугубляется очередностью обучения, когда слушателю, не умеющему говорить на языке и не понимающему его, предлагается учить алфавит, числа и грамматику. Хотя в природе заложено, что ребенок сперва начинает говорить и понимать речь, а лишь затем переходит к алфавиту.</p>
-            
-            <p style="text-align: justify; margin-bottom: 20px;">
-                Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.
-            </p>
-
-            <ul style="margin-bottom: 15px; padding-left: 20px;">
-                <li style="text-align: justify; margin-bottom: 8px;"><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</li>
-                <li style="text-align: justify; margin-bottom: 8px;"><b>Деловая коммуникация на выбор:</b> Изучение структур, необходимых для студенческой жизни, профессионального общения и официального стиля.</li>
-                <li style="text-align: justify; margin-bottom: 8px;"><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную учебную или рабочую деятельность.</li>
-            </ul>
-
-            <div style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; font-style: italic; font-size: 11px; margin-top: 15px; text-align: justify;">
-                "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
+                <details style="margin-bottom: 15px; cursor: pointer;">
+                    <summary style="font-weight: bold; color: #00bcd4; margin-bottom: 15px; padding: 5px 0; font-size: 13px;">
+                        📖 Развернуть/свернуть...
+                    </summary>
+                    <div style="padding-left: 12px; border-left: 2px solid rgba(255,255,255,0.15); margin-top: 10px;">
+                        <p style="text-align: justify; margin-bottom: 20px;">   
+                            Современные исследования доказывают, что чистый объем рабочей памяти у обычного человека составляет всего 4±1 единицы информации. Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику.
+                        </p>
+                    </div>
+                </details>
             </div>
-            
-        </div>
-    </details>
-    </div>
             <div class="stats">
                 <h3 id="statsTitle">📊 Ваша статистика</h3>
                 <div class="stat-item">
@@ -67,27 +51,71 @@
             <div class="chat-header">
                 <button class="menu-toggle" id="menuToggle">☰</button>
                 <div class="header-text">
-                    <h1>🤖 AI-помощник по казахскому языку</h1>
-                    <p>Перевод и ситуации по методике Тукубаева А.С.</p>
+                    <h1>🤖 Система обучения</h1>
+                    <p>Методика Тукубаева А.С.</p>
+                </div>
+                
+                <div class="tab-navigation">
+                    <button class="tab-nav-btn active" onclick="switchTab('ai-chat')">💬 ИИ-Чат</button>
+                    <button class="tab-nav-btn" onclick="switchTab('lull-wheel')">🎡 Колеса Луллия</button>
                 </div>
             </div>
 
-            <div class="messages" id="messages">
-                <div class="message bot">
-                    <div class="message-content">
-                        👋 <strong>Здравствуйте!</strong><br><br>
-                        Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
-                        <strong>Как ваше имя?</strong>
+            <div id="ai-chat-tab" class="tab-content active">
+                <div class="messages" id="messages">
+                    <div class="message bot">
+                        <div class="message-content">
+                            👋 <strong>Здравствуйте!</strong><br><br>
+                            Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
+                            <strong>Как ваше имя?</strong>
+                        </div>
                     </div>
                 </div>
+
+                <div class="input-area">
+                    <input type="text" id="userInput" placeholder="Напишите фразу на русском..." />
+                    <button id="sendBtn">📤 Отправить</button>
+                </div>
             </div>
 
-            <div class="input-area">
-                <input type="text" id="userInput" placeholder="Напишите фразу на русском..." />
-                <button id="sendBtn">📤 Отправить</button>
+            <div id="lull-wheel-tab" class="tab-content">
+                <div class="wheel-layout-container">
+                    
+                    <div class="device-body">
+                        <div class="pointer-needle"></div>
+                        
+                        <div class="wheel outer-wheel" id="outerWheel"></div>
+                        <div class="wheel middle-wheel" id="middleWheel"></div>
+                        <div class="wheel inner-wheel" id="innerWheel"></div>
+                        
+                        <div class="center-cap" id="spinBtn">Авто</div>
+                    </div>
+                    
+                    <div class="wheel-dashboard">
+                        <div class="wheel-dash-cell">
+                            <div class="w-label">1. ВОПРОС (ВНУТРЕННЕЕ КОЛЬЦО)</div>
+                            <div class="w-kk" id="resKkInner">-</div>
+                            <div class="w-ru" id="resRuInner">-</div>
+                        </div>
+                        <div class="wheel-dash-cell">
+                            <div class="w-label">2. ОТВЕТ (СРЕДНЕЕ КОЛЬЦО)</div>
+                            <div class="w-kk" id="resKkMiddle">-</div>
+                            <div class="w-ru" id="resRuMiddle">-</div>
+                        </div>
+                        <div class="wheel-dash-cell">
+                            <div class="w-label">3. РЕАКЦИЯ (ВНЕШНЕЕ КОЛЬЦО)</div>
+                            <div class="w-kk" id="resKkOuter">-</div>
+                            <div class="w-ru" id="resRuOuter">-</div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
         </div>
-    </div> <div class="action-menu" id="actionMenu">
+    </div> 
+
+    <div class="action-menu" id="actionMenu">
         <div class="action-menu-overlay" id="actionMenuOverlay"></div>
         <div class="action-menu-content">
             <div class="action-menu-title">Выберите действие</div>
@@ -120,8 +148,20 @@
     <script src="js/localTranslator.js"></script>
     <script src="js/chat.js"></script>
     
+    <script src="dataset.js"></script>
+    <script src="engine.js"></script>
+    
     <script>
-        // Управление выдвижным меню
+        // Переключение вкладок
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Управление меню (сохранено)
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const menuOverlay = document.getElementById('menuOverlay');
@@ -131,29 +171,19 @@
             menuOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
         function closeMenu() {
             sidebar.classList.remove('open');
             menuOverlay.classList.remove('active');
             document.body.style.overflow = '';
         }
-        
         if (menuToggle) {
             menuToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (sidebar.classList.contains('open')) {
-                    closeMenu();
-                } else {
-                    openMenu();
-                }
+                if (sidebar.classList.contains('open')) { closeMenu(); } else { openMenu(); }
             });
         }
+        if (menuOverlay) { menuOverlay.addEventListener('click', closeMenu); }
         
-        if (menuOverlay) {
-            menuOverlay.addEventListener('click', closeMenu);
-        }
-        
-        // Функция для обновления заголовка статистики с именем пользователя
         function updateStatsTitle() {
             const statsTitle = document.getElementById('statsTitle');
             const userName = localStorage.getItem('userName');
@@ -163,15 +193,9 @@
                 statsTitle.innerHTML = `📊 Ваша статистика`;
             }
         }
-        
-        // Вызываем при загрузке
         updateStatsTitle();
-        
-        // Следим за изменениями в localStorage
         window.addEventListener('storage', (e) => {
-            if (e.key === 'userName') {
-                updateStatsTitle();
-            }
+            if (e.key === 'userName') updateStatsTitle();
         });
     </script>
 </body>
