@@ -1,10 +1,10 @@
-// WheelRenderer - прямая копия логики из engine.js
+// WheelRenderer - полная копия твоего engine.js
 
 class WheelRenderer {
     constructor(containerId, themeData) {
         this.container = document.getElementById(containerId);
         this.themeData = themeData;
-        this.currentRotations = { outer: 0, middle: 0, inner: 0 };
+        this.currentRotations = { inner: 0, middle: 0, outer: 0 };
         this.init();
     }
 
@@ -12,7 +12,7 @@ class WheelRenderer {
         if (!this.container) return;
         this.container.innerHTML = '';
         
-        // Создаём device-body как в оригинале
+        // Создаём структуру как в твоём index.html
         const deviceBody = document.createElement('div');
         deviceBody.className = 'device-body';
         deviceBody.style.position = 'relative';
@@ -26,7 +26,6 @@ class WheelRenderer {
         deviceBody.style.justifyContent = 'center';
         deviceBody.style.boxShadow = '15px 15px 30px #d1d5db, -15px -15px 30px #ffffff';
         
-        // Стрелка
         const pointer = document.createElement('div');
         pointer.className = 'pointer-needle';
         pointer.style.position = 'absolute';
@@ -40,22 +39,21 @@ class WheelRenderer {
         pointer.style.borderTop = '18px solid #00b4d8';
         pointer.style.zIndex = '11';
         
-        // Колёса - как в оригинале, без лишних стилей
         const outerWheel = document.createElement('div');
         outerWheel.className = 'wheel outer-wheel';
-        outerWheel.id = 'rendererOuterWheel';
+        outerWheel.id = 'rendererOuter';
         
         const middleWheel = document.createElement('div');
         middleWheel.className = 'wheel middle-wheel';
-        middleWheel.id = 'rendererMiddleWheel';
+        middleWheel.id = 'rendererMiddle';
         
         const innerWheel = document.createElement('div');
         innerWheel.className = 'wheel inner-wheel';
-        innerWheel.id = 'rendererInnerWheel';
+        innerWheel.id = 'rendererInner';
         
-        // Кнопка СБРОС
         const centerBtn = document.createElement('div');
         centerBtn.className = 'center-cap';
+        centerBtn.id = 'rendererSpinBtn';
         centerBtn.innerText = 'СБРОС';
         
         deviceBody.appendChild(outerWheel);
@@ -66,106 +64,23 @@ class WheelRenderer {
         
         this.container.appendChild(deviceBody);
         
-        // Генерируем сектора
+        // Генерируем ячейки
         this.generateWheelCells(outerWheel, this.themeData.outer, 'outer');
         this.generateWheelCells(middleWheel, this.themeData.middle, 'middle');
         this.generateWheelCells(innerWheel, this.themeData.inner, 'inner');
         
-        this.wheels = {
-            outer: { el: outerWheel, rotation: 0 },
-            middle: { el: middleWheel, rotation: 0 },
-            inner: { el: innerWheel, rotation: 0 }
-        };
+        // Настройка вращения
+        this.setupRotationEngine(innerWheel, 'inner');
+        this.setupRotationEngine(middleWheel, 'middle');
+        this.setupRotationEngine(outerWheel, 'outer');
         
-        // Звук
-        let clickAudio = null;
-        try {
-            clickAudio = new Audio('short-click.mp3');
-            clickAudio.volume = 0.35;
-        } catch(e) {}
-        
-        const playClick = () => {
-            if (clickAudio) {
-                clickAudio.currentTime = 0;
-                clickAudio.play().catch(() => {});
-            }
-        };
-        
-        // Drag & Drop
-        const setupWheelDrag = (wheelEl, key) => {
-            let isDragging = false;
-            let startAngle = 0;
-            let lastSectorIndex = 0;
-            
-            const getCursorAngle = (e) => {
-                const rect = wheelEl.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
-            };
-            
-            const getCurrentSector = (rotation) => {
-                let norm = (-rotation) % 360;
-                if (norm < 0) norm += 360;
-                return Math.round(norm / 60) % 6;
-            };
-            
-            const onStart = (e) => {
-                isDragging = true;
-                startAngle = getCursorAngle(e) - this.currentRotations[key];
-                wheelEl.style.transition = 'none';
-                wheelEl.classList.add('active-turning');
-                lastSectorIndex = getCurrentSector(this.currentRotations[key]);
-                e.preventDefault();
-            };
-            
-            const onMove = (e) => {
-                if (!isDragging) return;
-                this.currentRotations[key] = getCursorAngle(e) - startAngle;
-                wheelEl.style.transform = `rotate(${this.currentRotations[key]}deg)`;
-                
-                const currentSector = getCurrentSector(this.currentRotations[key]);
-                if (currentSector !== lastSectorIndex) {
-                    playClick();
-                    lastSectorIndex = currentSector;
-                }
-                this.updateDashboard();
-                e.preventDefault();
-            };
-            
-            const onEnd = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                wheelEl.classList.remove('active-turning');
-                wheelEl.style.transition = 'transform 0.4s cubic-bezier(0.15, 0.85, 0.3, 1.25)';
-                this.currentRotations[key] = Math.round(this.currentRotations[key] / 60) * 60;
-                wheelEl.style.transform = `rotate(${this.currentRotations[key]}deg)`;
-                playClick();
-                this.updateDashboard();
-            };
-            
-            wheelEl.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-            wheelEl.addEventListener('touchstart', onStart, { passive: true });
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onEnd);
-        };
-        
-        setupWheelDrag(outerWheel, 'outer');
-        setupWheelDrag(middleWheel, 'middle');
-        setupWheelDrag(innerWheel, 'inner');
-        
-        // Кнопка СБРОС
+        // Кнопка сброса
         centerBtn.addEventListener('click', () => {
-            this.currentRotations = { outer: 0, middle: 0, inner: 0 };
-            outerWheel.style.transform = 'rotate(0deg)';
-            middleWheel.style.transform = 'rotate(0deg)';
+            this.currentRotations = { inner: 0, middle: 0, outer: 0 };
             innerWheel.style.transform = 'rotate(0deg)';
+            middleWheel.style.transform = 'rotate(0deg)';
+            outerWheel.style.transform = 'rotate(0deg)';
             this.updateDashboard();
-            playClick();
         });
         
         this.updateDashboard();
@@ -176,13 +91,17 @@ class WheelRenderer {
         const angleStep = 360 / count;
         
         let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
+        let colorPrefix = '';
         
         if (type === 'outer') {
             dMax = 640; rIn = 265; rOut = 320; textRadius = 295;
+            colorPrefix = 'var(--color-out-';
         } else if (type === 'middle') {
             dMax = 530; rIn = 195; rOut = 265; textRadius = 232;
+            colorPrefix = 'var(--color-mid-';
         } else if (type === 'inner') {
             dMax = 390; rIn = 0; rOut = 195; textRadius = 160;
+            colorPrefix = 'var(--color-inn-';
         }
         
         const cx = dMax / 2;
@@ -307,6 +226,79 @@ class WheelRenderer {
         return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
     }
 
+    setupRotationEngine(wheelEl, key) {
+        let isDragging = false;
+        let startAngle = 0;
+        let lastSectorIndex = 0;
+        
+        // Звук
+        let clickAudio = null;
+        try {
+            clickAudio = new Audio('short-click.mp3');
+            clickAudio.volume = 0.35;
+        } catch(e) {}
+        
+        const playClick = () => {
+            if (clickAudio) {
+                clickAudio.currentTime = 0;
+                clickAudio.play().catch(() => {});
+            }
+        };
+        
+        const getCursorAngle = (e) => {
+            const rect = wheelEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+        };
+        
+        const onStart = (e) => {
+            isDragging = true;
+            startAngle = getCursorAngle(e) - this.currentRotations[key];
+            wheelEl.style.transition = 'none';
+            wheelEl.classList.add('active-turning');
+            e.preventDefault();
+        };
+        
+        const onMove = (e) => {
+            if (!isDragging) return;
+            this.currentRotations[key] = getCursorAngle(e) - startAngle;
+            wheelEl.style.transform = `rotate(${this.currentRotations[key]}deg)`;
+            
+            let norm = (-this.currentRotations[key]) % 360;
+            if (norm < 0) norm += 360;
+            let currentSector = Math.round(norm / 60) % 6;
+            
+            if (currentSector !== lastSectorIndex) {
+                playClick();
+                lastSectorIndex = currentSector;
+            }
+            
+            this.updateDashboard();
+            e.preventDefault();
+        };
+        
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            wheelEl.classList.remove('active-turning');
+            wheelEl.style.transition = 'transform 0.4s cubic-bezier(0.15, 0.85, 0.3, 1.25)';
+            this.currentRotations[key] = Math.round(this.currentRotations[key] / 60) * 60;
+            wheelEl.style.transform = `rotate(${this.currentRotations[key]}deg)`;
+            playClick();
+            this.updateDashboard();
+        };
+        
+        wheelEl.addEventListener('mousedown', onStart);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onEnd);
+        wheelEl.addEventListener('touchstart', onStart, { passive: true });
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchend', onEnd);
+    }
+
     updateDashboard() {
         const getIndex = (rotation) => {
             let norm = (-rotation) % 360;
@@ -346,7 +338,7 @@ class WheelRenderer {
 
     updateTheme(newThemeData) {
         this.themeData = newThemeData;
-        this.currentRotations = { outer: 0, middle: 0, inner: 0 };
+        this.currentRotations = { inner: 0, middle: 0, outer: 0 };
         this.init();
     }
 }
