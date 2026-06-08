@@ -1,4 +1,4 @@
-// Простой рендерер - использует оригинальный код из engine.js
+// WheelRenderer - использует оригинальный код из engine.js
 
 class WheelRenderer {
     constructor(containerId, themeData) {
@@ -11,7 +11,7 @@ class WheelRenderer {
         if (!this.container) return;
         this.container.innerHTML = '';
         
-        // Создаём контейнер как в оригинале
+        // Копируем структуру из оригинального index.html
         const deviceBody = document.createElement('div');
         deviceBody.className = 'device-body';
         deviceBody.style.position = 'relative';
@@ -39,15 +39,36 @@ class WheelRenderer {
         pointer.style.zIndex = '11';
         
         // Колёса
-        const outerWheel = this.createWheel(640, this.themeData.outer, 'outer');
-        const middleWheel = this.createWheel(530, this.themeData.middle, 'middle');
-        const innerWheel = this.createWheel(390, this.themeData.inner, 'inner');
-        
+        const outerWheel = document.createElement('div');
+        outerWheel.className = 'wheel outer-wheel';
         outerWheel.style.position = 'absolute';
-        middleWheel.style.position = 'absolute';
-        innerWheel.style.position = 'absolute';
+        outerWheel.style.width = '640px';
+        outerWheel.style.height = '640px';
+        outerWheel.style.borderRadius = '50%';
+        outerWheel.style.zIndex = '1';
+        outerWheel.style.cursor = 'grab';
         
-        // Центрируем
+        const middleWheel = document.createElement('div');
+        middleWheel.className = 'wheel middle-wheel';
+        middleWheel.style.position = 'absolute';
+        middleWheel.style.width = '530px';
+        middleWheel.style.height = '530px';
+        middleWheel.style.borderRadius = '50%';
+        middleWheel.style.zIndex = '2';
+        middleWheel.style.cursor = 'grab';
+        middleWheel.style.border = '3px solid #ffffff';
+        
+        const innerWheel = document.createElement('div');
+        innerWheel.className = 'wheel inner-wheel';
+        innerWheel.style.position = 'absolute';
+        innerWheel.style.width = '390px';
+        innerWheel.style.height = '390px';
+        innerWheel.style.borderRadius = '50%';
+        innerWheel.style.zIndex = '3';
+        innerWheel.style.cursor = 'grab';
+        innerWheel.style.border = '3px solid #ffffff';
+        
+        // Центрируем среднее и внутреннее кольца
         const offsetMiddle = (640 - 530) / 2;
         middleWheel.style.left = `${offsetMiddle}px`;
         middleWheel.style.top = `${offsetMiddle}px`;
@@ -75,13 +96,6 @@ class WheelRenderer {
         centerBtn.style.color = '#2b2d42';
         centerBtn.innerText = 'СБРОС';
         
-        centerBtn.addEventListener('click', () => {
-            outerWheel.style.transform = 'rotate(0deg)';
-            middleWheel.style.transform = 'rotate(0deg)';
-            innerWheel.style.transform = 'rotate(0deg)';
-            this.updateDashboard(0, 0, 0);
-        });
-        
         deviceBody.appendChild(outerWheel);
         deviceBody.appendChild(middleWheel);
         deviceBody.appendChild(innerWheel);
@@ -90,6 +104,11 @@ class WheelRenderer {
         
         this.container.appendChild(deviceBody);
         
+        // Генерируем сектора для каждого колеса
+        this.generateWheelCells(outerWheel, this.themeData.outer, 'outer');
+        this.generateWheelCells(middleWheel, this.themeData.middle, 'middle');
+        this.generateWheelCells(innerWheel, this.themeData.inner, 'inner');
+        
         this.wheels = {
             outer: { el: outerWheel, rotation: 0 },
             middle: { el: middleWheel, rotation: 0 },
@@ -97,30 +116,26 @@ class WheelRenderer {
         };
         
         this.setupDrag();
-        this.updateDashboard(0, 0, 0);
+        this.updateDashboard();
     }
 
-    createWheel(size, items, type) {
-        const wheel = document.createElement('div');
-        wheel.style.width = `${size}px`;
-        wheel.style.height = `${size}px`;
-        wheel.style.borderRadius = '50%';
-        wheel.style.cursor = 'grab';
-        wheel.style.position = 'relative';
-        wheel.style.background = '#ddd';
-        wheel.style.boxShadow = '0px 20px 40px rgba(0, 0, 0, 0.12), inset 0px 2px 4px rgba(255,255,255,0.5)';
-        wheel.style.border = '3px solid #ffffff';
-        wheel.style.overflow = 'hidden';
-        
+    generateWheelCells(wheelEl, items, type) {
         const count = items.length;
         const angleStep = 360 / count;
-        const cx = size / 2;
-        const cy = size / 2;
         
-        let rIn = 0, rOut = size / 2;
-        if (type === 'outer') { rIn = size * 0.41; }
-        else if (type === 'middle') { rIn = size * 0.37; }
-        else if (type === 'inner') { rIn = 0; }
+        let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
+        let colorPrefix = '';
+        
+        if (type === 'outer') {
+            dMax = 640; rIn = 265; rOut = 320; textRadius = 295;
+        } else if (type === 'middle') {
+            dMax = 530; rIn = 195; rOut = 265; textRadius = 232;
+        } else if (type === 'inner') {
+            dMax = 390; rIn = 0; rOut = 195; textRadius = 160;
+        }
+        
+        const cx = dMax / 2;
+        const cy = dMax / 2;
         
         const colors = {
             outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
@@ -128,55 +143,117 @@ class WheelRenderer {
             inner: ['#ffffff', '#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da']
         };
         
+        wheelEl.innerHTML = '';
+        
         for (let i = 0; i < count; i++) {
             const obj = items[i];
             const currentAngle = i * angleStep;
             
             const cell = document.createElement('div');
+            cell.className = 'segment-cell';
             cell.style.position = 'absolute';
             cell.style.width = '100%';
             cell.style.height = '100%';
+            cell.style.top = '0';
+            cell.style.left = '0';
             cell.style.transform = `rotate(${currentAngle}deg)`;
             cell.style.transformOrigin = `${cx}px ${cy}px`;
+            cell.style.overflow = 'visible';
             
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+            svg.setAttribute("class", "wheel-svg");
+            svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
             svg.style.width = '100%';
             svg.style.height = '100%';
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
             
             const startAngle = -120;
             const endAngle = -60;
-            const startRad = startAngle * Math.PI / 180;
-            const endRad = endAngle * Math.PI / 180;
+            const sectorPathData = this.svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle);
+            const sectorColor = colors[type][i % 6];
             
-            const x1 = cx + rOut * Math.cos(startRad);
-            const y1 = cy + rOut * Math.sin(startRad);
-            const x2 = cx + rOut * Math.cos(endRad);
-            const y2 = cy + rOut * Math.sin(endRad);
+            const getArcPath = (radius) => {
+                const startRad = (-116 * Math.PI) / 180;
+                const endRad = (-64 * Math.PI) / 180;
+                const x1 = cx + radius * Math.cos(startRad);
+                const y1 = cy + radius * Math.sin(startRad);
+                const x2 = cx + radius * Math.cos(endRad);
+                const y2 = cy + radius * Math.sin(endRad);
+                return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
+            };
             
-            let pathData;
-            if (rIn > 0) {
-                const x3 = cx + rIn * Math.cos(endRad);
-                const y3 = cy + rIn * Math.sin(endRad);
-                const x4 = cx + rIn * Math.cos(startRad);
-                const y4 = cy + rIn * Math.sin(startRad);
-                pathData = `M ${x1} ${y1} A ${rOut} ${rOut} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 0 0 ${x4} ${y4} Z`;
+            const splitText = (text, limit) => {
+                if (text.length <= limit || !text.includes(' ')) return [text, ''];
+                const words = text.split(' ');
+                let line1 = '', line2 = '';
+                for (let w = 0; w < words.length; w++) {
+                    if ((line1 + words[w]).length <= limit) {
+                        line1 += (line1 === '' ? '' : ' ') + words[w];
+                    } else {
+                        line2 = words.slice(w).join(' ');
+                        break;
+                    }
+                }
+                return line1 === '' ? [text.slice(0, limit), text.slice(limit)] : [line1, line2];
+            };
+            
+            const limit = type === 'inner' ? 12 : 50;
+            const [kkLine1, kkLine2] = splitText(obj.kk, limit);
+            const [ruLine1, ruLine2] = splitText(obj.ru, limit);
+            
+            const step = 14;
+            let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}" stroke="white" stroke-width="2"/>`;
+            let currentR = textRadius;
+            
+            if (kkLine2) {
+                const pId = `p_kk_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+                currentR -= step;
+                const pId2 = `p_kk2_${type}_${i}`;
+                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>`;
+                currentR -= step + 4;
             } else {
-                pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${rOut} ${rOut} 0 0 1 ${x2} ${y2} Z`;
+                const pId = `p_kk_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+                currentR -= step + 4;
             }
             
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", pathData);
-            path.setAttribute("fill", colors[type][i % 6]);
-            path.setAttribute("stroke", "white");
-            path.setAttribute("stroke-width", "2");
-            svg.appendChild(path);
+            if (ruLine2) {
+                const pId = `p_ru_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+                currentR -= step;
+                const pId2 = `p_ru2_${type}_${i}`;
+                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>`;
+            } else {
+                const pId = `p_ru_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+            }
             
+            svg.innerHTML = svgContent;
             cell.appendChild(svg);
-            wheel.appendChild(cell);
+            wheelEl.appendChild(cell);
         }
-        
-        return wheel;
+    }
+
+    svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
+        const toRad = Math.PI / 180;
+        const x1_out = cx + rOut * Math.cos(startAngle * toRad);
+        const y1_out = cy + rOut * Math.sin(startAngle * toRad);
+        const x2_out = cx + rOut * Math.cos(endAngle * toRad);
+        const y2_out = cy + rOut * Math.sin(endAngle * toRad);
+        const x1_in = cx + rIn * Math.cos(endAngle * toRad);
+        const y1_in = cy + rIn * Math.sin(endAngle * toRad);
+        const x2_in = cx + rIn * Math.cos(startAngle * toRad);
+        const y2_in = cy + rIn * Math.sin(startAngle * toRad);
+        return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
     }
 
     setupDrag() {
@@ -209,11 +286,7 @@ class WheelRenderer {
                 if (!isDragging) return;
                 w.rotation = getAngle(e) - startAngle;
                 w.el.style.transform = `rotate(${w.rotation}deg)`;
-                this.updateDashboard(
-                    this.wheels.outer.rotation,
-                    this.wheels.middle.rotation,
-                    this.wheels.inner.rotation
-                );
+                this.updateDashboard();
                 e.preventDefault();
             };
             
@@ -223,11 +296,7 @@ class WheelRenderer {
                 w.el.style.transition = 'transform 0.3s ease';
                 w.rotation = Math.round(w.rotation / 60) * 60;
                 w.el.style.transform = `rotate(${w.rotation}deg)`;
-                this.updateDashboard(
-                    this.wheels.outer.rotation,
-                    this.wheels.middle.rotation,
-                    this.wheels.inner.rotation
-                );
+                this.updateDashboard();
             };
             
             w.el.addEventListener('mousedown', onStart);
@@ -239,16 +308,16 @@ class WheelRenderer {
         });
     }
 
-    updateDashboard(outerRot, middleRot, innerRot) {
+    updateDashboard() {
         const getIndex = (rotation) => {
             let norm = (-rotation) % 360;
             if (norm < 0) norm += 360;
             return Math.round(norm / 60) % 6;
         };
         
-        const outerIndex = getIndex(outerRot);
-        const middleIndex = getIndex(middleRot);
-        const innerIndex = getIndex(innerRot);
+        const outerIndex = getIndex(this.wheels.outer?.rotation || 0);
+        const middleIndex = getIndex(this.wheels.middle?.rotation || 0);
+        const innerIndex = getIndex(this.wheels.inner?.rotation || 0);
         
         const outerData = this.themeData.outer[outerIndex];
         const middleData = this.themeData.middle[middleIndex];
