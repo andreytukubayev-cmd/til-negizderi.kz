@@ -89,21 +89,15 @@
                 <button id="sendBtn">📤 Отправить</button>
             </div>
         </div>
-
         <!-- ПРАВАЯ ПАНЕЛЬ (КОЛЁСА ЛУЛЛИЯ) -->
         <div class="sidebar-right" id="sidebarRight">
-            <div class="right-panel-header">
-                <h3>🎡 КОЛЁСА ЛУЛЛИЯ</h3>
-                <button class="expand-wheels-btn" id="expandWheelsBtn">🔍</button>
+            <!-- Поиск и текущая тема в одной строке -->
+            <div class="search-theme-compact">
+                <input type="text" id="themeSearch" placeholder="🔍 Поиск темы..." />
+                <span class="current-theme-badge" id="currentTheme">столовая</span>
             </div>
             
-            <!-- Поиск по темам -->
-            <div class="search-theme">
-                <input type="text" id="themeSearch" placeholder="🔍 Поиск темы: столовая, аэропорт, совещание..." />
-                <div class="current-theme" id="currentTheme">Тема: столовая</div>
-            </div>
-            
-            <!-- Контейнер для мини-колёс -->
+            <!-- Контейнер для колёс -->
             <div id="wheelsContainer" class="wheels-container"></div>
             
             <!-- Отображение текущей комбинации -->
@@ -124,6 +118,7 @@
                     <div class="mini-dash-ru">-</div>
                 </div>
             </div>
+        </div>
             
             <div class="right-panel-footer">
                 <p>💡 Вращайте кольца → собирайте диалог</p>
