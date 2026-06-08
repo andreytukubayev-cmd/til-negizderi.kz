@@ -143,6 +143,20 @@ function regenerateWheels() {
         let isDragging = false;
         let startAngle = 0;
         let lastSectorIndex = 0;
+
+         // Звук
+    let clickAudio = null;
+    try {
+        clickAudio = new Audio('short-click.mp3');
+        clickAudio.volume = 0.35;
+    } catch(e) {}
+    
+    function playClick() {
+        if (clickAudio) {
+            clickAudio.currentTime = 0;
+            clickAudio.play().catch(() => {});
+        }
+    }
         
         const getAngle = (e) => {
             const rect = wheelEl.getBoundingClientRect();
