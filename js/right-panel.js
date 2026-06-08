@@ -1,6 +1,7 @@
-// Простая правая панель - использует оригинальный engine.js
+// Правая панель с колёсами Луллия
 
 let currentTheme = 'столовая';
+let rotations = { inner: 0, middle: 0, outer: 0 };
 let originalEngineInitialized = false;
 
 function loadTheme(themeName) {
@@ -8,7 +9,7 @@ function loadTheme(themeName) {
     if (!themeData) return false;
     
     currentTheme = themeName;
-    document.getElementById('currentTheme').innerText = `Тема: ${themeName}`;
+    document.getElementById('currentTheme').innerText = themeName;
     
     // Обновляем глобальный dataset
     window.dataset = {
@@ -17,7 +18,6 @@ function loadTheme(themeName) {
         inner: themeData.inner
     };
     
-    // Если engine уже инициализирован, пересоздаём колёса
     if (originalEngineInitialized) {
         regenerateWheels();
     }
@@ -29,7 +29,6 @@ function regenerateWheels() {
     const container = document.getElementById('wheelsContainer');
     if (!container) return;
     
-    // Очищаем и создаём заново структуру как в оригинале
     container.innerHTML = '';
     
     const deviceBody = document.createElement('div');
@@ -87,139 +86,28 @@ function regenerateWheels() {
     generateWheelCells(middleWheel, window.dataset.middle, 'middle');
     generateWheelCells(innerWheel, window.dataset.inner, 'inner');
     
+    // Сброс вращений
+    rotations = { inner: 0, middle: 0, outer: 0 };
+    
     // Настраиваем вращение
     setupDragForWheel(innerWheel, 'inner');
     setupDragForWheel(middleWheel, 'middle');
     setupDragForWheel(outerWheel, 'outer');
     
     // Кнопка сброса
-    let rotations = { inner: 0, middle: 0, outer: 0 };
     centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerWheel.style.transform = 'rotate(0deg)';
         middleWheel.style.transform = 'rotate(0deg)';
         outerWheel.style.transform = 'rotate(0deg)';
         updateWheelsDisplay(0, 0, 0);
+        playClick();
     });
     
-    function updateWheelsDisplay(outerRot, middleRot, innerRot) {
-        const getIndex = (rotation) => {
-            let norm = (-rotation) % 360;
-            if (norm < 0) norm += 360;
-            return Math.round(norm / 60) % 6;
-        };
-        
-        const outerIdx = getIndex(outerRot);
-        const middleIdx = getIndex(middleRot);
-        const innerIdx = getIndex(innerRot);
-        
-        const outerData = window.dataset.outer[outerIdx];
-        const middleData = window.dataset.middle[middleIdx];
-        const innerData = window.dataset.inner[innerIdx];
-        
-        const displayDiv = document.getElementById('wheelsDisplay');
-        if (displayDiv) {
-            displayDiv.innerHTML = `
-                <div class="mini-dash-item">
-                    <div class="mini-dash-label">❓ ВОПРОС</div>
-                    <div class="mini-dash-kk">${outerData?.kk || '-'}</div>
-                    <div class="mini-dash-ru">${outerData?.ru || '-'}</div>
-                </div>
-                <div class="mini-dash-item">
-                    <div class="mini-dash-label">💬 ОТВЕТ</div>
-                    <div class="mini-dash-kk">${middleData?.kk || '-'}</div>
-                    <div class="mini-dash-ru">${middleData?.ru || '-'}</div>
-                </div>
-                <div class="mini-dash-item">
-                    <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
-                    <div class="mini-dash-kk">${innerData?.kk || '-'}</div>
-                    <div class="mini-dash-ru">${innerData?.ru || '-'}</div>
-                </div>
-            `;
-        }
-    }
-    
-    function setupDragForWheel(wheelEl, key) {
-        let isDragging = false;
-        let startAngle = 0;
-        let lastSectorIndex = 0;
-
-         // Звук
-    let clickAudio = null;
-    try {
-        clickAudio = new Audio('short-click.mp3');
-        clickAudio.volume = 0.35;
-    } catch(e) {}
-    
-    function playClick() {
-        if (clickAudio) {
-            clickAudio.currentTime = 0;
-            clickAudio.play().catch(() => {});
-        }
-    }
-        
-        const getAngle = (e) => {
-            const rect = wheelEl.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
-        };
-        
-        wheelEl.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startAngle = getAngle(e) - rotations[key];
-            wheelEl.style.transition = 'none';
-            e.preventDefault();
-        });
-        
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            rotations[key] = getAngle(e) - startAngle;
-            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
-            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
-            e.preventDefault();
-        });
-        
-        window.addEventListener('mouseup', () => {
-            if (!isDragging) return;
-            isDragging = false;
-            wheelEl.style.transition = 'transform 0.3s ease';
-            rotations[key] = Math.round(rotations[key] / 60) * 60;
-            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
-            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
-        });
-        
-        wheelEl.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startAngle = getAngle(e) - rotations[key];
-            wheelEl.style.transition = 'none';
-            e.preventDefault();
-        }, { passive: false });
-        
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            rotations[key] = getAngle(e) - startAngle;
-            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
-            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
-            e.preventDefault();
-        }, { passive: false });
-        
-        window.addEventListener('touchend', () => {
-            if (!isDragging) return;
-            isDragging = false;
-            wheelEl.style.transition = 'transform 0.3s ease';
-            rotations[key] = Math.round(rotations[key] / 60) * 60;
-            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
-            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
-        });
-    }
-    
+    updateWheelsDisplay(0, 0, 0);
     originalEngineInitialized = true;
 }
 
-// Копия функции generateWheelCells из engine.js
 function generateWheelCells(wheelEl, items, type) {
     const count = items.length;
     const angleStep = 360 / count;
@@ -356,9 +244,120 @@ function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
     return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
 }
 
+// Звук
+let clickAudio = null;
+try {
+    clickAudio = new Audio('short-click.mp3');
+    clickAudio.volume = 0.35;
+} catch(e) {}
+
+function playClick() {
+    if (clickAudio) {
+        clickAudio.currentTime = 0;
+        clickAudio.play().catch(() => {});
+    }
+}
+
+function setupDragForWheel(wheelEl, key) {
+    let isDragging = false;
+    let startAngle = 0;
+    let lastSectorIndex = 0;
+    
+    const getAngle = (e) => {
+        const rect = wheelEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+    };
+    
+    const getCurrentSector = (rotation) => {
+        let norm = (-rotation) % 360;
+        if (norm < 0) norm += 360;
+        return Math.round(norm / 60) % 6;
+    };
+    
+    const onStart = (e) => {
+        isDragging = true;
+        startAngle = getAngle(e) - rotations[key];
+        wheelEl.style.transition = 'none';
+        lastSectorIndex = getCurrentSector(rotations[key]);
+        e.preventDefault();
+    };
+    
+    const onMove = (e) => {
+        if (!isDragging) return;
+        rotations[key] = getAngle(e) - startAngle;
+        wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+        
+        const currentSector = getCurrentSector(rotations[key]);
+        if (currentSector !== lastSectorIndex) {
+            playClick();
+            lastSectorIndex = currentSector;
+        }
+        
+        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        e.preventDefault();
+    };
+    
+    const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wheelEl.style.transition = 'transform 0.3s ease';
+        rotations[key] = Math.round(rotations[key] / 60) * 60;
+        wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+        playClick();
+        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+    };
+    
+    wheelEl.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    wheelEl.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+}
+
+function updateWheelsDisplay(outerRot, middleRot, innerRot) {
+    const getIndex = (rotation) => {
+        let norm = (-rotation) % 360;
+        if (norm < 0) norm += 360;
+        return Math.round(norm / 60) % 6;
+    };
+    
+    const outerIdx = getIndex(outerRot);
+    const middleIdx = getIndex(middleRot);
+    const innerIdx = getIndex(innerRot);
+    
+    const outerData = window.dataset.outer[outerIdx];
+    const middleData = window.dataset.middle[middleIdx];
+    const innerData = window.dataset.inner[innerIdx];
+    
+    const displayDiv = document.getElementById('wheelsDisplay');
+    if (displayDiv) {
+        displayDiv.innerHTML = `
+            <div class="mini-dash-item">
+                <div class="mini-dash-label">❓ ВОПРОС</div>
+                <div class="mini-dash-kk">${outerData?.kk || '-'}</div>
+                <div class="mini-dash-ru">${outerData?.ru || '-'}</div>
+            </div>
+            <div class="mini-dash-item">
+                <div class="mini-dash-label">💬 ОТВЕТ</div>
+                <div class="mini-dash-kk">${middleData?.kk || '-'}</div>
+                <div class="mini-dash-ru">${middleData?.ru || '-'}</div>
+            </div>
+            <div class="mini-dash-item">
+                <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
+                <div class="mini-dash-kk">${innerData?.kk || '-'}</div>
+                <div class="mini-dash-ru">${innerData?.ru || '-'}</div>
+            </div>
+        `;
+    }
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Устанавливаем глобальный dataset
     const defaultTheme = getThemeData('столовая');
     window.dataset = {
         outer: defaultTheme.outer,
@@ -368,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     regenerateWheels();
     
-    // Поиск
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
@@ -378,24 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadTheme(found);
                     themeSearch.value = '';
                 }
-            }
-        });
-    }
-    
-    // Кнопка расширения
-    const expandBtn = document.getElementById('expandWheelsBtn');
-    const container = document.querySelector('.container');
-    let expanded = false;
-    
-    if (expandBtn) {
-        expandBtn.addEventListener('click', () => {
-            expanded = !expanded;
-            if (expanded) {
-                container.classList.add('wheels-expanded');
-                expandBtn.innerHTML = '🗕';
-            } else {
-                container.classList.remove('wheels-expanded');
-                expandBtn.innerHTML = '🔍';
             }
         });
     }
