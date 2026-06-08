@@ -1,306 +1,387 @@
-// Логика правой панели с колёсами Луллия (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+// Простая правая панель - использует оригинальный engine.js
 
-let currentWheelRenderer = null;
 let currentTheme = 'столовая';
-let fullscreenActive = false;
+let originalEngineInitialized = false;
 
-// Функция загрузки темы
 function loadTheme(themeName) {
     const themeData = getThemeData(themeName);
-    if (!themeData) {
-        console.warn('Тема не найдена:', themeName);
-        return false;
-    }
+    if (!themeData) return false;
     
     currentTheme = themeName;
-    const currentThemeEl = document.getElementById('currentTheme');
-    if (currentThemeEl) {
-        currentThemeEl.innerText = `Тема: ${themeName}`;
-    }
+    document.getElementById('currentTheme').innerText = `Тема: ${themeName}`;
     
-    if (currentWheelRenderer) {
-        currentWheelRenderer.updateTheme(themeData);
-    } else {
-        currentWheelRenderer = new WheelRenderer('wheelsContainer', themeData);
+    // Обновляем глобальный dataset
+    window.dataset = {
+        outer: themeData.outer,
+        middle: themeData.middle,
+        inner: themeData.inner
+    };
+    
+    // Если engine уже инициализирован, пересоздаём колёса
+    if (originalEngineInitialized) {
+        regenerateWheels();
     }
     
     return true;
 }
 
-// Поиск темы
-function searchThemeAndLoad(query) {
-    if (!query || query.trim() === '') return;
+function regenerateWheels() {
+    const container = document.getElementById('wheelsContainer');
+    if (!container) return;
     
-    const foundTheme = searchTheme(query);
-    if (foundTheme) {
-        loadTheme(foundTheme);
-        
-        const messagesContainer = document.getElementById('messages');
-        if (messagesContainer) {
-            const hintDiv = document.createElement('div');
-            hintDiv.className = 'message bot';
-            hintDiv.innerHTML = `<div class="message-content" style="font-size: 0.8em; background: #e8e8e8;">
-                🎡 <strong>Найдена тема: ${foundTheme}</strong><br>
-                Вращайте колёса справа, чтобы собрать диалог!
-            </div>`;
-            messagesContainer.appendChild(hintDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            setTimeout(() => {
-                hintDiv.remove();
-            }, 5000);
-        }
-    } else {
-        const messagesContainer = document.getElementById('messages');
-        if (messagesContainer) {
-            const hintDiv = document.createElement('div');
-            hintDiv.className = 'message bot';
-            hintDiv.innerHTML = `<div class="message-content" style="font-size: 0.8em; background: #ffe0e0;">
-                ❓ <strong>Тема "${query}" не найдена</strong><br>
-                Доступные темы: ${getAllThemes().join(', ')}
-            </div>`;
-            messagesContainer.appendChild(hintDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            setTimeout(() => {
-                hintDiv.remove();
-            }, 5000);
-        }
-    }
-}
-
-// ПОЛНОЭКРАННЫЙ РЕЖИМ (рабочая версия)
-function openFullscreenWheels() {
-    const modal = document.getElementById('fullscreenWheelsModal');
-    const container = document.getElementById('fullscreenWheelsContainer');
-    
-    if (!modal || !container) return;
-    
+    // Очищаем и создаём заново структуру как в оригинале
     container.innerHTML = '';
     
-    const themeData = getThemeData(currentTheme);
-    if (!themeData) return;
+    const deviceBody = document.createElement('div');
+    deviceBody.className = 'device-body';
+    deviceBody.style.position = 'relative';
+    deviceBody.style.width = '646px';
+    deviceBody.style.height = '646px';
+    deviceBody.style.margin = '0 auto';
+    deviceBody.style.background = '#e6e9ef';
+    deviceBody.style.borderRadius = '50%';
+    deviceBody.style.display = 'flex';
+    deviceBody.style.alignItems = 'center';
+    deviceBody.style.justifyContent = 'center';
+    deviceBody.style.boxShadow = '15px 15px 30px #d1d5db, -15px -15px 30px #ffffff';
     
-    // Создаём полноэкранные колёса
-    createFullscreenWheels(container, themeData);
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    fullscreenActive = true;
-}
-
-function closeFullscreenWheels() {
-    const modal = document.getElementById('fullscreenWheelsModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-        fullscreenActive = false;
-    }
-}
-
-function createFullscreenWheels(container, themeData) {
-    container.innerHTML = '';
-    container.style.position = 'relative';
-    container.style.display = 'flex';
-    container.style.justifyContent = 'center';
-    container.style.alignItems = 'center';
-    container.style.minHeight = '500px';
-    
-    // Создаём обёртку
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    wrapper.style.width = 'min(90vw, 600px)';
-    wrapper.style.height = 'min(90vw, 600px)';
-    wrapper.style.margin = '0 auto';
-    
-    // Внешнее кольцо
-    const outerWheel = createFullWheel(themeData.outer, 'outer', 'min(90vw, 600px)', 250, 300);
-    outerWheel.style.position = 'absolute';
-    outerWheel.style.top = '0';
-    outerWheel.style.left = '0';
-    outerWheel.style.zIndex = '1';
-    
-    // Среднее кольцо
-    const middleSize = parseInt('min(90vw, 600px)') * 0.83;
-    const middleWheel = createFullWheel(themeData.middle, 'middle', `${parseInt('min(90vw, 600px)') * 0.83}px`, 190, 250);
-    middleWheel.style.position = 'absolute';
-    middleWheel.style.top = '50%';
-    middleWheel.style.left = '50%';
-    middleWheel.style.transform = 'translate(-50%, -50%)';
-    middleWheel.style.zIndex = '2';
-    
-    // Внутреннее кольцо
-    const innerWheel = createFullWheel(themeData.inner, 'inner', `${parseInt('min(90vw, 600px)') * 0.62}px`, 0, 185);
-    innerWheel.style.position = 'absolute';
-    innerWheel.style.top = '50%';
-    innerWheel.style.left = '50%';
-    innerWheel.style.transform = 'translate(-50%, -50%)';
-    innerWheel.style.zIndex = '3';
-    
-    // Указатель-стрелка
     const pointer = document.createElement('div');
+    pointer.className = 'pointer-needle';
     pointer.style.position = 'absolute';
-    pointer.style.top = '-15px';
+    pointer.style.top = '-8px';
     pointer.style.left = '50%';
     pointer.style.transform = 'translateX(-50%)';
     pointer.style.width = '0';
     pointer.style.height = '0';
-    pointer.style.borderLeft = '15px solid transparent';
-    pointer.style.borderRight = '15px solid transparent';
-    pointer.style.borderTop = '25px solid #00b4d8';
-    pointer.style.zIndex = '10';
-    pointer.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))';
+    pointer.style.borderLeft = '10px solid transparent';
+    pointer.style.borderRight = '10px solid transparent';
+    pointer.style.borderTop = '18px solid #00b4d8';
+    pointer.style.zIndex = '11';
     
-    wrapper.appendChild(outerWheel);
-    wrapper.appendChild(middleWheel);
-    wrapper.appendChild(innerWheel);
-    wrapper.appendChild(pointer);
+    const outerWheel = document.createElement('div');
+    outerWheel.className = 'wheel outer-wheel';
+    outerWheel.id = 'originalOuterWheel';
     
-    container.appendChild(wrapper);
-}
-
-function createFullWheel(items, type, size, rIn, rOut) {
-    const wheel = document.createElement('div');
-    const diameter = parseInt(size);
-    wheel.style.width = `${diameter}px`;
-    wheel.style.height = `${diameter}px`;
-    wheel.style.borderRadius = '50%';
-    wheel.style.cursor = 'grab';
-    wheel.style.position = 'relative';
-    wheel.style.background = '#f0f0f0';
-    wheel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-    wheel.style.border = '3px solid white';
+    const middleWheel = document.createElement('div');
+    middleWheel.className = 'wheel middle-wheel';
+    middleWheel.id = 'originalMiddleWheel';
     
-    const count = items.length;
-    const angleStep = 360 / count;
-    const cx = diameter / 2;
-    const cy = diameter / 2;
+    const innerWheel = document.createElement('div');
+    innerWheel.className = 'wheel inner-wheel';
+    innerWheel.id = 'originalInnerWheel';
     
-    const colors = [
-        '#ffadad', '#ffd6a5', '#fdffb6',
-        '#caffbf', '#9bf6ff', '#a0c4ff'
-    ];
+    const centerBtn = document.createElement('div');
+    centerBtn.className = 'center-cap';
+    centerBtn.innerText = 'СБРОС';
     
-    for (let i = 0; i < count; i++) {
-        const sector = document.createElement('div');
-        sector.style.position = 'absolute';
-        sector.style.width = '100%';
-        sector.style.height = '100%';
-        sector.style.transform = `rotate(${i * angleStep}deg)`;
-        sector.style.clipPath = `polygon(50% 50%, ${50 + (rOut / diameter) * 50 * Math.cos(-60 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-60 * Math.PI / 180)}%, ${50 + (rOut / diameter) * 50 * Math.cos(-120 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-120 * Math.PI / 180)}%)`;
+    deviceBody.appendChild(outerWheel);
+    deviceBody.appendChild(middleWheel);
+    deviceBody.appendChild(innerWheel);
+    deviceBody.appendChild(pointer);
+    deviceBody.appendChild(centerBtn);
+    
+    container.appendChild(deviceBody);
+    
+    // Генерируем сектора
+    generateWheelCells(outerWheel, window.dataset.outer, 'outer');
+    generateWheelCells(middleWheel, window.dataset.middle, 'middle');
+    generateWheelCells(innerWheel, window.dataset.inner, 'inner');
+    
+    // Настраиваем вращение
+    setupDragForWheel(innerWheel, 'inner');
+    setupDragForWheel(middleWheel, 'middle');
+    setupDragForWheel(outerWheel, 'outer');
+    
+    // Кнопка сброса
+    let rotations = { inner: 0, middle: 0, outer: 0 };
+    centerBtn.addEventListener('click', () => {
+        rotations = { inner: 0, middle: 0, outer: 0 };
+        innerWheel.style.transform = 'rotate(0deg)';
+        middleWheel.style.transform = 'rotate(0deg)';
+        outerWheel.style.transform = 'rotate(0deg)';
+        updateWheelsDisplay(0, 0, 0);
+    });
+    
+    function updateWheelsDisplay(outerRot, middleRot, innerRot) {
+        const getIndex = (rotation) => {
+            let norm = (-rotation) % 360;
+            if (norm < 0) norm += 360;
+            return Math.round(norm / 60) % 6;
+        };
         
-        // Цветной фон
-        const bg = document.createElement('div');
-        bg.style.position = 'absolute';
-        bg.style.width = '100%';
-        bg.style.height = '100%';
-        bg.style.background = colors[i % colors.length];
-        bg.style.opacity = '0.8';
-        bg.style.clipPath = `polygon(50% 50%, ${50 + (rOut / diameter) * 50 * Math.cos(-60 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-60 * Math.PI / 180)}%, ${50 + (rOut / diameter) * 50 * Math.cos(-120 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-120 * Math.PI / 180)}%)`;
-        sector.appendChild(bg);
+        const outerIdx = getIndex(outerRot);
+        const middleIdx = getIndex(middleRot);
+        const innerIdx = getIndex(innerRot);
         
-        // Текст
-        const textDiv = document.createElement('div');
-        textDiv.style.position = 'absolute';
-        textDiv.style.top = '35%';
-        textDiv.style.left = '50%';
-        textDiv.style.transform = 'translate(-50%, -50%)';
-        textDiv.style.textAlign = 'center';
-        textDiv.style.fontSize = type === 'inner' ? '10px' : '12px';
-        textDiv.style.fontWeight = 'bold';
-        textDiv.style.color = '#1a1d24';
-        textDiv.style.textShadow = '0 1px 1px white';
-        textDiv.style.width = '80px';
-        textDiv.innerHTML = `${items[i].kk}<br><small style="font-size: 9px; color: #4a5568;">${items[i].ru}</small>`;
+        const outerData = window.dataset.outer[outerIdx];
+        const middleData = window.dataset.middle[middleIdx];
+        const innerData = window.dataset.inner[innerIdx];
         
-        sector.appendChild(textDiv);
-        wheel.appendChild(sector);
+        const displayDiv = document.getElementById('wheelsDisplay');
+        if (displayDiv) {
+            displayDiv.innerHTML = `
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">❓ ВОПРОС</div>
+                    <div class="mini-dash-kk">${outerData?.kk || '-'}</div>
+                    <div class="mini-dash-ru">${outerData?.ru || '-'}</div>
+                </div>
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">💬 ОТВЕТ</div>
+                    <div class="mini-dash-kk">${middleData?.kk || '-'}</div>
+                    <div class="mini-dash-ru">${middleData?.ru || '-'}</div>
+                </div>
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
+                    <div class="mini-dash-kk">${innerData?.kk || '-'}</div>
+                    <div class="mini-dash-ru">${innerData?.ru || '-'}</div>
+                </div>
+            `;
+        }
     }
     
-    // Добавляем вращение
-    let rotation = 0;
-    let isDragging = false;
-    let startAngle = 0;
+    function setupDragForWheel(wheelEl, key) {
+        let isDragging = false;
+        let startAngle = 0;
+        let lastSectorIndex = 0;
+        
+        const getAngle = (e) => {
+            const rect = wheelEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+        };
+        
+        wheelEl.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startAngle = getAngle(e) - rotations[key];
+            wheelEl.style.transition = 'none';
+            e.preventDefault();
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            rotations[key] = getAngle(e) - startAngle;
+            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+            e.preventDefault();
+        });
+        
+        window.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            wheelEl.style.transition = 'transform 0.3s ease';
+            rotations[key] = Math.round(rotations[key] / 60) * 60;
+            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        });
+        
+        wheelEl.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startAngle = getAngle(e) - rotations[key];
+            wheelEl.style.transition = 'none';
+            e.preventDefault();
+        }, { passive: false });
+        
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            rotations[key] = getAngle(e) - startAngle;
+            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+            e.preventDefault();
+        }, { passive: false });
+        
+        window.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            wheelEl.style.transition = 'transform 0.3s ease';
+            rotations[key] = Math.round(rotations[key] / 60) * 60;
+            wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        });
+    }
     
-    const getAngle = (e) => {
-        const rect = wheel.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
-    };
-    
-    const onStart = (e) => {
-        isDragging = true;
-        startAngle = getAngle(e) - rotation;
-        wheel.style.transition = 'none';
-        e.preventDefault();
-    };
-    
-    const onMove = (e) => {
-        if (!isDragging) return;
-        rotation = getAngle(e) - startAngle;
-        wheel.style.transform = `rotate(${rotation}deg)`;
-        if (type === 'outer') {
-            wheel.style.transform = `rotate(${rotation}deg)`;
-        } else {
-            wheel.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
-        }
-        e.preventDefault();
-    };
-    
-    const onEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        wheel.style.transition = 'transform 0.3s ease';
-        rotation = Math.round(rotation / 60) * 60;
-        if (type === 'outer') {
-            wheel.style.transform = `rotate(${rotation}deg)`;
-        } else {
-            wheel.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
-        }
-    };
-    
-    wheel.addEventListener('mousedown', onStart);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onEnd);
-    wheel.addEventListener('touchstart', onStart, { passive: false });
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onEnd);
-    
-    return wheel;
+    originalEngineInitialized = true;
 }
 
-// ИНИЦИАЛИЗАЦИЯ
-document.addEventListener('DOMContentLoaded', () => {
-    loadTheme('столовая');
+// Копия функции generateWheelCells из engine.js
+function generateWheelCells(wheelEl, items, type) {
+    const count = items.length;
+    const angleStep = 360 / count;
     
+    let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
+    
+    if (type === 'outer') {
+        dMax = 640; rIn = 265; rOut = 320; textRadius = 295;
+    } else if (type === 'middle') {
+        dMax = 530; rIn = 195; rOut = 265; textRadius = 232;
+    } else if (type === 'inner') {
+        dMax = 390; rIn = 0; rOut = 195; textRadius = 160;
+    }
+    
+    const cx = dMax / 2;
+    const cy = dMax / 2;
+    
+    const colors = {
+        outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
+        middle: ['#f4f5f7', '#eaecf0', '#e1e4ea', '#d8dce4', '#cfd4dc', '#c6cbd6'],
+        inner: ['#ffffff', '#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da']
+    };
+    
+    wheelEl.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        const obj = items[i];
+        const currentAngle = i * angleStep;
+        
+        const cell = document.createElement('div');
+        cell.className = 'segment-cell';
+        cell.style.position = 'absolute';
+        cell.style.width = '100%';
+        cell.style.height = '100%';
+        cell.style.top = '0';
+        cell.style.left = '0';
+        cell.style.transform = `rotate(${currentAngle}deg)`;
+        cell.style.transformOrigin = `${cx}px ${cy}px`;
+        cell.style.overflow = 'visible';
+        
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "wheel-svg");
+        svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        
+        const startAngle = -120;
+        const endAngle = -60;
+        const sectorPathData = svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle);
+        const sectorColor = colors[type][i % 6];
+        
+        const getArcPath = (radius) => {
+            const startRad = (-116 * Math.PI) / 180;
+            const endRad = (-64 * Math.PI) / 180;
+            const x1 = cx + radius * Math.cos(startRad);
+            const y1 = cy + radius * Math.sin(startRad);
+            const x2 = cx + radius * Math.cos(endRad);
+            const y2 = cy + radius * Math.sin(endRad);
+            return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
+        };
+        
+        const splitText = (text, limit) => {
+            if (text.length <= limit || !text.includes(' ')) return [text, ''];
+            const words = text.split(' ');
+            let line1 = '', line2 = '';
+            for (let w = 0; w < words.length; w++) {
+                if ((line1 + words[w]).length <= limit) {
+                    line1 += (line1 === '' ? '' : ' ') + words[w];
+                } else {
+                    line2 = words.slice(w).join(' ');
+                    break;
+                }
+            }
+            return line1 === '' ? [text.slice(0, limit), text.slice(limit)] : [line1, line2];
+        };
+        
+        const limit = type === 'inner' ? 12 : 50;
+        const [kkLine1, kkLine2] = splitText(obj.kk, limit);
+        const [ruLine1, ruLine2] = splitText(obj.ru, limit);
+        
+        const step = 14;
+        let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}" stroke="white" stroke-width="2"/>`;
+        let currentR = textRadius;
+        
+        if (kkLine2) {
+            const pId = `p_kk_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+            currentR -= step;
+            const pId2 = `p_kk2_${type}_${i}`;
+            svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>`;
+            currentR -= step + 4;
+        } else {
+            const pId = `p_kk_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+            currentR -= step + 4;
+        }
+        
+        if (ruLine2) {
+            const pId = `p_ru_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+            currentR -= step;
+            const pId2 = `p_ru2_${type}_${i}`;
+            svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>`;
+        } else {
+            const pId = `p_ru_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+        }
+        
+        svg.innerHTML = svgContent;
+        cell.appendChild(svg);
+        wheelEl.appendChild(cell);
+    }
+}
+
+function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
+    const toRad = Math.PI / 180;
+    const x1_out = cx + rOut * Math.cos(startAngle * toRad);
+    const y1_out = cy + rOut * Math.sin(startAngle * toRad);
+    const x2_out = cx + rOut * Math.cos(endAngle * toRad);
+    const y2_out = cy + rOut * Math.sin(endAngle * toRad);
+    const x1_in = cx + rIn * Math.cos(endAngle * toRad);
+    const y1_in = cy + rIn * Math.sin(endAngle * toRad);
+    const x2_in = cx + rIn * Math.cos(startAngle * toRad);
+    const y2_in = cy + rIn * Math.sin(startAngle * toRad);
+    return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    // Устанавливаем глобальный dataset
+    const defaultTheme = getThemeData('столовая');
+    window.dataset = {
+        outer: defaultTheme.outer,
+        middle: defaultTheme.middle,
+        inner: defaultTheme.inner
+    };
+    
+    regenerateWheels();
+    
+    // Поиск
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                searchThemeAndLoad(themeSearch.value);
-                themeSearch.value = '';
+                const found = searchTheme(themeSearch.value);
+                if (found) {
+                    loadTheme(found);
+                    themeSearch.value = '';
+                }
             }
         });
     }
     
+    // Кнопка расширения
     const expandBtn = document.getElementById('expandWheelsBtn');
+    const container = document.querySelector('.container');
+    let expanded = false;
+    
     if (expandBtn) {
-        expandBtn.addEventListener('click', openFullscreenWheels);
-    }
-    
-    const closeBtn = document.getElementById('closeModalBtn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeFullscreenWheels);
-    }
-    
-    const modal = document.getElementById('fullscreenWheelsModal');
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeFullscreenWheels();
+        expandBtn.addEventListener('click', () => {
+            expanded = !expanded;
+            if (expanded) {
+                container.classList.add('wheels-expanded');
+                expandBtn.innerHTML = '🗕';
+            } else {
+                container.classList.remove('wheels-expanded');
+                expandBtn.innerHTML = '🔍';
             }
         });
     }
