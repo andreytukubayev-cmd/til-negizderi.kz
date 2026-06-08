@@ -252,57 +252,106 @@ class WheelRenderer {
         return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
     }
 
-    setupDrag() {
-        const wheels = ['outer', 'middle', 'inner'];
-        
-        wheels.forEach(key => {
-            const w = this.wheels[key];
-            if (!w || !w.el) return;
-            
-            let isDragging = false;
-            let startAngle = 0;
-            
-            const getAngle = (e) => {
-                const rect = w.el.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
-            };
-            
-            const onStart = (e) => {
-                isDragging = true;
-                startAngle = getAngle(e) - w.rotation;
-                w.el.style.transition = 'none';
-                e.preventDefault();
-            };
-            
-            const onMove = (e) => {
-                if (!isDragging) return;
-                w.rotation = getAngle(e) - startAngle;
-                w.el.style.transform = `rotate(${w.rotation}deg)`;
-                this.updateDashboard();
-                e.preventDefault();
-            };
-            
-            const onEnd = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                w.el.style.transition = 'transform 0.3s ease';
-                w.rotation = Math.round(w.rotation / 60) * 60;
-                w.el.style.transform = `rotate(${w.rotation}deg)`;
-                this.updateDashboard();
-            };
-            
-            w.el.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-            w.el.addEventListener('touchstart', onStart, { passive: false });
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onEnd);
-        });
+setupDrag() {
+    const wheels = ['outer', 'middle', 'inner'];
+    
+    // Создаём аудио объект
+    let clickAudio = null;
+    try {
+        clickAudio = new Audio('short-click.mp3');
+        clickAudio.volume = 0.35;
+    } catch(e) {
+        console.warn('Audio not supported');
     }
+    
+    function playClick() {
+        if (clickAudio) {
+            clickAudio.currentTime = 0;
+            clickAudio.play().catch(() => {});
+        }
+    }
+    
+    wheels.forEach(key => {
+        const w = this.wheels[key];
+        if (!w || !w.el) return;
+        
+        let isDragging = false;
+        let startAngle = 0;
+        let lastSectorIndex = -1;
+        
+        const getAngle = (e) => {
+            const rect = w.el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+        };
+        
+        const getCurrentSector = (rotation) => {
+            let norm = (-rotation) % 360;
+            if (norm < 0) norm += 360;
+            return Math.round(norm / 60) % 6;
+        };
+        
+        const onStart = (e) => {
+            isDragging = true;
+            startAngle = getAngle(e) - w.rotation;
+            w.el.style.transition = 'none';
+            w.el.style.cursor = 'grabbing';
+            e.preventDefault();
+            
+            // Запоминаем текущий сектор
+            lastSectorIndex = getCurrentSector(w.rotation);
+        };
+        
+        const onMove = (e) => {
+            if (!isDragging) return;
+            w.rotation = getAngle(e) - startAngle;
+            
+            if (key === 'outer') {
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
+            } else {
+                w.el.style.transform = `translate(-50%, -50%) rotate(${w.rotation}deg)`;
+            }
+            
+            // Проверяем сменился ли сектор
+            const currentSector = getCurrentSector(w.rotation);
+            if (currentSector !== lastSectorIndex) {
+                playClick();
+                lastSectorIndex = currentSector;
+            }
+            
+            this.updateDashboard();
+            e.preventDefault();
+        };
+        
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            w.el.style.cursor = 'grab';
+            w.el.style.transition = 'transform 0.3s ease';
+            w.rotation = Math.round(w.rotation / 60) * 60;
+            
+            if (key === 'outer') {
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
+            } else {
+                w.el.style.transform = `translate(-50%, -50%) rotate(${w.rotation}deg)`;
+            }
+            
+            // Финальный щелчок
+            playClick();
+            this.updateDashboard();
+        };
+        
+        w.el.addEventListener('mousedown', onStart);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onEnd);
+        w.el.addEventListener('touchstart', onStart, { passive: false });
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchend', onEnd);
+    });
+}
 
     updateDashboard() {
         const getIndex = (rotation) => {
