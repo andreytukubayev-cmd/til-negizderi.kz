@@ -112,18 +112,20 @@ function generateWheelCells(wheelEl, items, type) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
-    
-   if (type === 'outer') {
-    dMax = 640; rIn = 260; rOut = 320; textRadius = 290;
-} else if (type === 'middle') {
-    dMax = 530; rIn = 200; rOut = 260; textRadius = 230; // Было rIn = 195, rOut = 265
-} else if (type === 'inner') {
-    dMax = 390; rIn = 0; rOut = 200; textRadius = 145;   // Было rOut = 195
-    }
-    
+    // Единый размер холста 640x640 для исключения пиксельных смещений браузера
+    const dMax = 640; 
     const cx = dMax / 2;
     const cy = dMax / 2;
+    
+    let rIn = 0, rOut = 0, textRadius = 0;
+    
+    if (type === 'outer') {
+        rIn = 265; rOut = 320; textRadius = 295;
+    } else if (type === 'middle') {
+        rIn = 195; rOut = 265; textRadius = 232;
+    } else if (type === 'inner') {
+        rIn = 0; rOut = 195; textRadius = 160;
+    }
     
     const colors = {
         outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
