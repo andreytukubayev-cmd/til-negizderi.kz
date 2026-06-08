@@ -452,13 +452,13 @@ body {
     position: fixed;
     right: 0;
     top: 0;
-    width: 660px;
+    width: 320px;
     height: 100%;
-    background: linear-gradient(180deg, #1a2639 0%, #0f172a 100%);
-    color: white;
+    background: #f8fafc; /* Светлый премиальный фон */
+    color: #1e293b;      /* Темный цвет основного текста */
     display: flex;
     flex-direction: column;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     overflow-y: auto;
     z-index: 200;
     transform: translateX(100%);
@@ -538,6 +538,24 @@ body {
     border-color: #ffd700;
 }
 
+.theme-section h3 {
+    color: #334155;      /* Темно-серый заголовок */
+    font-size: 1.1em;
+    margin-bottom: 12px;
+}
+
+.current-theme-box {
+    background: #edf2f7; /* Светлая плашка для названия темы вместо темной */
+    padding: 10px 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+#currentTheme {
+    font-weight: bold;
+    color: #00b4d8;      /* Красивый акцентный цвет для названия темы */
+}
 .current-theme-badge {
     background: #ffd700;
     color: #1a2639;
@@ -592,35 +610,32 @@ body {
 }
 
 .mini-dash-item {
-    background: rgba(255,255,255,0.08);
-    padding: 10px 12px;
+    background: #ffffff; /* Белый фон карточки */
+    border: 1px solid #e2e8f0; /* Легкая граница */
     border-radius: 12px;
+    padding: 12px;
     margin-bottom: 10px;
-}
-
-.mini-dash-item:last-child {
-    margin-bottom: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .mini-dash-label {
-    font-size: 9px;
-    text-transform: uppercase;
-    color: #ffd700;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    font-weight: 700;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: #94a3b8;      /* Мягкий цвет для подписи (Вопрос/Ответ/Реакция) */
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
 }
 
 .mini-dash-kk {
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 3px;
+    font-size: 1.05em;
+    font-weight: bold;
+    color: #0f172a;      /* Глубокий темный для казахского текста */
+    margin-bottom: 2px;
 }
 
 .mini-dash-ru {
-    font-size: 10px;
-    color: rgba(255,255,255,0.7);
+    font-size: 0.9em;
+    color: #475569;      /* Серый для русского перевода */
 }
 
 .right-panel-footer {
