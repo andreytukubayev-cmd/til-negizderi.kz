@@ -8,6 +8,7 @@
 </head>
 <body>
     <div class="menu-overlay" id="menuOverlay"></div>
+<div class="menu-overlay-right" id="menuOverlayRight"></div>
 
     <div class="container">
         <div class="sidebar" id="sidebar">
@@ -70,6 +71,7 @@
                     <h1>🤖 AI-помощник по казахскому языку</h1>
                     <p>Перевод и ситуации по методике Тукубаева А.С.</p>
                 </div>
+                <button class="menu-toggle-right" id="menuToggleRight">🎡</button>
             </div>
 
             <div class="messages" id="messages">
@@ -87,7 +89,63 @@
                 <button id="sendBtn">📤 Отправить</button>
             </div>
         </div>
-    </div> <div class="action-menu" id="actionMenu">
+
+        <!-- ПРАВАЯ ПАНЕЛЬ (КОЛЁСА ЛУЛЛИЯ) -->
+        <div class="sidebar-right" id="sidebarRight">
+            <div class="right-panel-header">
+                <h3>🎡 КОЛЁСА ЛУЛЛИЯ</h3>
+                <button class="expand-wheels-btn" id="expandWheelsBtn">🔍</button>
+            </div>
+            
+            <!-- Поиск по темам -->
+            <div class="search-theme">
+                <input type="text" id="themeSearch" placeholder="🔍 Поиск темы: столовая, аэропорт, совещание..." />
+                <div class="current-theme" id="currentTheme">Тема: столовая</div>
+            </div>
+            
+            <!-- Контейнер для мини-колёс -->
+            <div id="wheelsContainer" class="wheels-container"></div>
+            
+            <!-- Отображение текущей комбинации -->
+            <div id="wheelsDisplay" class="wheels-display">
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">❓ ВОПРОС</div>
+                    <div class="mini-dash-kk">-</div>
+                    <div class="mini-dash-ru">-</div>
+                </div>
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">💬 ОТВЕТ</div>
+                    <div class="mini-dash-kk">-</div>
+                    <div class="mini-dash-ru">-</div>
+                </div>
+                <div class="mini-dash-item">
+                    <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
+                    <div class="mini-dash-kk">-</div>
+                    <div class="mini-dash-ru">-</div>
+                </div>
+            </div>
+            
+            <div class="right-panel-footer">
+                <p>💡 Вращайте кольца → собирайте диалог</p>
+                <p>🔍 Нажмите на лупу → полноэкранный режим</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПОЛНОЭКРАННЫХ КОЛЁС -->
+    <div id="fullscreenWheelsModal" class="fullscreen-modal">
+        <div class="fullscreen-modal-content">
+            <div class="fullscreen-modal-header">
+                <h2>🎡 КОЛЁСА ЛУЛЛИЯ — ПОЛНЫЙ ЭКРАН</h2>
+                <button class="close-modal-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="fullscreen-wheels-container" id="fullscreenWheelsContainer">
+                <!-- Здесь будут полноразмерные колёса -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-menu" id="actionMenu">
         <div class="action-menu-overlay" id="actionMenuOverlay"></div>
         <div class="action-menu-content">
             <div class="action-menu-title">Выберите действие</div>
@@ -117,8 +175,11 @@
         </div>
     </div>
 
-    <script src="js/localTranslator.js"></script>
-    <script src="js/chat.js"></script>
+<script src="js/wheels_library.js"></script>
+<script src="js/wheel_renderer.js"></script>
+<script src="js/localTranslator.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/right-panel.js"></script>
     
     <script>
         // Управление выдвижным меню
@@ -173,6 +234,38 @@
                 updateStatsTitle();
             }
         });
+
+                // Управление правой панелью
+        const menuToggleRight = document.getElementById('menuToggleRight');
+        const sidebarRight = document.getElementById('sidebarRight');
+        const menuOverlayRight = document.getElementById('menuOverlayRight');
+        
+        function openRightMenu() {
+            sidebarRight.classList.add('open');
+            menuOverlayRight.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeRightMenu() {
+            sidebarRight.classList.remove('open');
+            menuOverlayRight.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        if (menuToggleRight) {
+            menuToggleRight.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebarRight.classList.contains('open')) {
+                    closeRightMenu();
+                } else {
+                    openRightMenu();
+                }
+            });
+        }
+        
+        if (menuOverlayRight) {
+            menuOverlayRight.addEventListener('click', closeRightMenu);
+        }
     </script>
 </body>
 </html>
