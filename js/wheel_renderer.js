@@ -1,4 +1,4 @@
-// Универсальный рендерер колёс Луллия (работает с любой темой из библиотеки)
+// Универсальный рендерер колёс Луллия (ИСПРАВЛЕНАЯ ВЕРСИЯ)
 
 class WheelRenderer {
     constructor(containerId, themeData) {
@@ -17,7 +17,6 @@ class WheelRenderer {
     }
 
     createWheels() {
-        // Создаём три колеса
         const outerDiv = document.createElement('div');
         outerDiv.className = 'mini-wheel outer-wheel';
         outerDiv.id = 'miniOuterWheel';
@@ -34,13 +33,12 @@ class WheelRenderer {
         this.container.appendChild(middleDiv);
         this.container.appendChild(innerDiv);
         
-        // Генерируем сектора для каждого колеса
-        this.generateWheelCells(outerDiv, this.themeData.outer, 'outer', 'mini');
-        this.generateWheelCells(middleDiv, this.themeData.middle, 'middle', 'mini');
-        this.generateWheelCells(innerDiv, this.themeData.inner, 'inner', 'mini');
+        this.generateWheelCells(outerDiv, this.themeData.outer, 'outer');
+        this.generateWheelCells(middleDiv, this.themeData.middle, 'middle');
+        this.generateWheelCells(innerDiv, this.themeData.inner, 'inner');
     }
 
-    generateWheelCells(wheelEl, items, type, size = 'mini') {
+    generateWheelCells(wheelEl, items, type) {
         const count = items.length;
         const angleStep = 360 / count;
         
@@ -48,14 +46,14 @@ class WheelRenderer {
         let colorPrefix = '';
         
         if (type === 'outer') {
-            dMax = 280; rIn = 110; rOut = 140; textRadius = 128;
-            colorPrefix = 'var(--color-out-';
+            dMax = 280; rIn = 110; rOut = 140; textRadius = 126;
+            colorPrefix = '--color-out-';
         } else if (type === 'middle') {
             dMax = 230; rIn = 80; rOut = 115; textRadius = 100;
-            colorPrefix = 'var(--color-mid-';
+            colorPrefix = '--color-mid-';
         } else if (type === 'inner') {
             dMax = 170; rIn = 0; rOut = 85; textRadius = 65;
-            colorPrefix = 'var(--color-inn-';
+            colorPrefix = '--color-inn-';
         }
         
         const cx = dMax / 2;
@@ -63,24 +61,39 @@ class WheelRenderer {
         
         wheelEl.style.width = `${dMax}px`;
         wheelEl.style.height = `${dMax}px`;
+        wheelEl.style.position = 'relative';
         
-        items.forEach((obj, i) => {
+        // Очищаем предыдущие сектора
+        wheelEl.innerHTML = '';
+        
+        for (let i = 0; i < count; i++) {
+            const obj = items[i];
             const currentAngle = i * angleStep;
             
             const cell = document.createElement('div');
-            cell.className = `segment-cell`;
+            cell.className = 'segment-cell';
+            cell.style.position = 'absolute';
+            cell.style.width = '100%';
+            cell.style.height = '100%';
+            cell.style.top = '0';
+            cell.style.left = '0';
             cell.style.transform = `rotate(${currentAngle}deg)`;
             cell.style.transformOrigin = `${cx}px ${cy}px`;
-            wheelEl.appendChild(cell);
+            cell.style.overflow = 'visible';
             
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("class", "wheel-svg");
             svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
             
             const startAngle = -120;
             const endAngle = -60;
             const sectorPathData = this.svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle);
-            const sectorColor = `${colorPrefix}${i})`;
+            const colorValue = `var(${colorPrefix}${i % 6})`;
             
             const getArcPath = (radius) => {
                 const startRad = (-116 * Math.PI) / 180;
@@ -92,7 +105,7 @@ class WheelRenderer {
                 return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
             };
             
-            // Упрощённый текст для мини-колёс
+            // Функция разбиения текста
             const splitText = (text, limit) => {
                 if (text.length <= limit || !text.includes(' ')) return [text, ''];
                 const words = text.split(' ');
@@ -108,57 +121,50 @@ class WheelRenderer {
                 return line1 === '' ? [text.slice(0, limit), text.slice(limit)] : [line1, line2];
             };
             
-            const limit = (type === 'inner' && size === 'mini') ? 8 : 14;
+            const limit = (type === 'inner') ? 8 : 12;
             const [kkLine1, kkLine2] = splitText(obj.kk, limit);
             const [ruLine1, ruLine2] = splitText(obj.ru, limit);
             
             const step = 10;
-            let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}"/>`;
+            let svgContent = `<path d="${sectorPathData}" fill="${colorValue}" stroke="white" stroke-width="1.5"/>`;
             let currentR = textRadius;
             
-            const pIdKk1 = `p_kk1_${type}_${i}`;
+            // Казахский текст
             if (kkLine2) {
-                svgContent += `
-                    <defs><path id="${pIdKk1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-kk-mini"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
-                `;
+                const pId = `p_kk_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
                 currentR -= step;
-                const pIdKk2 = `p_kk2_${type}_${i}`;
-                svgContent += `
-                    <defs><path id="${pIdKk2}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-kk-mini"><textPath href="#${pIdKk2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>
-                `;
+                const pId2 = `p_kk2_${type}_${i}`;
+                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>`;
                 currentR -= step + 2;
             } else {
-                svgContent += `
-                    <defs><path id="${pIdKk1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-kk-mini"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
-                `;
+                const pId = `p_kk_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
                 currentR -= step + 4;
             }
             
-            const pIdRu1 = `p_ru1_${type}_${i}`;
+            // Русский текст
             if (ruLine2) {
-                svgContent += `
-                    <defs><path id="${pIdRu1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-ru-mini"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
-                `;
+                const pId = `p_ru_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
                 currentR -= step;
-                const pIdRu2 = `p_ru2_${type}_${i}`;
-                svgContent += `
-                    <defs><path id="${pIdRu2}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-ru-mini"><textPath href="#${pIdRu2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>
-                `;
+                const pId2 = `p_ru2_${type}_${i}`;
+                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>`;
             } else {
-                svgContent += `
-                    <defs><path id="${pIdRu1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                    <text class="svg-text-ru-mini"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
-                `;
+                const pId = `p_ru_${type}_${i}`;
+                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
             }
             
             svg.innerHTML = svgContent;
             cell.appendChild(svg);
-        });
+            wheelEl.appendChild(cell);
+        }
     }
 
     svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
@@ -243,7 +249,6 @@ class WheelRenderer {
         const middleData = this.themeData.middle[middleIndex];
         const innerData = this.themeData.inner[innerIndex];
         
-        // Обновляем дисплей в правой панели
         const displayDiv = document.getElementById('wheelsDisplay');
         if (displayDiv) {
             displayDiv.innerHTML = `
