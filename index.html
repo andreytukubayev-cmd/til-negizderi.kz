@@ -266,6 +266,31 @@
         if (menuOverlayRight) {
             menuOverlayRight.addEventListener('click', closeRightMenu);
         }
+
+        // Переключение расширенного режима для колёс
+const expandBtn = document.getElementById('expandWheelsBtn');
+const container = document.querySelector('.container');
+let wheelsExpanded = false;
+
+if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+        wheelsExpanded = !wheelsExpanded;
+        
+        if (wheelsExpanded) {
+            container.classList.add('wheels-expanded');
+            // Закрываем левое меню, если оно открыто на мобилке
+            if (sidebar.classList.contains('open')) {
+                closeMenu();
+            }
+            expandBtn.innerHTML = '🗕';
+            expandBtn.title = 'Свернуть колёса';
+        } else {
+            container.classList.remove('wheels-expanded');
+            expandBtn.innerHTML = '🔍';
+            expandBtn.title = 'Развернуть колёса';
+        }
+    });
+}
     </script>
 </body>
 </html>
