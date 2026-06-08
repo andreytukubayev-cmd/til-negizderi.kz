@@ -1,4 +1,4 @@
-// ИСПРАВЛЕННАЯ ВЕРСИЯ - все 6 секторов с текстом, колёса по центру
+// ИСПРАВЛЕННАЯ ВЕРСИЯ - текст на ВСЕХ 6 секторах
 
 class WheelRenderer {
     constructor(containerId, themeData) {
@@ -18,14 +18,13 @@ class WheelRenderer {
         this.container.style.alignItems = 'center';
         this.container.style.minHeight = '320px';
         
-        // Центральный контейнер для всех колёс
         const wheelsContainer = document.createElement('div');
         wheelsContainer.style.position = 'relative';
         wheelsContainer.style.width = '280px';
         wheelsContainer.style.height = '280px';
         wheelsContainer.style.margin = '0 auto';
         
-        // Указатель-стрелка
+        // Указатель
         const pointer = document.createElement('div');
         pointer.style.position = 'absolute';
         pointer.style.top = '-12px';
@@ -38,10 +37,9 @@ class WheelRenderer {
         pointer.style.borderTop = '20px solid #00b4d8';
         pointer.style.zIndex = '10';
         
-        // Создаём колёса (каждое абсолютно позиционировано внутри контейнера)
-        const outerWheel = this.createFullWheel(280, this.themeData.outer, 'outer');
-        const middleWheel = this.createFullWheel(230, this.themeData.middle, 'middle');
-        const innerWheel = this.createFullWheel(170, this.themeData.inner, 'inner');
+        const outerWheel = this.createWheel(280, this.themeData.outer, 'outer');
+        const middleWheel = this.createWheel(230, this.themeData.middle, 'middle');
+        const innerWheel = this.createWheel(170, this.themeData.inner, 'inner');
         
         outerWheel.style.position = 'absolute';
         outerWheel.style.top = '0';
@@ -57,7 +55,7 @@ class WheelRenderer {
         innerWheel.style.left = '50%';
         innerWheel.style.transform = 'translate(-50%, -50%)';
         
-        // Центральная кнопка
+        // Кнопка СБРОС
         const centerBtn = document.createElement('div');
         centerBtn.style.position = 'absolute';
         centerBtn.style.top = '50%';
@@ -67,7 +65,7 @@ class WheelRenderer {
         centerBtn.style.height = '50px';
         centerBtn.style.borderRadius = '50%';
         centerBtn.style.background = 'conic-gradient(from 0deg, #999, #eee, #999, #eee, #999)';
-        centerBtn.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.6)';
+        centerBtn.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
         centerBtn.style.border = '2px solid white';
         centerBtn.style.zIndex = '20';
         centerBtn.style.cursor = 'pointer';
@@ -77,10 +75,8 @@ class WheelRenderer {
         centerBtn.style.fontSize = '8px';
         centerBtn.style.fontWeight = 'bold';
         centerBtn.style.color = '#2b2d42';
-        centerBtn.style.textAlign = 'center';
         centerBtn.innerText = 'СБРОС';
         
-        // Кнопка сброса (возвращает колёса в исходное положение)
         centerBtn.addEventListener('click', () => {
             this.currentRotations = { outer: 0, middle: 0, inner: 0 };
             outerWheel.style.transform = 'rotate(0deg)';
@@ -107,7 +103,7 @@ class WheelRenderer {
         this.updateDashboard();
     }
 
-    createFullWheel(size, items, type) {
+    createWheel(size, items, type) {
         const wheel = document.createElement('div');
         wheel.style.width = `${size}px`;
         wheel.style.height = `${size}px`;
@@ -117,26 +113,24 @@ class WheelRenderer {
         wheel.style.background = '#e8e8e8';
         wheel.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
         wheel.style.border = '2px solid white';
-        wheel.style.overflow = 'hidden';
         
         const count = items.length;
         const angleStep = 360 / count;
         const centerX = size / 2;
         const centerY = size / 2;
         
-        // Радиусы для секторов
         let rOuter = size / 2;
         let rInner = 0;
         
         if (type === 'outer') {
             rOuter = size / 2;
-            rInner = size * 0.4;
+            rInner = size * 0.38;
         } else if (type === 'middle') {
             rOuter = size / 2;
-            rInner = size * 0.35;
+            rInner = size * 0.32;
         } else if (type === 'inner') {
             rOuter = size / 2;
-            rInner = size * 0.25;
+            rInner = size * 0.2;
         }
         
         const colors = {
@@ -146,7 +140,7 @@ class WheelRenderer {
         };
         
         for (let i = 0; i < count; i++) {
-            // Создаём сектор
+            // Сектор
             const sector = document.createElement('div');
             sector.style.position = 'absolute';
             sector.style.width = '100%';
@@ -154,7 +148,7 @@ class WheelRenderer {
             sector.style.transform = `rotate(${i * angleStep}deg)`;
             sector.style.transformOrigin = `${centerX}px ${centerY}px`;
             
-            // Рисуем сектор через SVG
+            // SVG для фона
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("width", size);
             svg.setAttribute("height", size);
@@ -162,7 +156,6 @@ class WheelRenderer {
             svg.style.top = '0';
             svg.style.left = '0';
             
-            // Углы сектора (каждый сектор занимает 60 градусов)
             const startAngle = -60;
             const endAngle = 0;
             const startRad = startAngle * Math.PI / 180;
@@ -192,20 +185,20 @@ class WheelRenderer {
             svg.appendChild(path);
             sector.appendChild(svg);
             
-            // Текст - размещаем в середине каждого сектора
+            // ТЕКСТ - теперь для каждого сектора отдельно
             const textDiv = document.createElement('div');
             textDiv.style.position = 'absolute';
-            textDiv.style.left = '50%';
-            textDiv.style.top = '50%';
             textDiv.style.textAlign = 'center';
             textDiv.style.pointerEvents = 'none';
             textDiv.style.zIndex = '5';
+            textDiv.style.width = '80px';
             
-            // Позиция текста: на радиусе = (rOuter + rInner) / 2, в середине сектора
-            const textRadius = rInner > 0 ? (rOuter + rInner) / 2 : rOuter * 0.7;
-            const midAngle = (i * angleStep - 30) * Math.PI / 180;
-            const textX = centerX + textRadius * Math.cos(midAngle);
-            const textY = centerY + textRadius * Math.sin(midAngle);
+            // Позиция в ЦЕНТРЕ каждого сектора (не на границе!)
+            const textRadius = (rOuter + rInner) / 2;
+            // Угол для текста: начало сектора + половина угла сектора (30 градусов)
+            const textAngle = (i * angleStep - 30) * Math.PI / 180;
+            const textX = centerX + textRadius * Math.cos(textAngle);
+            const textY = centerY + textRadius * Math.sin(textAngle);
             
             textDiv.style.left = `${textX}px`;
             textDiv.style.top = `${textY}px`;
