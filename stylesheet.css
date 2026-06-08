@@ -666,11 +666,12 @@ body {
 /* ============================================ */
 
 /* Правая панель (аналогично левой) */
+/* Правая панель - широкая для полноразмерных колёс */
 .sidebar-right {
     position: fixed;
     right: 0;
     top: 0;
-    width: 320px;
+    width: 660px;  /* Ширина под оригинальные колёса 640px + отступы */
     height: 100%;
     background: linear-gradient(180deg, #1a2639 0%, #0f172a 100%);
     color: white;
@@ -1082,5 +1083,28 @@ body {
     .container.wheels-expanded .wheels-container {
         transform: scale(1);
         min-height: 500px;
+    }
+}
+/* Расширенный режим для полноразмерных колёс */
+.container.wheels-expanded .sidebar {
+    display: none;
+}
+
+.container.wheels-expanded .chat-area {
+    width: 30%;
+    flex: 0 0 30%;
+}
+
+.container.wheels-expanded .sidebar-right {
+    width: 65%;
+}
+
+@media (max-width: 768px) {
+    .container.wheels-expanded .chat-area {
+        display: none;
+    }
+    
+    .container.wheels-expanded .sidebar-right {
+        width: 100%;
     }
 }
