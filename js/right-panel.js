@@ -1,4 +1,4 @@
-// Движок Колес Луллия 4.2 (Корректные физические размеры слоев)
+// Движок Колес Луллия 4.2 (Полный возврат управления оригинальному CSS)
 
 let currentTheme = 'столовая';
 let rotations = { inner: 0, middle: 0, outer: 0 };
@@ -12,7 +12,7 @@ function playClick() {
     clickAudio.play().catch(() => {});
 }
 
-// Построение сектора круга для SVG фона с динамическим центром
+// Построение сектора круга для SVG фона
 function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
     const toRad = Math.PI / 180;
     const x1_out = cx + rOut * Math.cos(startAngle * toRad);
@@ -58,63 +58,33 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
-    // Главный корпус-контейнер
+    // Создаем корпус прибора. Полагаемся ИСКЛЮЧИТЕЛЬНО на стили из stylesheet.css
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
-    deviceBody.style.position = 'relative';
-    deviceBody.style.width = '640px';
-    deviceBody.style.height = '640px';
-    deviceBody.style.margin = '0 auto';
     
     // Стрелка-указатель сверху
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
     
-    // Внешнее колесо (Полный размер 640px)
+    // Три кольца — стили размеров (640, 530, 390) берутся автоматически из CSS классов!
     const outerEl = document.createElement('div');
     outerEl.className = 'wheel outer-wheel';
     outerEl.id = 'outerWheel';
-    outerEl.style.position = 'absolute';
-    outerEl.style.width = '640px';
-    outerEl.style.height = '640px';
-    outerEl.style.top = '0';
-    outerEl.style.left = '0';
     
-    // Среднее колесо (Вложенное, диаметр меньше - 530px, центрируем сдвигом на 55px)
     const middleEl = document.createElement('div');
     middleEl.className = 'wheel middle-wheel';
     middleEl.id = 'middleWheel';
-    middleEl.style.position = 'absolute';
-    middleEl.style.width = '530px';
-    middleEl.style.height = '530px';
-    middleEl.style.top = '55px';
-    middleEl.style.left = '55px';
     
-    // Внутреннее колесо (Центральное, диаметр 390px, центрируем сдвигом на 125px)
     const innerEl = document.createElement('div');
     innerEl.className = 'wheel inner-wheel';
     innerEl.id = 'innerWheel';
-    innerEl.style.position = 'absolute';
-    innerEl.style.width = '390px';
-    innerEl.style.height = '390px';
-    innerEl.style.top = '125px';
-    innerEl.style.left = '125px';
     
-    // Центральный колпачок-кнопка СБРОС (диаметр 120px, сдвиг на 260px)
+    // Центральный колпачок-кнопка СБРОС
     const centerBtn = document.createElement('div');
     centerBtn.className = 'center-cap';
     centerBtn.innerText = 'СБРОС';
-    centerBtn.style.position = 'absolute';
-    centerBtn.style.width = '120px';
-    centerBtn.style.height = '120px';
-    centerBtn.style.top = '260px';
-    centerBtn.style.left = '260px';
-    centerBtn.style.zIndex = '50';
-    centerBtn.style.display = 'flex';
-    centerBtn.style.alignItems = 'center';
-    centerBtn.style.justifyContent = 'center';
     
-    // Собираем слои бутерброда
+    // Собираем строго иерархическую структуру, заложенную в CSS
     deviceBody.appendChild(outerEl);
     deviceBody.appendChild(middleEl);
     deviceBody.appendChild(innerEl);
@@ -122,16 +92,17 @@ function regenerateWheels() {
     deviceBody.appendChild(centerBtn);
     container.appendChild(deviceBody);
 
-    // Генерируем геометрию под индивидуальный размер каждого колеса
+    // Генерируем SVG-сектора. Размеры viewBox берем под физические размеры из CSS!
     generateWheelCells(outerEl, window.dataset.outer, 'outer', 640);
     generateWheelCells(middleEl, window.dataset.middle, 'middle', 530);
     generateWheelCells(innerEl, window.dataset.inner, 'inner', 390);
 
-    // Инициализация Drag & Drop
+    // Подключаем логику вращения
     setupRotationEngine(innerEl, 'inner');
     setupRotationEngine(middleEl, 'middle');
     setupRotationEngine(outerEl, 'outer');
 
+    // Клик по центру сбрасывает углы
     centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerEl.style.transform = 'rotate(0deg)';
@@ -143,6 +114,7 @@ function regenerateWheels() {
         playClick();
     });
 
+    // Восстанавливаем текущее положение колес при регенерации
     innerEl.style.transform = `rotate(${rotations.inner}deg)`;
     middleEl.style.transform = `rotate(${rotations.middle}deg)`;
     outerEl.style.transform = `rotate(${rotations.outer}deg)`;
@@ -156,14 +128,14 @@ function generateWheelCells(wheelEl, items, type, currentSize) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    // Центр SVG рассчитывается строго от текущего физического размера колеса
+    // Динамический центр SVG высчитывается строго по размеру контейнера из CSS
     const cx = currentSize / 2;
     const cy = currentSize / 2;
 
     let rIn = 0, rOut = 0, textRadius = 0;
     let colorPrefix = '';
 
-    // Математика радиусов колец относительно их собственных осей координат
+    // Математика радиусов рисования секторов
     if (type === 'outer') {
         rIn = 265; rOut = 320; textRadius = 292;
         colorPrefix = 'var(--color-out-';
