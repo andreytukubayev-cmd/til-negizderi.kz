@@ -1,8 +1,8 @@
-// Логика правой панели с колёсами Луллия
+// Логика правой панели с колёсами Луллия (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 
 let currentWheelRenderer = null;
 let currentTheme = 'столовая';
-let fullscreenRenderer = null;
+let fullscreenActive = false;
 
 // Функция загрузки темы
 function loadTheme(themeName) {
@@ -13,9 +13,11 @@ function loadTheme(themeName) {
     }
     
     currentTheme = themeName;
-    document.getElementById('currentTheme').innerText = `Тема: ${themeName}`;
+    const currentThemeEl = document.getElementById('currentTheme');
+    if (currentThemeEl) {
+        currentThemeEl.innerText = `Тема: ${themeName}`;
+    }
     
-    // Обновляем мини-колёса
     if (currentWheelRenderer) {
         currentWheelRenderer.updateTheme(themeData);
     } else {
@@ -33,7 +35,6 @@ function searchThemeAndLoad(query) {
     if (foundTheme) {
         loadTheme(foundTheme);
         
-        // Добавляем подсказку в чат (опционально)
         const messagesContainer = document.getElementById('messages');
         if (messagesContainer) {
             const hintDiv = document.createElement('div');
@@ -44,9 +45,12 @@ function searchThemeAndLoad(query) {
             </div>`;
             messagesContainer.appendChild(hintDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            setTimeout(() => {
+                hintDiv.remove();
+            }, 5000);
         }
     } else {
-        // Тема не найдена
         const messagesContainer = document.getElementById('messages');
         if (messagesContainer) {
             const hintDiv = document.createElement('div');
@@ -57,29 +61,32 @@ function searchThemeAndLoad(query) {
             </div>`;
             messagesContainer.appendChild(hintDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            setTimeout(() => {
+                hintDiv.remove();
+            }, 5000);
         }
     }
 }
 
-// Полноэкранный режим
+// ПОЛНОЭКРАННЫЙ РЕЖИМ (рабочая версия)
 function openFullscreenWheels() {
     const modal = document.getElementById('fullscreenWheelsModal');
     const container = document.getElementById('fullscreenWheelsContainer');
     
     if (!modal || !container) return;
     
-    // Очищаем контейнер
     container.innerHTML = '';
     
-    // Создаём полноразмерные колёса (используем существующий рендерер, но с большими размерами)
     const themeData = getThemeData(currentTheme);
     if (!themeData) return;
     
-    // Создаём временный рендерер для полноэкранного режима
-    fullscreenRenderer = new FullscreenWheelRenderer(container, themeData);
+    // Создаём полноэкранные колёса
+    createFullscreenWheels(container, themeData);
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    fullscreenActive = true;
 }
 
 function closeFullscreenWheels() {
@@ -87,179 +94,188 @@ function closeFullscreenWheels() {
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        fullscreenRenderer = null;
+        fullscreenActive = false;
     }
 }
 
-// Упрощённый рендерер для полноэкранного режима (используем оригинальный код из engine.js)
-class FullscreenWheelRenderer {
-    constructor(container, themeData) {
-        this.container = container;
-        this.themeData = themeData;
-        this.currentRotations = { outer: 0, middle: 0, inner: 0 };
-        this.init();
+function createFullscreenWheels(container, themeData) {
+    container.innerHTML = '';
+    container.style.position = 'relative';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.minHeight = '500px';
+    
+    // Создаём обёртку
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.width = 'min(90vw, 600px)';
+    wrapper.style.height = 'min(90vw, 600px)';
+    wrapper.style.margin = '0 auto';
+    
+    // Внешнее кольцо
+    const outerWheel = createFullWheel(themeData.outer, 'outer', 'min(90vw, 600px)', 250, 300);
+    outerWheel.style.position = 'absolute';
+    outerWheel.style.top = '0';
+    outerWheel.style.left = '0';
+    outerWheel.style.zIndex = '1';
+    
+    // Среднее кольцо
+    const middleSize = parseInt('min(90vw, 600px)') * 0.83;
+    const middleWheel = createFullWheel(themeData.middle, 'middle', `${parseInt('min(90vw, 600px)') * 0.83}px`, 190, 250);
+    middleWheel.style.position = 'absolute';
+    middleWheel.style.top = '50%';
+    middleWheel.style.left = '50%';
+    middleWheel.style.transform = 'translate(-50%, -50%)';
+    middleWheel.style.zIndex = '2';
+    
+    // Внутреннее кольцо
+    const innerWheel = createFullWheel(themeData.inner, 'inner', `${parseInt('min(90vw, 600px)') * 0.62}px`, 0, 185);
+    innerWheel.style.position = 'absolute';
+    innerWheel.style.top = '50%';
+    innerWheel.style.left = '50%';
+    innerWheel.style.transform = 'translate(-50%, -50%)';
+    innerWheel.style.zIndex = '3';
+    
+    // Указатель-стрелка
+    const pointer = document.createElement('div');
+    pointer.style.position = 'absolute';
+    pointer.style.top = '-15px';
+    pointer.style.left = '50%';
+    pointer.style.transform = 'translateX(-50%)';
+    pointer.style.width = '0';
+    pointer.style.height = '0';
+    pointer.style.borderLeft = '15px solid transparent';
+    pointer.style.borderRight = '15px solid transparent';
+    pointer.style.borderTop = '25px solid #00b4d8';
+    pointer.style.zIndex = '10';
+    pointer.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))';
+    
+    wrapper.appendChild(outerWheel);
+    wrapper.appendChild(middleWheel);
+    wrapper.appendChild(innerWheel);
+    wrapper.appendChild(pointer);
+    
+    container.appendChild(wrapper);
+}
+
+function createFullWheel(items, type, size, rIn, rOut) {
+    const wheel = document.createElement('div');
+    const diameter = parseInt(size);
+    wheel.style.width = `${diameter}px`;
+    wheel.style.height = `${diameter}px`;
+    wheel.style.borderRadius = '50%';
+    wheel.style.cursor = 'grab';
+    wheel.style.position = 'relative';
+    wheel.style.background = '#f0f0f0';
+    wheel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+    wheel.style.border = '3px solid white';
+    
+    const count = items.length;
+    const angleStep = 360 / count;
+    const cx = diameter / 2;
+    const cy = diameter / 2;
+    
+    const colors = [
+        '#ffadad', '#ffd6a5', '#fdffb6',
+        '#caffbf', '#9bf6ff', '#a0c4ff'
+    ];
+    
+    for (let i = 0; i < count; i++) {
+        const sector = document.createElement('div');
+        sector.style.position = 'absolute';
+        sector.style.width = '100%';
+        sector.style.height = '100%';
+        sector.style.transform = `rotate(${i * angleStep}deg)`;
+        sector.style.clipPath = `polygon(50% 50%, ${50 + (rOut / diameter) * 50 * Math.cos(-60 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-60 * Math.PI / 180)}%, ${50 + (rOut / diameter) * 50 * Math.cos(-120 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-120 * Math.PI / 180)}%)`;
+        
+        // Цветной фон
+        const bg = document.createElement('div');
+        bg.style.position = 'absolute';
+        bg.style.width = '100%';
+        bg.style.height = '100%';
+        bg.style.background = colors[i % colors.length];
+        bg.style.opacity = '0.8';
+        bg.style.clipPath = `polygon(50% 50%, ${50 + (rOut / diameter) * 50 * Math.cos(-60 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-60 * Math.PI / 180)}%, ${50 + (rOut / diameter) * 50 * Math.cos(-120 * Math.PI / 180)}% ${50 + (rOut / diameter) * 50 * Math.sin(-120 * Math.PI / 180)}%)`;
+        sector.appendChild(bg);
+        
+        // Текст
+        const textDiv = document.createElement('div');
+        textDiv.style.position = 'absolute';
+        textDiv.style.top = '35%';
+        textDiv.style.left = '50%';
+        textDiv.style.transform = 'translate(-50%, -50%)';
+        textDiv.style.textAlign = 'center';
+        textDiv.style.fontSize = type === 'inner' ? '10px' : '12px';
+        textDiv.style.fontWeight = 'bold';
+        textDiv.style.color = '#1a1d24';
+        textDiv.style.textShadow = '0 1px 1px white';
+        textDiv.style.width = '80px';
+        textDiv.innerHTML = `${items[i].kk}<br><small style="font-size: 9px; color: #4a5568;">${items[i].ru}</small>`;
+        
+        sector.appendChild(textDiv);
+        wheel.appendChild(sector);
     }
     
-    init() {
-        this.container.innerHTML = '';
-        
-        // Создаём контейнер для колёс
-        const wheelsWrapper = document.createElement('div');
-        wheelsWrapper.className = 'fullscreen-wheels-wrapper';
-        wheelsWrapper.style.position = 'relative';
-        wheelsWrapper.style.width = '600px';
-        wheelsWrapper.style.height = '600px';
-        wheelsWrapper.style.margin = '0 auto';
-        
-        // Создаём колёса
-        const outerDiv = document.createElement('div');
-        outerDiv.className = 'fullscreen-outer-wheel';
-        outerDiv.id = 'fullscreenOuterWheel';
-        outerDiv.style.position = 'absolute';
-        outerDiv.style.width = '600px';
-        outerDiv.style.height = '600px';
-        outerDiv.style.borderRadius = '50%';
-        outerDiv.style.cursor = 'grab';
-        outerDiv.style.zIndex = '1';
-        
-        const middleDiv = document.createElement('div');
-        middleDiv.className = 'fullscreen-middle-wheel';
-        middleDiv.id = 'fullscreenMiddleWheel';
-        middleDiv.style.position = 'absolute';
-        middleDiv.style.width = '500px';
-        middleDiv.style.height = '500px';
-        middleDiv.style.borderRadius = '50%';
-        middleDiv.style.cursor = 'grab';
-        middleDiv.style.zIndex = '2';
-        
-        const innerDiv = document.createElement('div');
-        innerDiv.className = 'fullscreen-inner-wheel';
-        innerDiv.id = 'fullscreenInnerWheel';
-        innerDiv.style.position = 'absolute';
-        innerDiv.style.width = '370px';
-        innerDiv.style.height = '370px';
-        innerDiv.style.borderRadius = '50%';
-        innerDiv.style.cursor = 'grab';
-        innerDiv.style.zIndex = '3';
-        
-        // Центрируем
-        const centerOffset = (600 - 500) / 2;
-        middleDiv.style.left = `${centerOffset}px`;
-        middleDiv.style.top = `${centerOffset}px`;
-        
-        const innerOffset = (600 - 370) / 2;
-        innerDiv.style.left = `${innerOffset}px`;
-        innerDiv.style.top = `${innerOffset}px`;
-        
-        wheelsWrapper.appendChild(outerDiv);
-        wheelsWrapper.appendChild(middleDiv);
-        wheelsWrapper.appendChild(innerDiv);
-        this.container.appendChild(wheelsWrapper);
-        
-        // Добавляем указатель
-        const pointer = document.createElement('div');
-        pointer.style.position = 'absolute';
-        pointer.style.top = '-12px';
-        pointer.style.left = '50%';
-        pointer.style.transform = 'translateX(-50%)';
-        pointer.style.width = '0';
-        pointer.style.height = '0';
-        pointer.style.borderLeft = '12px solid transparent';
-        pointer.style.borderRight = '12px solid transparent';
-        pointer.style.borderTop = '20px solid #00b4d8';
-        pointer.style.zIndex = '10';
-        wheelsWrapper.appendChild(pointer);
-        
-        // Генерируем сектора (упрощённо — используем данные напрямую)
-        this.generateSimpleWheel(outerDiv, this.themeData.outer, 600, 250, 300);
-        this.generateSimpleWheel(middleDiv, this.themeData.middle, 500, 190, 250);
-        this.generateSimpleWheel(innerDiv, this.themeData.inner, 370, 0, 185);
-        
-        this.setupDrag();
-    }
+    // Добавляем вращение
+    let rotation = 0;
+    let isDragging = false;
+    let startAngle = 0;
     
-    generateSimpleWheel(wheelEl, items, size, rIn, rOut) {
-        wheelEl.style.background = '#e0e0e0';
-        wheelEl.style.border = '3px solid white';
-        wheelEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-        
-        // Простое отображение номеров секторов (для демо)
-        const angleStep = 360 / items.length;
-        for (let i = 0; i < items.length; i++) {
-            const sector = document.createElement('div');
-            sector.style.position = 'absolute';
-            sector.style.width = '100%';
-            sector.style.height = '100%';
-            sector.style.transform = `rotate(${i * angleStep}deg)`;
-            
-            const label = document.createElement('div');
-            label.style.position = 'absolute';
-            label.style.top = '30%';
-            label.style.left = '50%';
-            label.style.transform = 'translate(-50%, -50%)';
-            label.style.fontSize = '10px';
-            label.style.fontWeight = 'bold';
-            label.style.textAlign = 'center';
-            label.innerHTML = `${items[i].kk.substring(0, 10)}<br><small>${items[i].ru.substring(0, 15)}</small>`;
-            label.style.color = '#333';
-            label.style.textShadow = '0 1px 1px white';
-            
-            sector.appendChild(label);
-            wheelEl.appendChild(sector);
+    const getAngle = (e) => {
+        const rect = wheel.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+    };
+    
+    const onStart = (e) => {
+        isDragging = true;
+        startAngle = getAngle(e) - rotation;
+        wheel.style.transition = 'none';
+        e.preventDefault();
+    };
+    
+    const onMove = (e) => {
+        if (!isDragging) return;
+        rotation = getAngle(e) - startAngle;
+        wheel.style.transform = `rotate(${rotation}deg)`;
+        if (type === 'outer') {
+            wheel.style.transform = `rotate(${rotation}deg)`;
+        } else {
+            wheel.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
         }
-    }
+        e.preventDefault();
+    };
     
-    setupDrag() {
-        // Упрощённый drag для полноэкранного режима
-        const wheels = [
-            { el: document.getElementById('fullscreenOuterWheel'), key: 'outer' },
-            { el: document.getElementById('fullscreenMiddleWheel'), key: 'middle' },
-            { el: document.getElementById('fullscreenInnerWheel'), key: 'inner' }
-        ];
-        
-        wheels.forEach(w => {
-            if (!w.el) return;
-            let isDragging = false;
-            let startAngle = 0;
-            
-            const getAngle = (e, el) => {
-                const rect = el.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
-            };
-            
-            w.el.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startAngle = getAngle(e, w.el) - this.currentRotations[w.key];
-                w.el.style.transition = 'none';
-            });
-            
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                this.currentRotations[w.key] = getAngle(e, w.el) - startAngle;
-                w.el.style.transform = `rotate(${this.currentRotations[w.key]}deg)`;
-            });
-            
-            window.addEventListener('mouseup', () => {
-                if (!isDragging) return;
-                isDragging = false;
-                w.el.style.transition = 'transform 0.3s ease';
-                this.currentRotations[w.key] = Math.round(this.currentRotations[w.key] / 60) * 60;
-                w.el.style.transform = `rotate(${this.currentRotations[w.key]}deg)`;
-            });
-        });
-    }
+    const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wheel.style.transition = 'transform 0.3s ease';
+        rotation = Math.round(rotation / 60) * 60;
+        if (type === 'outer') {
+            wheel.style.transform = `rotate(${rotation}deg)`;
+        } else {
+            wheel.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+        }
+    };
+    
+    wheel.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    wheel.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+    
+    return wheel;
 }
 
-// Инициализация правой панели
+// ИНИЦИАЛИЗАЦИЯ
 document.addEventListener('DOMContentLoaded', () => {
-    // Загружаем первую тему
     loadTheme('столовая');
     
-    // Поиск по теме
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
@@ -270,19 +286,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Полноэкранный режим
     const expandBtn = document.getElementById('expandWheelsBtn');
     if (expandBtn) {
         expandBtn.addEventListener('click', openFullscreenWheels);
     }
     
-    // Закрытие модального окна
     const closeBtn = document.getElementById('closeModalBtn');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeFullscreenWheels);
     }
     
-    // Закрытие по клику на фон
     const modal = document.getElementById('fullscreenWheelsModal');
     if (modal) {
         modal.addEventListener('click', (e) => {
