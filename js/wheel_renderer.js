@@ -1,4 +1,4 @@
-// Упрощённый рендерер колёс (использует оригинальную логику из engine.js)
+// Упрощённый рендерер колёс (ИСПРАВЛЕНАЯ ВЕРСИЯ - ТЕКСТ ВИДЕН)
 
 class WheelRenderer {
     constructor(containerId, themeData) {
@@ -12,7 +12,6 @@ class WheelRenderer {
         if (!this.container) return;
         this.container.innerHTML = '';
         
-        // Создаём структуру как в оригинале
         this.container.style.position = 'relative';
         this.container.style.display = 'flex';
         this.container.style.justifyContent = 'center';
@@ -21,8 +20,8 @@ class WheelRenderer {
         
         const deviceBody = document.createElement('div');
         deviceBody.style.position = 'relative';
-        deviceBody.style.width = '280px';
-        deviceBody.style.height = '280px';
+        deviceBody.style.width = '300px';
+        deviceBody.style.height = '300px';
         deviceBody.style.display = 'flex';
         deviceBody.style.alignItems = 'center';
         deviceBody.style.justifyContent = 'center';
@@ -39,16 +38,24 @@ class WheelRenderer {
         pointer.style.borderRight = '12px solid transparent';
         pointer.style.borderTop = '20px solid #00b4d8';
         pointer.style.zIndex = '10';
-        pointer.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))';
         
-        // Создаём колёса
-        const outerWheel = this.createWheel(280, this.themeData.outer, 'outer');
-        const middleWheel = this.createWheel(230, this.themeData.middle, 'middle');
-        const innerWheel = this.createWheel(170, this.themeData.inner, 'inner');
+        // Создаём колёса с текстом
+        const outerWheel = this.createWheelWithText(280, this.themeData.outer, 'outer');
+        const middleWheel = this.createWheelWithText(230, this.themeData.middle, 'middle');
+        const innerWheel = this.createWheelWithText(170, this.themeData.inner, 'inner');
         
         outerWheel.style.position = 'absolute';
         middleWheel.style.position = 'absolute';
         innerWheel.style.position = 'absolute';
+        
+        // Центрируем среднее и внутреннее кольца
+        const offsetMiddle = (280 - 230) / 2;
+        middleWheel.style.left = `${offsetMiddle}px`;
+        middleWheel.style.top = `${offsetMiddle}px`;
+        
+        const offsetInner = (280 - 170) / 2;
+        innerWheel.style.left = `${offsetInner}px`;
+        innerWheel.style.top = `${offsetInner}px`;
         
         deviceBody.appendChild(outerWheel);
         deviceBody.appendChild(middleWheel);
@@ -67,7 +74,7 @@ class WheelRenderer {
         this.updateDashboard();
     }
 
-    createWheel(size, items, type) {
+    createWheelWithText(size, items, type) {
         const wheel = document.createElement('div');
         wheel.style.width = `${size}px`;
         wheel.style.height = `${size}px`;
@@ -81,8 +88,23 @@ class WheelRenderer {
         
         const count = items.length;
         const angleStep = 360 / count;
-        const cx = size / 2;
-        const cy = size / 2;
+        const centerX = size / 2;
+        const centerY = size / 2;
+        
+        // Радиусы для секторов
+        let rOuter = size / 2;
+        let rInner = 0;
+        
+        if (type === 'outer') {
+            rOuter = size / 2;
+            rInner = size * 0.35;
+        } else if (type === 'middle') {
+            rOuter = size / 2;
+            rInner = size * 0.28;
+        } else if (type === 'inner') {
+            rOuter = size / 2;
+            rInner = 0;
+        }
         
         const colors = {
             outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
@@ -91,59 +113,88 @@ class WheelRenderer {
         };
         
         for (let i = 0; i < count; i++) {
+            // Создаём сектор с помощью SVG (надёжнее)
             const sector = document.createElement('div');
             sector.style.position = 'absolute';
             sector.style.width = '100%';
             sector.style.height = '100%';
             sector.style.transform = `rotate(${i * angleStep}deg)`;
-            sector.style.background = colors[type][i % 6];
-            sector.style.clipPath = this.getSectorClipPath(size, i, angleStep);
+            sector.style.transformOrigin = `${centerX}px ${centerY}px`;
+            
+            // SVG для фона сектора
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", size);
+            svg.setAttribute("height", size);
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            
+            // Рисуем сектор
+            const startAngle = -60;
+            const endAngle = 0;
+            const startRad = startAngle * Math.PI / 180;
+            const endRad = endAngle * Math.PI / 180;
+            
+            const x1 = centerX + rOuter * Math.cos(startRad);
+            const y1 = centerY + rOuter * Math.sin(startRad);
+            const x2 = centerX + rOuter * Math.cos(endRad);
+            const y2 = centerY + rOuter * Math.sin(endRad);
+            
+            let pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${rOuter} ${rOuter} 0 0 1 ${x2} ${y2} Z`;
+            
+            if (rInner > 0) {
+                const x3 = centerX + rInner * Math.cos(endRad);
+                const y3 = centerY + rInner * Math.sin(endRad);
+                const x4 = centerX + rInner * Math.cos(startRad);
+                const y4 = centerY + rInner * Math.sin(startRad);
+                pathData = `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 0 0 ${x4} ${y4} Z`;
+            }
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", colors[type][i % 6]);
+            path.setAttribute("stroke", "white");
+            path.setAttribute("stroke-width", "1.5");
+            svg.appendChild(path);
+            
+            sector.appendChild(svg);
             
             // Текст
-            const text = document.createElement('div');
-            text.style.position = 'absolute';
-            text.style.top = '55%';
-            text.style.left = '50%';
-            text.style.transform = 'translate(-50%, -50%)';
-            text.style.textAlign = 'center';
-            text.style.fontSize = type === 'inner' ? '7px' : '8px';
-            text.style.fontWeight = 'bold';
-            text.style.color = '#1a1d24';
-            text.style.width = '60px';
+            const textDiv = document.createElement('div');
+            textDiv.style.position = 'absolute';
+            textDiv.style.left = '50%';
+            textDiv.style.top = '50%';
+            textDiv.style.transform = 'translate(-50%, -50%)';
+            textDiv.style.textAlign = 'center';
+            textDiv.style.pointerEvents = 'none';
             
-            const kkText = items[i].kk.length > 12 ? items[i].kk.substring(0, 10) + '..' : items[i].kk;
-            const ruText = items[i].ru.length > 15 ? items[i].ru.substring(0, 13) + '..' : items[i].ru;
-            text.innerHTML = `${kkText}<br><small style="font-size: 6px; color: #666;">${ruText}</small>`;
+            // Позиционируем текст в середине сектора
+            const textRadius = (rOuter + rInner) / 2;
+            const angleRad = (i * angleStep - 30) * Math.PI / 180;
+            const textX = centerX + textRadius * Math.cos(angleRad);
+            const textY = centerY + textRadius * Math.sin(angleRad);
             
-            sector.appendChild(text);
+            textDiv.style.left = `${textX}px`;
+            textDiv.style.top = `${textY}px`;
+            textDiv.style.transform = 'translate(-50%, -50%)';
+            
+            const fontSize = type === 'inner' ? '7px' : '8px';
+            const smallFont = type === 'inner' ? '5px' : '6px';
+            
+            let kkText = items[i].kk;
+            let ruText = items[i].ru;
+            
+            if (kkText.length > 12) kkText = kkText.substring(0, 10) + '..';
+            if (ruText.length > 18) ruText = ruText.substring(0, 16) + '..';
+            
+            textDiv.innerHTML = `<div style="font-size: ${fontSize}; font-weight: bold; color: #1a1d24;">${kkText}</div>
+                                 <div style="font-size: ${smallFont}; color: #4a5568;">${ruText}</div>`;
+            
+            sector.appendChild(textDiv);
             wheel.appendChild(sector);
         }
         
         return wheel;
-    }
-
-    getSectorClipPath(size, index, angleStep) {
-        const cx = 50;
-        const cy = 50;
-        const rOuter = 50;
-        const rInner = 30;
-        
-        const startAngle = index * angleStep - 60;
-        const endAngle = startAngle + 60;
-        
-        const radStart = startAngle * Math.PI / 180;
-        const radEnd = endAngle * Math.PI / 180;
-        
-        const x1 = cx + rOuter * Math.cos(radStart);
-        const y1 = cy + rOuter * Math.sin(radStart);
-        const x2 = cx + rOuter * Math.cos(radEnd);
-        const y2 = cy + rOuter * Math.sin(radEnd);
-        const x3 = cx + rInner * Math.cos(radEnd);
-        const y3 = cy + rInner * Math.sin(radEnd);
-        const x4 = cx + rInner * Math.cos(radStart);
-        const y4 = cy + rInner * Math.sin(radStart);
-        
-        return `polygon(${cx}% ${cy}%, ${x1}% ${y1}%, ${x2}% ${y2}%, ${x3}% ${y3}%, ${x4}% ${y4}%)`;
     }
 
     setupDrag() {
@@ -237,7 +288,7 @@ class WheelRenderer {
 
     updateTheme(newThemeData) {
         this.themeData = newThemeData;
-        this.currentRotations = { outer: 0, middle: 0, inner: 0 };
+        this.wheels = { outer: { rotation: 0 }, middle: { rotation: 0 }, inner: { rotation: 0 } };
         this.init();
     }
 }
