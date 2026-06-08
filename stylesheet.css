@@ -509,9 +509,43 @@ body {
     cursor: pointer;
 }
 
-.search-theme {
-    padding: 16px;
+/* Компактный поиск и тема */
+.search-theme-compact {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
     border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.search-theme-compact input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 0.8em;
+    outline: none;
+}
+
+.search-theme-compact input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.search-theme-compact input:focus {
+    border-color: #ffd700;
+}
+
+.current-theme-badge {
+    background: #ffd700;
+    color: #1a2639;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 .search-theme input {
