@@ -114,12 +114,12 @@ function generateWheelCells(wheelEl, items, type) {
     
     let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
     
-    if (type === 'outer') {
-        dMax = 640; rIn = 265; rOut = 320; textRadius = 295;
-    } else if (type === 'middle') {
-        dMax = 530; rIn = 195; rOut = 265; textRadius = 232;
-    } else if (type === 'inner') {
-        dMax = 390; rIn = 0; rOut = 195; textRadius = 160;
+   if (type === 'outer') {
+    dMax = 640; rIn = 260; rOut = 320; textRadius = 290;
+} else if (type === 'middle') {
+    dMax = 530; rIn = 200; rOut = 260; textRadius = 230; // Было rIn = 195, rOut = 265
+} else if (type === 'inner') {
+    dMax = 390; rIn = 0; rOut = 200; textRadius = 145;   // Было rOut = 195
     }
     
     const cx = dMax / 2;
@@ -233,15 +233,24 @@ function generateWheelCells(wheelEl, items, type) {
 
 function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
     const toRad = Math.PI / 180;
+    
+    // Точки на внешней дуге
     const x1_out = cx + rOut * Math.cos(startAngle * toRad);
     const y1_out = cy + rOut * Math.sin(startAngle * toRad);
     const x2_out = cx + rOut * Math.cos(endAngle * toRad);
     const y2_out = cy + rOut * Math.sin(endAngle * toRad);
+    
+    // Точки на внутренней дуге
     const x1_in = cx + rIn * Math.cos(endAngle * toRad);
     const y1_in = cy + rIn * Math.sin(endAngle * toRad);
     const x2_in = cx + rIn * Math.cos(startAngle * toRad);
     const y2_in = cy + rIn * Math.sin(startAngle * toRad);
-    return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
+    
+    // Правильный SVG путь: внешняя дуга по часовой (1), линия внутрь, внутренняя дуга против часовой (0)
+    return `M ${x1_out} ${y1_out} ` +
+           `A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} ` +
+           `L ${x1_in} ${y1_in} ` +
+           `A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
 }
 
 // Звук
