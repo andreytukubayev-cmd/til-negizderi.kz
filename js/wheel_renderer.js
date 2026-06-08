@@ -43,13 +43,26 @@ class WheelRenderer {
         const innerWheel = this.createOriginalWheel(170, this.themeData.inner, 'inner');
         
         outerWheel.style.position = 'absolute';
+        outerWheel.style.top = '0';
+        outerWheel.style.left = '0';
+        
         middleWheel.style.position = 'absolute';
+        middleWheel.style.top = '50%';
+        middleWheel.style.left = '50%';
+        middleWheel.style.transform = 'translate(-50%, -50%)';
+        
         innerWheel.style.position = 'absolute';
+        innerWheel.style.top = '50%';
+        innerWheel.style.left = '50%';
+        innerWheel.style.transform = 'translate(-50%, -50%)';
         
         // Кнопка СБРОС
         const centerBtn = document.createElement('div');
         centerBtn.className = 'mini-center-cap';
         centerBtn.style.position = 'absolute';
+        centerBtn.style.top = '50%';
+        centerBtn.style.left = '50%';
+        centerBtn.style.transform = 'translate(-50%, -50%)';
         centerBtn.style.width = '50px';
         centerBtn.style.height = '50px';
         centerBtn.style.borderRadius = '50%';
@@ -70,8 +83,8 @@ class WheelRenderer {
         centerBtn.addEventListener('click', () => {
             this.currentRotations = { outer: 0, middle: 0, inner: 0 };
             outerWheel.style.transform = 'rotate(0deg)';
-            middleWheel.style.transform = 'rotate(0deg)';
-            innerWheel.style.transform = 'rotate(0deg)';
+            middleWheel.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+            innerWheel.style.transform = 'translate(-50%, -50%) rotate(0deg)';
             this.updateDashboard();
         });
         
@@ -109,25 +122,20 @@ class WheelRenderer {
         const count = items.length;
         const angleStep = 360 / count;
         
-        let dMax = size;
         let rIn = 0, rOut = 0, textRadius = 0;
-        let colorPrefix = '';
         
         if (type === 'outer') {
             rIn = size * 0.38;
             rOut = size * 0.5;
             textRadius = size * 0.45;
-            colorPrefix = 'var(--color-out-';
         } else if (type === 'middle') {
             rIn = size * 0.32;
             rOut = size * 0.5;
             textRadius = size * 0.42;
-            colorPrefix = 'var(--color-mid-';
         } else if (type === 'inner') {
             rIn = 0;
             rOut = size * 0.5;
             textRadius = size * 0.4;
-            colorPrefix = 'var(--color-inn-';
         }
         
         const cx = size / 2;
@@ -252,106 +260,96 @@ class WheelRenderer {
         return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
     }
 
-setupDrag() {
-    const wheels = ['outer', 'middle', 'inner'];
-    
-    // Создаём аудио объект
-    let clickAudio = null;
-    try {
-        clickAudio = new Audio('short-click.mp3');
-        clickAudio.volume = 0.35;
-    } catch(e) {
-        console.warn('Audio not supported');
-    }
-    
-    function playClick() {
-        if (clickAudio) {
-            clickAudio.currentTime = 0;
-            clickAudio.play().catch(() => {});
+    setupDrag() {
+        const wheels = ['outer', 'middle', 'inner'];
+        
+        // Создаём аудио объект
+        let clickAudio = null;
+        try {
+            clickAudio = new Audio('short-click.mp3');
+            clickAudio.volume = 0.35;
+        } catch(e) {
+            console.warn('Audio not supported');
         }
-    }
-    
-    wheels.forEach(key => {
-        const w = this.wheels[key];
-        if (!w || !w.el) return;
         
-        let isDragging = false;
-        let startAngle = 0;
-        let lastSectorIndex = -1;
-        
-        const getAngle = (e) => {
-            const rect = w.el.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
-        };
-        
-        const getCurrentSector = (rotation) => {
-            let norm = (-rotation) % 360;
-            if (norm < 0) norm += 360;
-            return Math.round(norm / 60) % 6;
-        };
-        
-        const onStart = (e) => {
-            isDragging = true;
-            startAngle = getAngle(e) - w.rotation;
-            w.el.style.transition = 'none';
-            w.el.style.cursor = 'grabbing';
-            e.preventDefault();
-            
-            // Запоминаем текущий сектор
-            lastSectorIndex = getCurrentSector(w.rotation);
-        };
-        
-        const onMove = (e) => {
-            if (!isDragging) return;
-            w.rotation = getAngle(e) - startAngle;
-            
-            if (key === 'outer') {
-                w.el.style.transform = `rotate(${w.rotation}deg)`;
-            } else {
-                w.el.style.transform = `translate(-50%, -50%) rotate(${w.rotation}deg)`;
+        function playClick() {
+            if (clickAudio) {
+                clickAudio.currentTime = 0;
+                clickAudio.play().catch(() => {});
             }
+        }
+        
+        wheels.forEach(key => {
+            const w = this.wheels[key];
+            if (!w || !w.el) return;
             
-            // Проверяем сменился ли сектор
-            const currentSector = getCurrentSector(w.rotation);
-            if (currentSector !== lastSectorIndex) {
+            let isDragging = false;
+            let startAngle = 0;
+            let lastSectorIndex = -1;
+            
+            const getAngle = (e) => {
+                const rect = w.el.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+            };
+            
+            const getCurrentSector = (rotation) => {
+                let norm = (-rotation) % 360;
+                if (norm < 0) norm += 360;
+                return Math.round(norm / 60) % 6;
+            };
+            
+            const onStart = (e) => {
+                isDragging = true;
+                startAngle = getAngle(e) - w.rotation;
+                w.el.style.transition = 'none';
+                w.el.style.cursor = 'grabbing';
+                e.preventDefault();
+                
+                lastSectorIndex = getCurrentSector(w.rotation);
+            };
+            
+            const onMove = (e) => {
+                if (!isDragging) return;
+                w.rotation = getAngle(e) - startAngle;
+                
+                // Для ВСЕХ колёс - только rotate (translate уже задан в CSS)
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
+                
+                const currentSector = getCurrentSector(w.rotation);
+                if (currentSector !== lastSectorIndex) {
+                    playClick();
+                    lastSectorIndex = currentSector;
+                }
+                
+                this.updateDashboard();
+                e.preventDefault();
+            };
+            
+            const onEnd = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                w.el.style.cursor = 'grab';
+                w.el.style.transition = 'transform 0.3s ease';
+                w.rotation = Math.round(w.rotation / 60) * 60;
+                
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
+                
                 playClick();
-                lastSectorIndex = currentSector;
-            }
+                this.updateDashboard();
+            };
             
-            this.updateDashboard();
-            e.preventDefault();
-        };
-        
-        const onEnd = () => {
-            if (!isDragging) return;
-            isDragging = false;
-            w.el.style.cursor = 'grab';
-            w.el.style.transition = 'transform 0.3s ease';
-            w.rotation = Math.round(w.rotation / 60) * 60;
-            
-            if (key === 'outer') {
-                w.el.style.transform = `rotate(${w.rotation}deg)`;
-            } else {
-                w.el.style.transform = `translate(-50%, -50%) rotate(${w.rotation}deg)`;
-            }
-            
-            // Финальный щелчок
-            playClick();
-            this.updateDashboard();
-        };
-        
-        w.el.addEventListener('mousedown', onStart);
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onEnd);
-        w.el.addEventListener('touchstart', onStart, { passive: false });
-        window.addEventListener('touchmove', onMove, { passive: false });
-        window.addEventListener('touchend', onEnd);
-    });
-}
+            w.el.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+            w.el.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onEnd);
+        });
+    }
 
     updateDashboard() {
         const getIndex = (rotation) => {
