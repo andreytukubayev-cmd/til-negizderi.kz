@@ -25,10 +25,10 @@ function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
     const x2_in = cx + rIn * Math.cos(startAngle * toRad);
     const y2_in = cy + rIn * Math.sin(startAngle * toRad);
 
-    return `M ${x1_out} ${y1_out} 
-            A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} 
-            L ${x1_in} ${y1_in} 
-            A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
+    return `M ${x1_out} ${y1_out} \n` +
+           `A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} \n` +
+           `L ${x1_in} ${y1_in} \n` +
+           `A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
 }
 
 function loadTheme(themeName) {
@@ -36,7 +36,8 @@ function loadTheme(themeName) {
     if (!themeData) return false;
     
     currentTheme = themeName;
-    document.getElementById('currentTheme').innerText = themeName;
+    const currentThemeEl = document.getElementById('currentTheme');
+    if (currentThemeEl) currentThemeEl.innerText = themeName;
     
     // Обновляем глобальный dataset
     window.dataset = {
@@ -53,78 +54,11 @@ function loadTheme(themeName) {
 }
 
 function regenerateWheels() {
-    // Находим старые элементы колес в DOM, если они уже есть
     let outerEl = document.getElementById('outerWheel');
     let middleEl = document.getElementById('middleWheel');
     let innerEl = document.getElementById('innerWheel');
 
-    // Если структура создается динамически или через контейнер
-    const container = document.getElementById('wheelsContainer');
-    if (container && container.innerHTML === '') {
-        // Первичная сборка разметки внутри контейнера (если пустой)
-        const deviceBody = document.createElement('div');
-        deviceBody.className = 'device-body';
-        deviceBody.style.position = 'relative';
-        deviceBody.style.width = '646px';
-        deviceBody.style.height = '646px';
-        deviceBody.style.margin = '0 auto';
-        deviceBody.style.background = '#e6e9ef';
-        deviceBody.style.borderRadius = '50%';
-        deviceBody.style.display = 'flex';
-        deviceBody.style.alignItems = 'center';
-        deviceBody.style.justifyContent = 'center';
-        deviceBody.style.boxShadow = '15px 15px 30px #d1d5db, -15px -15px 30px #ffffff';
-        
-        const pointer = document.createElement('div');
-        pointer.className = 'pointer-needle';
-        pointer.style.position = 'absolute';
-        pointer.style.top = '-8px';
-        pointer.style.left = '50%';
-        pointer.style.transform = 'translateX(-50%)';
-        pointer.style.width = '0';
-        pointer.style.height = '0';
-        pointer.style.borderLeft = '10px solid transparent';
-        pointer.style.borderRight = '10px solid transparent';
-        pointer.style.borderTop = '18px solid #00b4d8';
-        pointer.style.zIndex = '11';
-        
-        outerEl = document.createElement('div');
-        outerEl.className = 'wheel outer-wheel';
-        outerEl.id = 'outerWheel';
-        
-        middleEl = document.createElement('div');
-        middleEl.className = 'wheel middle-wheel';
-        middleEl.id = 'middleWheel';
-        
-        innerEl = document.createElement('div');
-        innerEl.className = 'wheel inner-wheel';
-        innerEl.id = 'innerWheel';
-        
-        const centerBtn = document.createElement('div');
-        centerBtn.className = 'center-cap';
-        centerBtn.innerText = 'СБРОС';
-        
-        deviceBody.appendChild(outerEl);
-        deviceBody.appendChild(middleWheel);
-        deviceBody.appendChild(innerEl);
-        deviceBody.appendChild(pointer);
-        deviceBody.appendChild(centerBtn);
-        container.appendChild(deviceBody);
-
-        // Кнопка сброса
-        centerBtn.addEventListener('click', () => {
-            rotations = { inner: 0, middle: 0, outer: 0 };
-            innerEl.style.transform = 'rotate(0deg)';
-            middleEl.style.transform = 'rotate(0deg)';
-            outerEl.style.transform = 'rotate(0deg)';
-            updateDashboard('inner', 0);
-            updateDashboard('middle', 0);
-            updateDashboard('outer', 0);
-            playClick();
-        });
-    }
-
-    // Очищаем и перегенерируем ячейки под новую тему
+    // Если структура ячеек уже существует в HTML, просто перегенерируем их
     if (outerEl && middleEl && innerEl) {
         generateWheelCells(outerEl, window.dataset.outer, 'outer');
         generateWheelCells(middleEl, window.dataset.middle, 'middle');
@@ -146,7 +80,7 @@ function generateWheelCells(wheelEl, items, type) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    // Единый размер координатной сетки 640x640 исключает пиксельное смещение центров
+    // Единый размер координатной сетки 640x640 полностью убирает пиксельное смещение
     const dMax = 640; 
     const cx = dMax / 2;
     const cy = dMax / 2;
@@ -245,7 +179,7 @@ function generateWheelCells(wheelEl, items, type) {
         const pIdKk1 = `p_kk1_${type}_${i}`, pIdKk2 = `p_kk2_${type}_${i}`;
         const pIdRu1 = `p_ru1_${type}_${i}`, pIdRu2 = `p_ru2_${type}_${i}`;
 
-        let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}" stroke="white" stroke-width="2"/>`;
+        let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}"/>`;
         let currentR = textRadius;
 
         // --- РЕНДЕРИНГ КАЗАХСКОГО ТЕКСТА ---
@@ -255,14 +189,14 @@ function generateWheelCells(wheelEl, items, type) {
                     <path id="${pIdKk1}" d="${getArcPath(currentR)}" fill="none"/>
                     <path id="${pIdKk2}" d="${getArcPath(currentR - step)}" fill="none"/>
                 </defs>
-                <text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
-                <text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pIdKk2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>
+                <text class="svg-text-kk"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
+                <text class="svg-text-kk"><textPath href="#${pIdKk2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>
             `;
             currentR -= (step * 2) + 4;
         } else {
             svgContent += `
                 <defs><path id="${pIdKk1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                <text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
+                <text class="svg-text-kk"><textPath href="#${pIdKk1}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>
             `;
             currentR -= (step + 4);
         }
@@ -274,13 +208,13 @@ function generateWheelCells(wheelEl, items, type) {
                     <path id="${pIdRu1}" d="${getArcPath(currentR)}" fill="none"/>
                     <path id="${pIdRu2}" d="${getArcPath(currentR - step)}" fill="none"/>
                 </defs>
-                <text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
-                <text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pIdRu2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>
+                <text class="svg-text-ru"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
+                <text class="svg-text-ru"><textPath href="#${pIdRu2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>
             `;
         } else {
             svgContent += `
                 <defs><path id="${pIdRu1}" d="${getArcPath(currentR)}" fill="none"/></defs>
-                <text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
+                <text class="svg-text-ru"><textPath href="#${pIdRu1}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>
             `;
         }
 
@@ -368,7 +302,6 @@ function updateDashboard(key, rotation) {
     const index = Math.round(normalizedAngle / 60) % 6;
     const activeData = window.dataset[key][index];
     
-    // Поддержка двух видов вывода результатов (старый формат мини-панели и формат дешборда)
     const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
     const resKkEl = document.getElementById(`resKk${capitalizedKey}`);
     const resRuEl = document.getElementById(`resRu${capitalizedKey}`);
@@ -378,7 +311,7 @@ function updateDashboard(key, rotation) {
         resRuEl.innerText = activeData?.ru || '-';
     }
     
-    // Синхронизация с общим блоком вывода wheelsDisplay (если используется он)
+    // Синхронизация с блоком wheelsDisplay (если он есть на странице)
     const displayDiv = document.getElementById('wheelsDisplay');
     if (displayDiv && originalEngineInitialized) {
         const outerIdx = Math.round(((-rotations.outer) % 360 < 0 ? (-rotations.outer) % 360 + 360 : (-rotations.outer) % 360) / 60) % 6;
@@ -406,26 +339,33 @@ function updateDashboard(key, rotation) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Получаем тему по умолчанию
-    const defaultTheme = getThemeData('столовая');
-    window.dataset = {
-        outer: defaultTheme.outer,
-        middle: defaultTheme.middle,
-        inner: defaultTheme.inner
-    };
+    // Получаем тему по умолчанию из подключенной библиотеки тем
+    if (typeof getThemeData === "function") {
+        const defaultTheme = getThemeData('столовая');
+        if (defaultTheme) {
+            window.dataset = {
+                outer: defaultTheme.outer,
+                middle: defaultTheme.middle,
+                inner: defaultTheme.inner
+            };
+        }
+    }
 
     const outerEl = document.getElementById('outerWheel');
     const middleEl = document.getElementById('middleWheel');
     const innerEl = document.getElementById('innerWheel');
 
-    // Первичная инициализация структуры ячеек
-    generateWheelCells(outerEl, window.dataset.outer, 'outer');
-    generateWheelCells(middleEl, window.dataset.middle, 'middle');
-    generateWheelCells(innerEl, window.dataset.inner, 'inner');
+    if (outerEl && middleEl && innerEl) {
+        // Отрисовка секторов
+        generateWheelCells(outerEl, window.dataset.outer, 'outer');
+        generateWheelCells(middleEl, window.dataset.middle, 'middle');
+        generateWheelCells(innerEl, window.dataset.inner, 'inner');
 
-    setupRotationEngine(innerEl, 'inner');
-    setupRotationEngine(middleEl, 'middle');
-    setupRotationEngine(outerEl, 'outer');
+        // Подключение Drag & Drop
+        setupRotationEngine(innerEl, 'inner');
+        setupRotationEngine(middleEl, 'middle');
+        setupRotationEngine(outerEl, 'outer');
+    }
 
     originalEngineInitialized = true;
 
@@ -437,13 +377,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const spinBtn = document.getElementById('spinBtn');
     let isSpinning = false;
 
-    if (spinBtn) {
+    if (spinBtn && outerEl && middleEl && innerEl) {
         spinBtn.addEventListener('click', () => {
-            if (isSpinning) return; // Защита от спам-кликов во время вращения
+            if (isSpinning) return; 
             isSpinning = true;
             spinBtn.style.pointerEvents = 'none';
 
-            // Случайное количество шагов вращения для каждого колеса отдельно
             const wheels = [
                 { el: innerEl, key: 'inner', steps: 12 + Math.floor(Math.random() * 6) },
                 { el: middleEl, key: 'middle', steps: 18 + Math.floor(Math.random() * 6) },
@@ -453,11 +392,9 @@ document.addEventListener("DOMContentLoaded", () => {
             wheels.forEach((w) => {
                 w.el.style.transition = 'transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1)';
                 
-                // Считаем новый целевой угол
                 const targetRotation = rotations[w.key] - (w.steps * 60);
                 w.el.style.transform = `rotate(${targetRotation}deg)`;
                 
-                // Звук щелчков с постепенным замедлением интервала
                 let currentStep = 0;
                 const interval = setInterval(() => {
                     if (currentStep >= w.steps) {
@@ -468,11 +405,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }, 2500 / w.steps);
 
-                // Записываем финальный угол в общую переменную rotations
                 rotations[w.key] = targetRotation;
             });
 
-            // Восстановление интерфейса после завершения анимации
             setTimeout(() => {
                 isSpinning = false;
                 spinBtn.style.pointerEvents = 'auto';
@@ -480,20 +415,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 wheels.forEach((w) => {
                     updateDashboard(w.key, rotations[w.key]);
                 });
-                playClick(); // Эффектный финальный щелчок фиксации
+                playClick(); 
             }, 2600);
         });
     }
 
-    // Слушатель для поиска тем на панели ввода
+    // Слушатель для поиска тем (если есть строка ввода)
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const found = searchTheme(themeSearch.value);
-                if (found) {
-                    loadTheme(found);
-                    themeSearch.value = '';
+                if (typeof searchTheme === "function") {
+                    const found = searchTheme(themeSearch.value);
+                    if (found) {
+                        loadTheme(found);
+                        themeSearch.value = '';
+                    }
                 }
             }
         });
