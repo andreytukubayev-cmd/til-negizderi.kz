@@ -1,4 +1,4 @@
-// Универсальный рендерер колёс Луллия (ИСПРАВЛЕНАЯ ВЕРСИЯ)
+// Упрощённый рендерер колёс (использует оригинальную логику из engine.js)
 
 class WheelRenderer {
     constructor(containerId, themeData) {
@@ -11,188 +11,152 @@ class WheelRenderer {
     init() {
         if (!this.container) return;
         this.container.innerHTML = '';
-        this.createWheels();
-        this.setupDragAndDrop();
+        
+        // Создаём структуру как в оригинале
+        this.container.style.position = 'relative';
+        this.container.style.display = 'flex';
+        this.container.style.justifyContent = 'center';
+        this.container.style.alignItems = 'center';
+        this.container.style.minHeight = '320px';
+        
+        const deviceBody = document.createElement('div');
+        deviceBody.style.position = 'relative';
+        deviceBody.style.width = '280px';
+        deviceBody.style.height = '280px';
+        deviceBody.style.display = 'flex';
+        deviceBody.style.alignItems = 'center';
+        deviceBody.style.justifyContent = 'center';
+        
+        // Указатель
+        const pointer = document.createElement('div');
+        pointer.style.position = 'absolute';
+        pointer.style.top = '-12px';
+        pointer.style.left = '50%';
+        pointer.style.transform = 'translateX(-50%)';
+        pointer.style.width = '0';
+        pointer.style.height = '0';
+        pointer.style.borderLeft = '12px solid transparent';
+        pointer.style.borderRight = '12px solid transparent';
+        pointer.style.borderTop = '20px solid #00b4d8';
+        pointer.style.zIndex = '10';
+        pointer.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.3))';
+        
+        // Создаём колёса
+        const outerWheel = this.createWheel(280, this.themeData.outer, 'outer');
+        const middleWheel = this.createWheel(230, this.themeData.middle, 'middle');
+        const innerWheel = this.createWheel(170, this.themeData.inner, 'inner');
+        
+        outerWheel.style.position = 'absolute';
+        middleWheel.style.position = 'absolute';
+        innerWheel.style.position = 'absolute';
+        
+        deviceBody.appendChild(outerWheel);
+        deviceBody.appendChild(middleWheel);
+        deviceBody.appendChild(innerWheel);
+        deviceBody.appendChild(pointer);
+        
+        this.container.appendChild(deviceBody);
+        
+        this.wheels = {
+            outer: { el: outerWheel, rotation: 0 },
+            middle: { el: middleWheel, rotation: 0 },
+            inner: { el: innerWheel, rotation: 0 }
+        };
+        
+        this.setupDrag();
         this.updateDashboard();
     }
 
-    createWheels() {
-        const outerDiv = document.createElement('div');
-        outerDiv.className = 'mini-wheel outer-wheel';
-        outerDiv.id = 'miniOuterWheel';
+    createWheel(size, items, type) {
+        const wheel = document.createElement('div');
+        wheel.style.width = `${size}px`;
+        wheel.style.height = `${size}px`;
+        wheel.style.borderRadius = '50%';
+        wheel.style.cursor = 'grab';
+        wheel.style.position = 'relative';
+        wheel.style.background = '#e8e8e8';
+        wheel.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        wheel.style.border = '2px solid white';
+        wheel.style.overflow = 'hidden';
         
-        const middleDiv = document.createElement('div');
-        middleDiv.className = 'mini-wheel middle-wheel';
-        middleDiv.id = 'miniMiddleWheel';
-        
-        const innerDiv = document.createElement('div');
-        innerDiv.className = 'mini-wheel inner-wheel';
-        innerDiv.id = 'miniInnerWheel';
-        
-        this.container.appendChild(outerDiv);
-        this.container.appendChild(middleDiv);
-        this.container.appendChild(innerDiv);
-        
-        this.generateWheelCells(outerDiv, this.themeData.outer, 'outer');
-        this.generateWheelCells(middleDiv, this.themeData.middle, 'middle');
-        this.generateWheelCells(innerDiv, this.themeData.inner, 'inner');
-    }
-
-    generateWheelCells(wheelEl, items, type) {
         const count = items.length;
         const angleStep = 360 / count;
+        const cx = size / 2;
+        const cy = size / 2;
         
-        let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
-        let colorPrefix = '';
-        
-        if (type === 'outer') {
-            dMax = 280; rIn = 110; rOut = 140; textRadius = 126;
-            colorPrefix = '--color-out-';
-        } else if (type === 'middle') {
-            dMax = 230; rIn = 80; rOut = 115; textRadius = 100;
-            colorPrefix = '--color-mid-';
-        } else if (type === 'inner') {
-            dMax = 170; rIn = 0; rOut = 85; textRadius = 65;
-            colorPrefix = '--color-inn-';
-        }
-        
-        const cx = dMax / 2;
-        const cy = dMax / 2;
-        
-        wheelEl.style.width = `${dMax}px`;
-        wheelEl.style.height = `${dMax}px`;
-        wheelEl.style.position = 'relative';
-        
-        // Очищаем предыдущие сектора
-        wheelEl.innerHTML = '';
+        const colors = {
+            outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
+            middle: ['#f4f5f7', '#eaecf0', '#e1e4ea', '#d8dce4', '#cfd4dc', '#c6cbd6'],
+            inner: ['#ffffff', '#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da']
+        };
         
         for (let i = 0; i < count; i++) {
-            const obj = items[i];
-            const currentAngle = i * angleStep;
+            const sector = document.createElement('div');
+            sector.style.position = 'absolute';
+            sector.style.width = '100%';
+            sector.style.height = '100%';
+            sector.style.transform = `rotate(${i * angleStep}deg)`;
+            sector.style.background = colors[type][i % 6];
+            sector.style.clipPath = this.getSectorClipPath(size, i, angleStep);
             
-            const cell = document.createElement('div');
-            cell.className = 'segment-cell';
-            cell.style.position = 'absolute';
-            cell.style.width = '100%';
-            cell.style.height = '100%';
-            cell.style.top = '0';
-            cell.style.left = '0';
-            cell.style.transform = `rotate(${currentAngle}deg)`;
-            cell.style.transformOrigin = `${cx}px ${cy}px`;
-            cell.style.overflow = 'visible';
+            // Текст
+            const text = document.createElement('div');
+            text.style.position = 'absolute';
+            text.style.top = '55%';
+            text.style.left = '50%';
+            text.style.transform = 'translate(-50%, -50%)';
+            text.style.textAlign = 'center';
+            text.style.fontSize = type === 'inner' ? '7px' : '8px';
+            text.style.fontWeight = 'bold';
+            text.style.color = '#1a1d24';
+            text.style.width = '60px';
             
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("class", "wheel-svg");
-            svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
-            svg.style.width = '100%';
-            svg.style.height = '100%';
-            svg.style.position = 'absolute';
-            svg.style.top = '0';
-            svg.style.left = '0';
+            const kkText = items[i].kk.length > 12 ? items[i].kk.substring(0, 10) + '..' : items[i].kk;
+            const ruText = items[i].ru.length > 15 ? items[i].ru.substring(0, 13) + '..' : items[i].ru;
+            text.innerHTML = `${kkText}<br><small style="font-size: 6px; color: #666;">${ruText}</small>`;
             
-            const startAngle = -120;
-            const endAngle = -60;
-            const sectorPathData = this.svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle);
-            const colorValue = `var(${colorPrefix}${i % 6})`;
-            
-            const getArcPath = (radius) => {
-                const startRad = (-116 * Math.PI) / 180;
-                const endRad = (-64 * Math.PI) / 180;
-                const x1 = cx + radius * Math.cos(startRad);
-                const y1 = cy + radius * Math.sin(startRad);
-                const x2 = cx + radius * Math.cos(endRad);
-                const y2 = cy + radius * Math.sin(endRad);
-                return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
-            };
-            
-            // Функция разбиения текста
-            const splitText = (text, limit) => {
-                if (text.length <= limit || !text.includes(' ')) return [text, ''];
-                const words = text.split(' ');
-                let line1 = '', line2 = '';
-                for (let w = 0; w < words.length; w++) {
-                    if ((line1 + words[w]).length <= limit) {
-                        line1 += (line1 === '' ? '' : ' ') + words[w];
-                    } else {
-                        line2 = words.slice(w).join(' ');
-                        break;
-                    }
-                }
-                return line1 === '' ? [text.slice(0, limit), text.slice(limit)] : [line1, line2];
-            };
-            
-            const limit = (type === 'inner') ? 8 : 12;
-            const [kkLine1, kkLine2] = splitText(obj.kk, limit);
-            const [ruLine1, ruLine2] = splitText(obj.ru, limit);
-            
-            const step = 10;
-            let svgContent = `<path d="${sectorPathData}" fill="${colorValue}" stroke="white" stroke-width="1.5"/>`;
-            let currentR = textRadius;
-            
-            // Казахский текст
-            if (kkLine2) {
-                const pId = `p_kk_${type}_${i}`;
-                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
-                currentR -= step;
-                const pId2 = `p_kk2_${type}_${i}`;
-                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>`;
-                currentR -= step + 2;
-            } else {
-                const pId = `p_kk_${type}_${i}`;
-                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-kk-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
-                currentR -= step + 4;
-            }
-            
-            // Русский текст
-            if (ruLine2) {
-                const pId = `p_ru_${type}_${i}`;
-                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
-                currentR -= step;
-                const pId2 = `p_ru2_${type}_${i}`;
-                svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>`;
-            } else {
-                const pId = `p_ru_${type}_${i}`;
-                svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
-                svgContent += `<text class="svg-text-ru-mini"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
-            }
-            
-            svg.innerHTML = svgContent;
-            cell.appendChild(svg);
-            wheelEl.appendChild(cell);
+            sector.appendChild(text);
+            wheel.appendChild(sector);
         }
-    }
-
-    svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
-        const toRad = Math.PI / 180;
-        const x1_out = cx + rOut * Math.cos(startAngle * toRad);
-        const y1_out = cy + rOut * Math.sin(startAngle * toRad);
-        const x2_out = cx + rOut * Math.cos(endAngle * toRad);
-        const y2_out = cy + rOut * Math.sin(endAngle * toRad);
-        const x1_in = cx + rIn * Math.cos(endAngle * toRad);
-        const y1_in = cy + rIn * Math.sin(endAngle * toRad);
-        const x2_in = cx + rIn * Math.cos(startAngle * toRad);
-        const y2_in = cy + rIn * Math.sin(startAngle * toRad);
-        return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
-    }
-
-    setupDragAndDrop() {
-        const wheels = [
-            { el: document.getElementById('miniOuterWheel'), key: 'outer' },
-            { el: document.getElementById('miniMiddleWheel'), key: 'middle' },
-            { el: document.getElementById('miniInnerWheel'), key: 'inner' }
-        ];
         
-        wheels.forEach(w => {
-            if (!w.el) return;
+        return wheel;
+    }
+
+    getSectorClipPath(size, index, angleStep) {
+        const cx = 50;
+        const cy = 50;
+        const rOuter = 50;
+        const rInner = 30;
+        
+        const startAngle = index * angleStep - 60;
+        const endAngle = startAngle + 60;
+        
+        const radStart = startAngle * Math.PI / 180;
+        const radEnd = endAngle * Math.PI / 180;
+        
+        const x1 = cx + rOuter * Math.cos(radStart);
+        const y1 = cy + rOuter * Math.sin(radStart);
+        const x2 = cx + rOuter * Math.cos(radEnd);
+        const y2 = cy + rOuter * Math.sin(radEnd);
+        const x3 = cx + rInner * Math.cos(radEnd);
+        const y3 = cy + rInner * Math.sin(radEnd);
+        const x4 = cx + rInner * Math.cos(radStart);
+        const y4 = cy + rInner * Math.sin(radStart);
+        
+        return `polygon(${cx}% ${cy}%, ${x1}% ${y1}%, ${x2}% ${y2}%, ${x3}% ${y3}%, ${x4}% ${y4}%)`;
+    }
+
+    setupDrag() {
+        const wheels = ['outer', 'middle', 'inner'];
+        
+        wheels.forEach(key => {
+            const w = this.wheels[key];
+            if (!w || !w.el) return;
+            
             let isDragging = false;
             let startAngle = 0;
             
-            const getCursorAngle = (e) => {
+            const getAngle = (e) => {
                 const rect = w.el.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2;
                 const cy = rect.top + rect.height / 2;
@@ -203,15 +167,15 @@ class WheelRenderer {
             
             const onStart = (e) => {
                 isDragging = true;
-                startAngle = getCursorAngle(e) - this.currentRotations[w.key];
+                startAngle = getAngle(e) - w.rotation;
                 w.el.style.transition = 'none';
                 e.preventDefault();
             };
             
             const onMove = (e) => {
                 if (!isDragging) return;
-                this.currentRotations[w.key] = getCursorAngle(e) - startAngle;
-                w.el.style.transform = `rotate(${this.currentRotations[w.key]}deg)`;
+                w.rotation = getAngle(e) - startAngle;
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
                 this.updateDashboard();
                 e.preventDefault();
             };
@@ -220,15 +184,15 @@ class WheelRenderer {
                 if (!isDragging) return;
                 isDragging = false;
                 w.el.style.transition = 'transform 0.3s ease';
-                this.currentRotations[w.key] = Math.round(this.currentRotations[w.key] / 60) * 60;
-                w.el.style.transform = `rotate(${this.currentRotations[w.key]}deg)`;
+                w.rotation = Math.round(w.rotation / 60) * 60;
+                w.el.style.transform = `rotate(${w.rotation}deg)`;
                 this.updateDashboard();
             };
             
             w.el.addEventListener('mousedown', onStart);
             window.addEventListener('mousemove', onMove);
             window.addEventListener('mouseup', onEnd);
-            w.el.addEventListener('touchstart', onStart, { passive: true });
+            w.el.addEventListener('touchstart', onStart, { passive: false });
             window.addEventListener('touchmove', onMove, { passive: false });
             window.addEventListener('touchend', onEnd);
         });
@@ -241,9 +205,9 @@ class WheelRenderer {
             return Math.round(norm / 60) % 6;
         };
         
-        const outerIndex = getIndex(this.currentRotations.outer);
-        const middleIndex = getIndex(this.currentRotations.middle);
-        const innerIndex = getIndex(this.currentRotations.inner);
+        const outerIndex = getIndex(this.wheels.outer?.rotation || 0);
+        const middleIndex = getIndex(this.wheels.middle?.rotation || 0);
+        const innerIndex = getIndex(this.wheels.inner?.rotation || 0);
         
         const outerData = this.themeData.outer[outerIndex];
         const middleData = this.themeData.middle[middleIndex];
