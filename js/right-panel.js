@@ -1,4 +1,4 @@
-// Движок Колес Луллия 4.2 (С исправлением центровки SVG и поддержкой динамических тем)
+// Движок Колес Луллия 4.2 (С автоматическим рендерингом корпуса и исправлением центровки)
 
 let currentTheme = 'столовая';
 let rotations = { inner: 0, middle: 0, outer: 0 };
@@ -54,33 +54,106 @@ function loadTheme(themeName) {
 }
 
 function regenerateWheels() {
-    let outerEl = document.getElementById('outerWheel');
-    let middleEl = document.getElementById('middleWheel');
-    let innerEl = document.getElementById('innerWheel');
+    const container = document.getElementById('wheelsContainer');
+    if (!container) return;
+    
+    // Полностью очищаем контейнер перед пересборкой
+    container.innerHTML = '';
+    
+    // Создаем корпус прибора (device-body), как это было в исходной структуре
+    const deviceBody = document.createElement('div');
+    deviceBody.className = 'device-body';
+    deviceBody.style.position = 'relative';
+    deviceBody.style.width = '646px';
+    deviceBody.style.height = '646px';
+    deviceBody.style.margin = '0 auto';
+    deviceBody.style.background = '#e6e9ef';
+    deviceBody.style.borderRadius = '50%';
+    deviceBody.style.display = 'flex';
+    deviceBody.style.alignItems = 'center';
+    deviceBody.style.justifyContent = 'center';
+    deviceBody.style.boxShadow = '15px 15px 30px #d1d5db, -15px -15px 30px #ffffff';
+    
+    // Создаем стрелку-указатель сверху
+    const pointer = document.createElement('div');
+    pointer.className = 'pointer-needle';
+    pointer.style.position = 'absolute';
+    pointer.style.top = '-8px';
+    pointer.style.left = '50%';
+    pointer.style.transform = 'translateX(-50%)';
+    pointer.style.width = '0';
+    pointer.style.height = '0';
+    pointer.style.borderLeft = '10px solid transparent';
+    pointer.style.borderRight = '10px solid transparent';
+    pointer.style.borderTop = '18px solid #00b4d8';
+    pointer.style.zIndex = '11';
+    
+    // Создаем три кольца с оригинальными ID
+    const outerEl = document.createElement('div');
+    outerEl.className = 'wheel outer-wheel';
+    outerEl.id = 'outerWheel';
+    
+    const middleEl = document.createElement('div');
+    middleEl.className = 'wheel middle-wheel';
+    middleEl.id = 'middleWheel';
+    
+    const innerEl = document.createElement('div');
+    innerEl.className = 'wheel inner-wheel';
+    innerEl.id = 'innerWheel';
+    
+    // Создаем центральную кнопку-колпачок СБРОС
+    const centerBtn = document.createElement('div');
+    centerBtn.className = 'center-cap';
+    centerBtn.innerText = 'СБРОС';
+    centerBtn.style.position = 'absolute';
+    centerBtn.style.zIndex = '12';
+    centerBtn.style.cursor = 'pointer';
+    
+    // Собираем DOM структуру воедино
+    deviceBody.appendChild(outerEl);
+    deviceBody.appendChild(middleEl);
+    deviceBody.appendChild(innerEl);
+    deviceBody.appendChild(pointer);
+    deviceBody.appendChild(centerBtn);
+    container.appendChild(deviceBody);
 
-    // Если структура ячеек уже существует в HTML, просто перегенерируем их
-    if (outerEl && middleEl && innerEl) {
-        generateWheelCells(outerEl, window.dataset.outer, 'outer');
-        generateWheelCells(middleEl, window.dataset.middle, 'middle');
-        generateWheelCells(innerEl, window.dataset.inner, 'inner');
+    // Отрисовываем ячейки внутри колес
+    generateWheelCells(outerEl, window.dataset.outer, 'outer');
+    generateWheelCells(middleEl, window.dataset.middle, 'middle');
+    generateWheelCells(innerEl, window.dataset.inner, 'inner');
 
-        // Сбрасываем вращение визуально и в логике при смене темы
+    // Навешиваем обработчики вращения (Drag & Drop)
+    setupRotationEngine(innerEl, 'inner');
+    setupRotationEngine(middleEl, 'middle');
+    setupRotationEngine(outerEl, 'outer');
+
+    // Кнопка сброса углов в 0
+    centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerEl.style.transform = 'rotate(0deg)';
         middleEl.style.transform = 'rotate(0deg)';
         outerEl.style.transform = 'rotate(0deg)';
-
         updateDashboard('inner', 0);
         updateDashboard('middle', 0);
         updateDashboard('outer', 0);
-    }
+        playClick();
+    });
+
+    // Применяем сохраненные или нулевые углы
+    innerEl.style.transform = `rotate(${rotations.inner}deg)`;
+    middleEl.style.transform = `rotate(${rotations.middle}deg)`;
+    outerEl.style.transform = `rotate(${rotations.outer}deg)`;
+
+    updateDashboard('inner', rotations.inner);
+    updateDashboard('middle', rotations.middle);
+    updateDashboard('outer', rotations.outer);
 }
 
 function generateWheelCells(wheelEl, items, type) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    // Единый размер координатной сетки 640x640 полностью убирает пиксельное смещение
+    // Фиксированный размер холста 640x640 для безупречной центровки
     const dMax = 640; 
     const cx = dMax / 2;
     const cy = dMax / 2;
@@ -221,7 +294,7 @@ function generateWheelCells(wheelEl, items, type) {
         svg.innerHTML = svgContent;
         cell.appendChild(svg);
 
-        // Отрисовка разделительных линий (.wheel-divider)
+        // Отрисовка линий границ (.wheel-divider)
         const divider = document.createElement('div');
         divider.className = 'wheel-divider';
         divider.style.position = 'absolute';
@@ -311,7 +384,7 @@ function updateDashboard(key, rotation) {
         resRuEl.innerText = activeData?.ru || '-';
     }
     
-    // Синхронизация с блоком wheelsDisplay (если он есть на странице)
+    // Синхронизация с блоком результатов (.wheelsDisplay)
     const displayDiv = document.getElementById('wheelsDisplay');
     if (displayDiv && originalEngineInitialized) {
         const outerIdx = Math.round(((-rotations.outer) % 360 < 0 ? (-rotations.outer) % 360 + 360 : (-rotations.outer) % 360) / 60) % 6;
@@ -339,7 +412,7 @@ function updateDashboard(key, rotation) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Получаем тему по умолчанию из подключенной библиотеки тем
+    // Получаем тему по умолчанию из библиотеки
     if (typeof getThemeData === "function") {
         const defaultTheme = getThemeData('столовая');
         if (defaultTheme) {
@@ -351,37 +424,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    const outerEl = document.getElementById('outerWheel');
-    const middleEl = document.getElementById('middleWheel');
-    const innerEl = document.getElementById('innerWheel');
-
-    if (outerEl && middleEl && innerEl) {
-        // Отрисовка секторов
-        generateWheelCells(outerEl, window.dataset.outer, 'outer');
-        generateWheelCells(middleEl, window.dataset.middle, 'middle');
-        generateWheelCells(innerEl, window.dataset.inner, 'inner');
-
-        // Подключение Drag & Drop
-        setupRotationEngine(innerEl, 'inner');
-        setupRotationEngine(middleEl, 'middle');
-        setupRotationEngine(outerEl, 'outer');
-    }
-
+    // Собираем корпус и генерируем колеса
+    regenerateWheels();
     originalEngineInitialized = true;
-
+    
+    // Свежее обновление панелей результатов в исходных точках
     updateDashboard('inner', 0);
     updateDashboard('middle', 0);
     updateDashboard('outer', 0);
     
-    // --- ФУНКЦИЯ КНОПКИ АВТО-ВРАЩЕНИЯ ---
+    // --- НАСТРОЙКА КНОПКИ СЛУЧАЙНОГО АВТО-ВРАЩЕНИЯ ---
     const spinBtn = document.getElementById('spinBtn');
     let isSpinning = false;
 
-    if (spinBtn && outerEl && middleEl && innerEl) {
+    if (spinBtn) {
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return; 
             isSpinning = true;
             spinBtn.style.pointerEvents = 'none';
+
+            const innerEl = document.getElementById('innerWheel');
+            const middleEl = document.getElementById('middleWheel');
+            const outerEl = document.getElementById('outerWheel');
+
+            if (!innerEl || !middleEl || !outerEl) {
+                isSpinning = false;
+                spinBtn.style.pointerEvents = 'auto';
+                return;
+            }
 
             const wheels = [
                 { el: innerEl, key: 'inner', steps: 12 + Math.floor(Math.random() * 6) },
@@ -420,7 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Слушатель для поиска тем (если есть строка ввода)
+    // Слушатель строки поиска тем
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
