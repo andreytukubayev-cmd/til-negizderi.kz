@@ -1030,3 +1030,57 @@ body {
         min-height: 400px;
     }
 }
+
+/* ============================================ */
+/* РАСШИРЕННЫЙ РЕЖИМ ДЛЯ КОЛЁС (колёса больше) */
+/* ============================================ */
+
+/* Когда активен режим расширенных колёс */
+.container.wheels-expanded .sidebar {
+    transform: translateX(-100%);
+}
+
+.container.wheels-expanded .chat-area {
+    width: 40%;
+    flex: 0 0 40%;
+}
+
+.container.wheels-expanded .sidebar-right {
+    width: 55%;
+}
+
+/* Для мини-колёс в расширенном режиме - увеличиваем размер */
+.container.wheels-expanded .wheels-container {
+    transform: scale(1.3);
+    margin: 20px 0;
+}
+
+.container.wheels-expanded .mini-device-body {
+    transform: scale(1.2);
+}
+
+/* Анимация */
+.container.wheels-expanded .sidebar,
+.container.wheels-expanded .chat-area,
+.container.wheels-expanded .sidebar-right {
+    transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+/* На мобилке - другое поведение */
+@media (max-width: 768px) {
+    .container.wheels-expanded .chat-area {
+        width: 0;
+        flex: 0 0 0;
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .container.wheels-expanded .sidebar-right {
+        width: 100%;
+    }
+    
+    .container.wheels-expanded .wheels-container {
+        transform: scale(1);
+        min-height: 500px;
+    }
+}
