@@ -660,3 +660,342 @@ body {
         max-width: 90%;
     }
 }
+
+/* ============================================ */
+/* ПРАВАЯ ПАНЕЛЬ (КОЛЁСА ЛУЛЛИЯ) - ДОБАВИТЬ В КОНЕЦ ФАЙЛА */
+/* ============================================ */
+
+/* Правая панель (аналогично левой) */
+.sidebar-right {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 320px;
+    height: 100%;
+    background: linear-gradient(180deg, #1a2639 0%, #0f172a 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-right.open {
+    transform: translateX(0);
+}
+
+.menu-overlay-right {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 150;
+    display: none;
+}
+
+.menu-overlay-right.active {
+    display: block;
+}
+
+/* Кнопка правого меню */
+.menu-toggle-right {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Заголовок правой панели */
+.right-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.right-panel-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #ffd700;
+}
+
+.expand-wheels-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.expand-wheels-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.05);
+}
+
+/* Поиск темы */
+.search-theme {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.search-theme input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 25px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 0.85em;
+    outline: none;
+}
+
+.search-theme input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.search-theme input:focus {
+    border-color: #ffd700;
+    background: rgba(255,255,255,0.15);
+}
+
+.current-theme {
+    font-size: 0.75em;
+    color: #ffd700;
+    margin-top: 8px;
+    padding-left: 8px;
+}
+
+/* Контейнер для мини-колёс */
+.wheels-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 10px;
+    min-height: 320px;
+    position: relative;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Мини-колёса */
+.mini-wheel {
+    position: absolute;
+    border-radius: 50%;
+    cursor: grab;
+    transition: transform 0.3s cubic-bezier(0.1, 0.8, 0.25, 1.15);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.mini-wheel:active { cursor: grabbing; }
+
+.mini-wheel.outer-wheel { z-index: 1; }
+.mini-wheel.middle-wheel { z-index: 2; }
+.mini-wheel.inner-wheel { z-index: 3; }
+
+/* Текст на мини-колёсах */
+.svg-text-kk-mini {
+    font-size: 8px;
+    font-weight: 800;
+    fill: #1a1d24;
+    letter-spacing: 0.2px;
+}
+
+.svg-text-ru-mini {
+    font-size: 6.5px;
+    font-weight: 600;
+    fill: #4a5568;
+}
+
+/* Дисплей текущей комбинации (в правой панели) */
+.wheels-display {
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    margin: 12px;
+    border-radius: 16px;
+}
+
+.mini-dash-item {
+    background: rgba(255,255,255,0.08);
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+.mini-dash-item:last-child {
+    margin-bottom: 0;
+}
+
+.mini-dash-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #ffd700;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.mini-dash-kk {
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 3px;
+}
+
+.mini-dash-ru {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+}
+
+.right-panel-footer {
+    padding: 16px;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: auto;
+}
+
+.right-panel-footer p {
+    margin: 5px 0;
+}
+
+/* ============================================ */
+/* МОДАЛЬНОЕ ОКНО ДЛЯ ПОЛНОЭКРАННЫХ КОЛЁС */
+/* ============================================ */
+.fullscreen-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-modal.active {
+    display: flex;
+}
+
+.fullscreen-modal-content {
+    background: #e6e9ef;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.fullscreen-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px 20px 0 0;
+    color: white;
+}
+
+.fullscreen-modal-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-modal-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.fullscreen-wheels-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    min-height: 500px;
+    position: relative;
+}
+
+/* Десктопная версия — правая панель видна */
+@media (min-width: 769px) {
+    .sidebar-right {
+        position: relative;
+        transform: translateX(0);
+        width: 360px;
+    }
+    
+    .menu-toggle-right {
+        display: flex;
+    }
+    
+    .menu-overlay-right {
+        display: none !important;
+    }
+    
+    /* Три колонки: левая панель + чат + правая панель */
+    .container {
+        display: flex;
+    }
+    
+    .sidebar {
+        width: 300px;
+        position: relative;
+        transform: translateX(0);
+    }
+    
+    .chat-area {
+        flex: 1;
+    }
+    
+    .sidebar-right {
+        width: 360px;
+    }
+}
+
+/* Мобильная версия — правая панель скрыта */
+@media (max-width: 768px) {
+    .sidebar-right {
+        width: 280px;
+    }
+    
+    .fullscreen-modal-content {
+        width: 95%;
+    }
+    
+    .fullscreen-wheels-container {
+        padding: 15px;
+        min-height: 400px;
+    }
+}
