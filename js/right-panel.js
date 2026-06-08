@@ -1,4 +1,4 @@
-// Движок Колес Луллия 4.2 (С исправлением послойного наложения слоев)
+// Движок Колес Луллия 4.2 (Корректные физические размеры слоев)
 
 let currentTheme = 'столовая';
 let rotations = { inner: 0, middle: 0, outer: 0 };
@@ -58,51 +58,63 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
-    // Создаем корпус прибора
+    // Главный корпус-контейнер
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
     deviceBody.style.position = 'relative';
-    deviceBody.style.width = '646px';
-    deviceBody.style.height = '646px';
+    deviceBody.style.width = '640px';
+    deviceBody.style.height = '640px';
     deviceBody.style.margin = '0 auto';
-    deviceBody.style.display = 'flex';
-    deviceBody.style.alignItems = 'center';
-    deviceBody.style.justifyContent = 'center';
     
-    // Создаем стрелку-указатель сверху
+    // Стрелка-указатель сверху
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
     
-    // Создаем три кольца и ЖЕСТКО задаем им абсолютное позиционирование друг на друга
+    // Внешнее колесо (Полный размер 640px)
     const outerEl = document.createElement('div');
     outerEl.className = 'wheel outer-wheel';
     outerEl.id = 'outerWheel';
     outerEl.style.position = 'absolute';
     outerEl.style.width = '640px';
     outerEl.style.height = '640px';
+    outerEl.style.top = '0';
+    outerEl.style.left = '0';
     
+    // Среднее колесо (Вложенное, диаметр меньше - 530px, центрируем сдвигом на 55px)
     const middleEl = document.createElement('div');
     middleEl.className = 'wheel middle-wheel';
     middleEl.id = 'middleWheel';
     middleEl.style.position = 'absolute';
-    middleEl.style.width = '640px';
-    middleEl.style.height = '640px';
+    middleEl.style.width = '530px';
+    middleEl.style.height = '530px';
+    middleEl.style.top = '55px';
+    middleEl.style.left = '55px';
     
+    // Внутреннее колесо (Центральное, диаметр 390px, центрируем сдвигом на 125px)
     const innerEl = document.createElement('div');
     innerEl.className = 'wheel inner-wheel';
     innerEl.id = 'innerWheel';
     innerEl.style.position = 'absolute';
-    innerEl.style.width = '640px';
-    innerEl.style.height = '640px';
+    innerEl.style.width = '390px';
+    innerEl.style.height = '390px';
+    innerEl.style.top = '125px';
+    innerEl.style.left = '125px';
     
-    // Центральная кнопка СБРОС
+    // Центральный колпачок-кнопка СБРОС (диаметр 120px, сдвиг на 260px)
     const centerBtn = document.createElement('div');
     centerBtn.className = 'center-cap';
     centerBtn.innerText = 'СБРОС';
     centerBtn.style.position = 'absolute';
-    centerBtn.style.zIndex = '15';
+    centerBtn.style.width = '120px';
+    centerBtn.style.height = '120px';
+    centerBtn.style.top = '260px';
+    centerBtn.style.left = '260px';
+    centerBtn.style.zIndex = '50';
+    centerBtn.style.display = 'flex';
+    centerBtn.style.alignItems = 'center';
+    centerBtn.style.justifyContent = 'center';
     
-    // Собираем всё в один узел
+    // Собираем слои бутерброда
     deviceBody.appendChild(outerEl);
     deviceBody.appendChild(middleEl);
     deviceBody.appendChild(innerEl);
@@ -110,17 +122,16 @@ function regenerateWheels() {
     deviceBody.appendChild(centerBtn);
     container.appendChild(deviceBody);
 
-    // Генерируем внутренности кругов
-    generateWheelCells(outerEl, window.dataset.outer, 'outer');
-    generateWheelCells(middleEl, window.dataset.middle, 'middle');
-    generateWheelCells(innerEl, window.dataset.inner, 'inner');
+    // Генерируем геометрию под индивидуальный размер каждого колеса
+    generateWheelCells(outerEl, window.dataset.outer, 'outer', 640);
+    generateWheelCells(middleEl, window.dataset.middle, 'middle', 530);
+    generateWheelCells(innerEl, window.dataset.inner, 'inner', 390);
 
-    // Инициализируем Drag & Drop
+    // Инициализация Drag & Drop
     setupRotationEngine(innerEl, 'inner');
     setupRotationEngine(middleEl, 'middle');
     setupRotationEngine(outerEl, 'outer');
 
-    // Клик по центру сбрасывает всё в 0
     centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerEl.style.transform = 'rotate(0deg)';
@@ -141,25 +152,26 @@ function regenerateWheels() {
     updateDashboard('outer', rotations.outer);
 }
 
-function generateWheelCells(wheelEl, items, type) {
+function generateWheelCells(wheelEl, items, type, currentSize) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    const dMax = 640; 
-    const cx = dMax / 2;
-    const cy = dMax / 2;
+    // Центр SVG рассчитывается строго от текущего физического размера колеса
+    const cx = currentSize / 2;
+    const cy = currentSize / 2;
 
     let rIn = 0, rOut = 0, textRadius = 0;
     let colorPrefix = '';
 
+    // Математика радиусов колец относительно их собственных осей координат
     if (type === 'outer') {
         rIn = 265; rOut = 320; textRadius = 292;
         colorPrefix = 'var(--color-out-';
     } else if (type === 'middle') {
-        rIn = 195; rOut = 265; textRadius = 230;
+        rIn = 195; rOut = 265; textRadius = 228;
         colorPrefix = 'var(--color-mid-';
     } else if (type === 'inner') {
-        rIn = 0;   rOut = 195; textRadius = 155;
+        rIn = 60;  rOut = 195; textRadius = 140;
         colorPrefix = 'var(--color-inn-';
     }
 
@@ -182,7 +194,7 @@ function generateWheelCells(wheelEl, items, type) {
 
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("class", "wheel-svg");
-        svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
+        svg.setAttribute("viewBox", `0 0 ${currentSize} ${currentSize}`);
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.position = 'absolute';
@@ -207,7 +219,7 @@ function generateWheelCells(wheelEl, items, type) {
         const splitPhraseSmart = (text, currentType) => {
             let charLimit = 50; 
             if (currentType === 'middle') charLimit = 40;
-            if (currentType === 'inner')  charLimit = 12; 
+            if (currentType === 'inner')  charLimit = 16; 
 
             if (text.length <= charLimit || !text.includes(' ')) {
                 return [text, ''];
@@ -237,7 +249,7 @@ function generateWheelCells(wheelEl, items, type) {
         const [kkLine1, kkLine2] = splitPhraseSmart(obj.kk, type);
         const [ruLine1, ruLine2] = splitPhraseSmart(obj.ru, type);
 
-        const step = 14; 
+        const step = 13; 
         
         const pIdKk1 = `p_kk1_${type}_${i}`, pIdKk2 = `p_kk2_${type}_${i}`;
         const pIdRu1 = `p_ru1_${type}_${i}`, pIdRu2 = `p_ru2_${type}_${i}`;
@@ -389,7 +401,7 @@ function updateDashboard(key, rotation) {
             </div>
             <div class="mini-dash-item">
                 <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
-                <div class="mini-dash-kk">${window.dataset.inner[innerIdx]?.inner || window.dataset.inner[innerIdx]?.kk || '-'}</div>
+                <div class="mini-dash-kk">${window.dataset.inner[innerIdx]?.kk || '-'}</div>
                 <div class="mini-dash-ru">${window.dataset.inner[innerIdx]?.ru || '-'}</div>
             </div>
         `;
