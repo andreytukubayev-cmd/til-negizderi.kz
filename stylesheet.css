@@ -592,6 +592,41 @@ body {
     padding-left: 8px;
 }
 
+/* Обрамление блока поиска над кольцами */
+.search-theme-compact {
+    background: #ffffff !important;         /* Белый фон для самого контейнера поиска */
+    border: 1px solid #e2e8f0 !important;   /* Легкая аккуратная рамка вокруг всего блока */
+    border-radius: 12px !important;         /* Закругление контейнера */
+    margin: 16px 16px 4px 16px !important;  /* Отступы вокруг блока, чтобы он не лип к краям панели */
+    padding: 12px !important;               /* Внутренние отступы */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important; /* Мягкая тень для объема */
+}
+
+/* Стилизация самого инпута внутри рамки */
+#themeSearch {
+    background: #f1f5f9 !important;         /* Мягкий сероватый фон для самого поля ввода */
+    border: 1px solid #cbd5e1 !important;   /* Четкая рамка для поля */
+    border-radius: 8px !important;          /* Слегка закругляем углы */
+    padding: 8px 14px !important;           /* Увеличиваем внутренние отступы для текста */
+    color: #1e293b !important;              /* Темный цвет вводимого текста */
+    font-size: 0.9em !important;            /* Хорошо читаемый размер шрифта */
+    transition: all 0.2s ease !important;
+}
+
+/* Эффект при клике (фокусе) на поиск */
+#themeSearch:focus {
+    background: #ffffff !important;         /* При вводе фон становится чисто белым */
+    border-color: #00b4d8 !important;       /* Рамка подсвечивается красивым акцентным цветом */
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15) !important; /* Мягкое свечение */
+    outline: none !important;
+}
+
+/* Цвет подсказки (placeholder) */
+#themeSearch::placeholder {
+    color: #94a3b8 !important;              /* Читаемый серый цвет для "Введи тему..." */
+    opacity: 1 !important;
+}
+
 .wheels-container {
     display: flex;
     justify-content: center;
