@@ -1,4 +1,4 @@
-// Движок Колес Луллия 4.2 (Исправленная послойная центровка HTML/CSS)
+// Движок Колес Луллия 4.2 (С исправлением послойного наложения слоев)
 
 let currentTheme = 'столовая';
 let rotations = { inner: 0, middle: 0, outer: 0 };
@@ -39,7 +39,6 @@ function loadTheme(themeName) {
     const currentThemeEl = document.getElementById('currentTheme');
     if (currentThemeEl) currentThemeEl.innerText = themeName;
     
-    // Обновляем глобальный dataset
     window.dataset = {
         outer: themeData.outer,
         middle: themeData.middle,
@@ -59,33 +58,51 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
-    // Создаем корпус прибора (device-body)
+    // Создаем корпус прибора
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
+    deviceBody.style.position = 'relative';
+    deviceBody.style.width = '646px';
+    deviceBody.style.height = '646px';
+    deviceBody.style.margin = '0 auto';
+    deviceBody.style.display = 'flex';
+    deviceBody.style.alignItems = 'center';
+    deviceBody.style.justifyContent = 'center';
     
     // Создаем стрелку-указатель сверху
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
     
-    // Создаем три кольца с оригинальными классами из вашего CSS для послойного наложения
+    // Создаем три кольца и ЖЕСТКО задаем им абсолютное позиционирование друг на друга
     const outerEl = document.createElement('div');
     outerEl.className = 'wheel outer-wheel';
     outerEl.id = 'outerWheel';
+    outerEl.style.position = 'absolute';
+    outerEl.style.width = '640px';
+    outerEl.style.height = '640px';
     
     const middleEl = document.createElement('div');
     middleEl.className = 'wheel middle-wheel';
     middleEl.id = 'middleWheel';
+    middleEl.style.position = 'absolute';
+    middleEl.style.width = '640px';
+    middleEl.style.height = '640px';
     
     const innerEl = document.createElement('div');
     innerEl.className = 'wheel inner-wheel';
     innerEl.id = 'innerWheel';
+    innerEl.style.position = 'absolute';
+    innerEl.style.width = '640px';
+    innerEl.style.height = '640px';
     
-    // Создаем центральную кнопку СБРОС
+    // Центральная кнопка СБРОС
     const centerBtn = document.createElement('div');
     centerBtn.className = 'center-cap';
     centerBtn.innerText = 'СБРОС';
+    centerBtn.style.position = 'absolute';
+    centerBtn.style.zIndex = '15';
     
-    // Собираем DOM структуру строго по иерархии CSS классов
+    // Собираем всё в один узел
     deviceBody.appendChild(outerEl);
     deviceBody.appendChild(middleEl);
     deviceBody.appendChild(innerEl);
@@ -93,17 +110,17 @@ function regenerateWheels() {
     deviceBody.appendChild(centerBtn);
     container.appendChild(deviceBody);
 
-    // Генерируем внутренние SVG сектора
+    // Генерируем внутренности кругов
     generateWheelCells(outerEl, window.dataset.outer, 'outer');
     generateWheelCells(middleEl, window.dataset.middle, 'middle');
     generateWheelCells(innerEl, window.dataset.inner, 'inner');
 
-    // Подключаем Drag & Drop управление
+    // Инициализируем Drag & Drop
     setupRotationEngine(innerEl, 'inner');
     setupRotationEngine(middleEl, 'middle');
     setupRotationEngine(outerEl, 'outer');
 
-    // Обработчик кнопки сброса
+    // Клик по центру сбрасывает всё в 0
     centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerEl.style.transform = 'rotate(0deg)';
@@ -115,7 +132,6 @@ function regenerateWheels() {
         playClick();
     });
 
-    // Восстанавливаем углы поворота
     innerEl.style.transform = `rotate(${rotations.inner}deg)`;
     middleEl.style.transform = `rotate(${rotations.middle}deg)`;
     outerEl.style.transform = `rotate(${rotations.outer}deg)`;
@@ -129,7 +145,6 @@ function generateWheelCells(wheelEl, items, type) {
     const count = items.length;
     const angleStep = 360 / count;
     
-    // Координатная сетка 640x640 для рендеринга путей
     const dMax = 640; 
     const cx = dMax / 2;
     const cy = dMax / 2;
@@ -138,13 +153,13 @@ function generateWheelCells(wheelEl, items, type) {
     let colorPrefix = '';
 
     if (type === 'outer') {
-        rIn = 265; rOut = 320; textRadius = 295;
+        rIn = 265; rOut = 320; textRadius = 292;
         colorPrefix = 'var(--color-out-';
     } else if (type === 'middle') {
-        rIn = 195; rOut = 265; textRadius = 232;
+        rIn = 195; rOut = 265; textRadius = 230;
         colorPrefix = 'var(--color-mid-';
     } else if (type === 'inner') {
-        rIn = 0;   rOut = 195; textRadius = 160;
+        rIn = 0;   rOut = 195; textRadius = 155;
         colorPrefix = 'var(--color-inn-';
     }
 
@@ -161,7 +176,7 @@ function generateWheelCells(wheelEl, items, type) {
         cell.style.top = '0';
         cell.style.left = '0';
         cell.style.transform = `rotate(${currentAngle}deg)`;
-        cell.style.transformOrigin = `50% 50%`; // Центрируем по центру самого колеса
+        cell.style.transformOrigin = '50% 50%';
         cell.style.overflow = 'visible';
         wheelEl.appendChild(cell);
 
@@ -374,7 +389,7 @@ function updateDashboard(key, rotation) {
             </div>
             <div class="mini-dash-item">
                 <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
-                <div class="mini-dash-kk">${window.dataset.inner[innerIdx]?.kk || '-'}</div>
+                <div class="mini-dash-kk">${window.dataset.inner[innerIdx]?.inner || window.dataset.inner[innerIdx]?.kk || '-'}</div>
                 <div class="mini-dash-ru">${window.dataset.inner[innerIdx]?.ru || '-'}</div>
             </div>
         `;
