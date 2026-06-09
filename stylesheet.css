@@ -505,6 +505,8 @@ body {
     align-items: center;
     position: relative;
     z-index: 210;
+    height: 46px; /* Фиксируем высоту строки поиска */
+    flex-shrink: 0;
 }
 
 #themeSearch {
@@ -566,9 +568,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 5px 10px 15px 10px;
+    padding: 10px;
+    height: 660px; /* Фиксированная высота чуть больше самого колеса */
     position: relative;
-    overflow-x: auto;
+    flex-shrink: 0; /* Запрещаем контейнеру сжиматься */
 }
 
 /* Карточки итоговых фраз (Результат сопоставления) */
