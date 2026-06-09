@@ -1,3 +1,6 @@
+/* ==========================================================================
+   1. ГЛОБАЛЬНЫЕ СТИЛИ И СБРОС
+   ========================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -7,21 +10,32 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100vh;
     height: 100dvh;
-    overflow: hidden;
     width: 100%;
+    overflow: hidden;
 }
 
 .container {
     display: flex;
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
     width: 100%;
     position: relative;
 }
 
-/* ========== ЛЕВАЯ ПАНЕЛЬ ========== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #e0e0e0;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+/* ==========================================================================
+   2. ЛЕВАЯ ПАНЕЛЬ (ПРОФИЛЬ И МЕТОДИКА)
+   ========================================================================== */
 .sidebar {
     position: fixed;
     left: 0;
@@ -159,7 +173,9 @@ body {
     color: #ffd700;
 }
 
-/* ========== ЧАТ ========== */
+/* ==========================================================================
+   3. ЦЕНТРАЛЬНАЯ ЗОНА: ЧАТ С AI
+   ========================================================================== */
 .chat-area {
     flex: 1;
     display: flex;
@@ -179,22 +195,7 @@ body {
     gap: 15px;
 }
 
-.menu-toggle {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.menu-toggle-right {
+.menu-toggle, .menu-toggle-right {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     color: white;
@@ -242,23 +243,12 @@ body {
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.message.user {
-    justify-content: flex-end;
-}
-
-.message.bot {
-    justify-content: flex-start;
-}
+.message.user { justify-content: flex-end; }
+.message.bot { justify-content: flex-start; }
 
 .message-content {
     max-width: 75%;
@@ -300,23 +290,12 @@ body {
     animation: typing 1.4s infinite;
 }
 
-.typing-indicator span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-    animation-delay: 0.4s;
-}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes typing {
-    0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: 0.5;
-    }
-    30% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-10px); opacity: 1; }
 }
 
 .input-area {
@@ -357,7 +336,9 @@ body {
     transform: scale(0.97);
 }
 
-/* ========== ОРИГИНАЛЬНЫЕ СТИЛИ ДЛЯ КОЛЁС ИЗ weel.css ========== */
+/* ==========================================================================
+   4. КОМПОНЕНТ: КОЛЕСА ЛУЛЛИЯ
+   ========================================================================= */
 .device-body {
     position: relative;
     width: 646px;
@@ -394,9 +375,9 @@ body {
 }
 .wheel:active { cursor: grabbing; }
 
-.outer-wheel { width: 640px; height: 640px; z-index: 1; background: #bbb; }
-.middle-wheel { width: 530px; height: 530px; z-index: 2; background: #ccc; border: 3px solid #ffffff; }
-.inner-wheel { width: 390px; height: 390px; z-index: 3; background: #ddd; border: 3px solid #ffffff; }
+.outer-wheel { width: 640px; height: 640px; z-index: 1; }
+.middle-wheel { width: 530px; height: 530px; z-index: 2; border: 3px solid #ffffff; }
+.inner-wheel { width: 390px; height: 390px; z-index: 3; border: 3px solid #ffffff; }
 
 .center-cap {
     position: absolute;
@@ -447,15 +428,17 @@ body {
     fill: #4a5568;
 }
 
-/* ========== ПРАВАЯ ПАНЕЛЬ ========== */
+/* ==========================================================================
+   5. ПРАВАЯ ПАНЕЛЬ И РЕЗУЛЬТАТЫ
+   ========================================================================== */
 .sidebar-right {
     position: fixed;
     right: 0;
     top: 0;
     width: 320px;
     height: 100%;
-    background: #f8fafc; /* Светлый премиальный фон */
-    color: #1e293b;      /* Темный цвет основного текста */
+    background: #f8fafc;
+    color: #1e293b;
     display: flex;
     flex-direction: column;
     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
@@ -489,18 +472,18 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 20px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .right-panel-header h3 {
     margin: 0;
     font-size: 1.1em;
-    color: #ffd700;
+    color: #1e293b;
 }
 
 .expand-wheels-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
     color: white;
     width: 36px;
     height: 36px;
@@ -509,53 +492,65 @@ body {
     cursor: pointer;
 }
 
-/* Компактный поиск и тема */
+/* Динамический блок поиска и темы */
 .search-theme-compact {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 16px 16px 4px 16px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    z-index: 210;
 }
 
-.search-theme-compact input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid rgba(255,255,255,0.2);
+#themeSearch {
+    background: #f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
+    background-size: 16px;
+    border: 1px solid #cbd5e1;
     border-radius: 20px;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    font-size: 0.8em;
+    padding: 8px 14px 8px 36px;
+    color: #1e293b;
+    font-size: 0.9em;
+    width: 40px;
+    text-indent: -9999px;
+    cursor: pointer;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+}
+
+#themeSearch:hover {
+    background-color: #e2e8f0;
+}
+
+#themeSearch:focus {
+    width: 100%;
+    text-indent: 0px;
+    background-color: #ffffff;
+    border-color: #00b4d8;
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+    cursor: text;
     outline: none;
 }
 
-.search-theme-compact input::placeholder {
-    color: rgba(255,255,255,0.5);
-}
-
-.search-theme-compact input:focus {
-    border-color: #ffd700;
-}
-
-.theme-section h3 {
-    color: #334155;      /* Темно-серый заголовок */
-    font-size: 1.1em;
-    margin-bottom: 12px;
-}
-
 .current-theme-box {
-    background: #edf2f7; /* Светлая плашка для названия темы вместо темной */
+    background: #edf2f7;
     padding: 10px 15px;
     border-radius: 12px;
-    margin-bottom: 15px;
+    margin: 4px 16px 10px 16px;
     border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 #currentTheme {
     font-weight: bold;
-    color: #00b4d8;      /* Красивый акцентный цвет для названия темы */
+    color: #00b4d8;
 }
+
 .current-theme-badge {
     background: #ffd700;
     color: #1a2639;
@@ -566,97 +561,30 @@ body {
     white-space: nowrap;
 }
 
-.search-theme input {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 25px;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    font-size: 0.85em;
-    outline: none;
-}
-
-.search-theme input::placeholder {
-    color: rgba(255,255,255,0.5);
-}
-
-.search-theme input:focus {
-    border-color: #ffd700;
-}
-
-.current-theme {
-    font-size: 0.75em;
-    color: #ffd700;
-    margin-top: 8px;
-    padding-left: 8px;
-}
-
-/* Обрамление блока поиска над кольцами */
-.search-theme-compact {
-    background: #ffffff !important;         /* Белый фон для самого контейнера поиска */
-    border: 1px solid #e2e8f0 !important;   /* Легкая аккуратная рамка вокруг всего блока */
-    border-radius: 12px !important;         /* Закругление контейнера */
-    margin: 16px 16px 4px 16px !important;  /* Отступы вокруг блока, чтобы он не лип к краям панели */
-    padding: 12px !important;               /* Внутренние отступы */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important; /* Мягкая тень для объема */
-}
-
-/* Стилизация самого инпута внутри рамки */
-#themeSearch {
-    background: #f1f5f9 !important;         /* Мягкий сероватый фон для самого поля ввода */
-    border: 1px solid #cbd5e1 !important;   /* Четкая рамка для поля */
-    border-radius: 8px !important;          /* Слегка закругляем углы */
-    padding: 8px 14px !important;           /* Увеличиваем внутренние отступы для текста */
-    color: #1e293b !important;              /* Темный цвет вводимого текста */
-    font-size: 0.9em !important;            /* Хорошо читаемый размер шрифта */
-    transition: all 0.2s ease !important;
-}
-
-/* Эффект при клике (фокусе) на поиск */
-#themeSearch:focus {
-    background: #ffffff !important;         /* При вводе фон становится чисто белым */
-    border-color: #00b4d8 !important;       /* Рамка подсвечивается красивым акцентным цветом */
-    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15) !important; /* Мягкое свечение */
-    outline: none !important;
-}
-
-/* Цвет подсказки (placeholder) */
-#themeSearch::placeholder {
-    color: #94a3b8 !important;              /* Читаемый серый цвет для "Введи тему..." */
-    opacity: 1 !important;
-}
-
+/* Контейнер для вывода колес */
 .wheels-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px 10px;
-    min-height: 680px;
+    padding: 5px 10px 15px 10px;
     position: relative;
     overflow-x: auto;
 }
 
-.wheels-display {
-    padding: 16px;
-    background: rgba(0,0,0,0.2);
-    margin: 12px;
-    border-radius: 16px;
-}
-
+/* Карточки итоговых фраз (Результат сопоставления) */
 .mini-dash-item {
-    background: #ffffff; /* Белый фон карточки */
-    border: 1px solid #e2e8f0; /* Легкая граница */
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 12px;
-    margin-bottom: 10px;
+    margin: 0 16px 10px 16px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .mini-dash-label {
     font-size: 0.75em;
     font-weight: bold;
-    color: #94a3b8;      /* Мягкий цвет для подписи (Вопрос/Ответ/Реакция) */
+    color: #94a3b8;
     margin-bottom: 4px;
     letter-spacing: 0.5px;
 }
@@ -664,121 +592,90 @@ body {
 .mini-dash-kk {
     font-size: 1.05em;
     font-weight: bold;
-    color: #0f172a;      /* Глубокий темный для казахского текста */
+    color: #0f172a;
     margin-bottom: 2px;
 }
 
 .mini-dash-ru {
     font-size: 0.9em;
-    color: #475569;      /* Серый для русского перевода */
+    color: #475569;
 }
 
 .right-panel-footer {
     padding: 16px;
     text-align: center;
     font-size: 10px;
-    color: rgba(255,255,255,0.5);
-    border-top: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
     margin-top: auto;
 }
 
-/* ========== МОДАЛЬНОЕ ОКНО (НЕ ИСПОЛЬЗУЕТСЯ, НО ОСТАВИМ) ========== */
-.fullscreen-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
+/* ==========================================================================
+   6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ (МЕДИА-СЕТКА)
+   ========================================================================== */
 
-.fullscreen-modal.active {
-    display: flex;
-}
-
-/* ========== ДЕСКТОП ========== */
+/* --- ДЕСКТОП (Экраны шире 768px) --- */
 @media (min-width: 769px) {
     .sidebar {
         position: relative;
         transform: translateX(0);
         width: 300px;
     }
-    
     .menu-toggle {
         display: none;
     }
-    
     .menu-overlay {
         display: none !important;
     }
-    
     .sidebar-right {
         position: relative;
         transform: translateX(0);
         width: 660px;
     }
-    
     .menu-overlay-right {
         display: none !important;
     }
 }
 
-/* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
+/* --- МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px) --- */
 @media (max-width: 768px) {
-    .menu-toggle {
+    .menu-toggle, .menu-toggle-right {
         display: flex;
     }
-    
-    .menu-toggle-right {
-        display: flex;
-    }
-    
     .sidebar-right {
         width: 100%;
     }
-    
     .chat-header {
         padding: 10px 15px;
     }
-    
     .header-text h1 {
         font-size: 1em;
     }
-    
     .messages {
         padding: 10px;
     }
-    
     .message-content {
         max-width: 85%;
         padding: 8px 14px;
         font-size: 0.9em;
     }
-    
     .input-area {
         padding: 10px 12px;
     }
-    
     .wheels-container {
         transform: scale(0.85);
         min-height: 580px;
     }
 }
 
-/* ========== РАСШИРЕННЫЙ РЕЖИМ ========== */
+/* --- РАСШИРЕННЫЙ РЕЖИМ (Колеса на весь экран) --- */
 .container.wheels-expanded .sidebar {
     display: none;
 }
-
 .container.wheels-expanded .chat-area {
     width: 35%;
     flex: 0 0 35%;
 }
-
 .container.wheels-expanded .sidebar-right {
     width: 65%;
 }
@@ -787,137 +684,10 @@ body {
     .container.wheels-expanded .chat-area {
         display: none;
     }
-    
     .container.wheels-expanded .sidebar-right {
         width: 100%;
     }
-    
     .container.wheels-expanded .wheels-container {
         transform: scale(1);
     }
-}
-
-/* ========== ВСПЛЫВАЮЩЕЕ МЕНЮ ========== */
-.action-menu {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 300;
-    visibility: hidden;
-    opacity: 0;
-    transition: all 0.3s ease;
-}
-
-.action-menu.active {
-    visibility: visible;
-    opacity: 1;
-}
-
-.action-menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 301;
-}
-
-.action-menu-content {
-    position: relative;
-    z-index: 302;
-    background: white;
-    border-radius: 20px 20px 0 0;
-    padding: 20px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-}
-
-.action-menu.active .action-menu-content {
-    transform: translateY(0);
-}
-
-.action-menu-title {
-    text-align: center;
-    font-size: 0.95em;
-    color: #666;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e0e0e0;
-    margin-bottom: 12px;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 8px;
-    border: none;
-    border-radius: 12px;
-    background: #f5f5f5;
-    cursor: pointer;
-}
-
-.action-icon {
-    font-size: 1.5em;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    border-radius: 20px;
-}
-
-.action-text {
-    flex: 1;
-    text-align: left;
-}
-
-.action-name {
-    font-weight: bold;
-    font-size: 1em;
-    color: #333;
-}
-
-.action-desc {
-    font-size: 0.7em;
-    color: #888;
-}
-
-.modal {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    text-align: center;
-    max-width: 350px;
-    width: 85%;
-}
-
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #e0e0e0;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
 }
