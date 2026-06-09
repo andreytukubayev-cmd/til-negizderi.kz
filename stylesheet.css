@@ -660,15 +660,11 @@ body {
    МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* --- Ваши старые рабочие стили для чата и меню --- */
-    .menu-toggle, .menu-toggle-right {
-        display: flex !important;
-        position: relative !important;
-        z-index: 9999 !important; /* Гарантируем, что кнопка закрытия будет кликабельной на телефоне */
-    }
+    /* --- Базовые стили чата и панелей --- */
     .sidebar-right {
-        width: 100%;
+        width: 100% !important;
         overflow-x: hidden !important; /* Намертво убираем горизонтальный скролл */
+        background: #f8fafc !important;
     }
     .chat-header {
         padding: 10px 15px;
@@ -688,53 +684,85 @@ body {
         padding: 10px 12px;
     }
 
-    /* --- НОВЫЕ СТИЛИ: Исправление поиска и колеса на смартфонах --- */
+    /* --- УПРАВЛЕНИЕ КНОПКАМИ В ШАПКЕ --- */
     
-    /* 1. Возвращаем поиск в нормальный поток, чтобы он не наезжал на колесо */
+    /* Жесткое скрытие левой кнопки ☰ внутри правой панели (увеличена специфичность селектора) */
+    .sidebar-right .menu-toggle,
+    .sidebar-right div.menu-toggle,
+    .sidebar-right button.menu-toggle {
+        display: none !important;
+    }
+
+    /* Кнопка выхода 🎡 больше не парит «в абсолюте» поверх текста, а аккуратно сидит в общем ряду */
+    .menu-toggle-right {
+        display: flex !important;
+        position: static !important; /* Выстраиваем в линию с поиском и бейджем */
+        margin: 0 !important;
+        z-index: 250 !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* --- АДАПТАЦИЯ ЕДИНОЙ СТРОКИ ШАПКИ --- */
+    
+    /* Превращаем всю верхнюю строку в упорядоченный ряд, куда поместятся: поиск + бейдж + кнопка 🎡 */
     .search-theme-compact {
         position: relative !important;
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        margin: 12px 16px 8px 16px !important;
+        margin: 12px 16px !important; /* Возвращаем стандартные отступы со всех сторон */
         height: 40px !important;
-        justify-content: space-between !important; /* Распределяем лупу и бейдж */
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important; /* Расталкивает элементы по ширине равномерно */
+        align-items: center !important;
+        gap: 10px !important; /* Безопасное расстояние между инпутом, бейджем и кнопкой */
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
-    #themeSearch:focus {
-        width: 100% !important;
+    /* Ограничиваем максимальную ширину инпута, чтобы он не вытеснял бейдж и кнопку */
+    #themeSearch {
+        flex: 1 !important; /* Забирает всё свободное место слева */
+        min-width: 100px !important;
     }
 
-    /* 2. Контейнер колеса: жестко изолируем его высоту, чтобы убрать невидимые перекрытия */
+    /* Желтый бейдж «столовая» */
+    .current-theme-badge {
+        flex-shrink: 0 !important; /* Запрещаем тексту сжиматься или переноситься */
+    }
+
+    /* --- Изоляция и масштабирование колеса --- */
     .wheels-container {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         padding: 0 !important;
         width: 100% !important;
-        height: 330px !important; /* Четко держит границы сжатого колеса */
-        min-height: 330px !important; 
-        overflow: hidden !important; /* Обрезает гигантские фантомные углы SVG */
-        margin-top: 10px !important;
+        height: 340px !important; 
+        min-height: 340px !important; 
+        overflow: hidden !important; 
+        margin: 10px 0 0 0 !important;
         position: relative !important;
     }
 
-    /* 3. ДИНАМИЧЕСКОЕ СЖАТИЕ КОЛЕСА */
     .device-body {
         transform: scale(0.5) !important; 
         transform-origin: center center !important;
-        margin: 0 !important; /* Обнуляем маргины, высоту теперь держит контейнер */
+        margin: 0 !important; 
         position: absolute !important;
     }
 
-    /* Для совсем узких экранов (смартфоны шириной до 380px) */
+    /* Коррекция для узких экранов (смартфоны до 380px) */
     @media (max-width: 380px) {
+        .search-theme-compact {
+            gap: 6px !important;
+            margin: 12px 10px !important;
+        }
         .wheels-container {
-            height: 290px !important;
-            min-height: 290px !important;
+            height: 300px !important;
+            min-height: 300px !important;
         }
         .device-body {
             transform: scale(0.44) !important;
@@ -742,53 +770,13 @@ body {
         }
     }
 
-    /* Адаптируем карточки под колесом */
+    /* Адаптируем нижние карточки результатов */
     .wheels-display {
-        padding: 8px 12px 24px 12px !important;
+        padding: 12px 12px 24px 12px !important;
     }
 
     .mini-dash-item {
-        margin: 0 0 8px 0 !important;
-        padding: 8px 12px !important;
+        margin: 0 0 10px 0 !important;
+        padding: 12px !important;
     }
-}
-
-/* --- РАСШИРЕННЫЙ РЕЖИМ (Колеса на весь экран) --- */
-.container.wheels-expanded .sidebar {
-    display: none;
-}
-.container.wheels-expanded .chat-area {
-    width: 35%;
-    flex: 0 0 35%;
-}
-.container.wheels-expanded .sidebar-right {
-    width: 65%;
-}
-
-@media (max-width: 768px) {
-    .container.wheels-expanded .chat-area {
-        display: none;
-    }
-    .container.wheels-expanded .sidebar-right {
-        width: 100%;
-    }
-    /* Если колесо развернуто на весь экран на мобилке */
-    .container.wheels-expanded .wheels-container {
-        height: 360px !important;
-        min-height: 360px !important;
-    }
-    .container.wheels-expanded .device-body {
-        transform: scale(0.55) !important;
-        margin: 0 !important;
-    }
-}
-
-/* --- ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ КАРТОЧЕК (Для десктопа) --- */
-.wheels-display {
-    padding: 0 16px 20px 16px !important;
-}
-
-.mini-dash-item {
-    margin: 0 16px 8px 16px !important;
-    padding: 10px 12px !important;       
 }
