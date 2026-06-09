@@ -662,7 +662,9 @@ body {
 @media (max-width: 768px) {
     /* --- Ваши старые рабочие стили для чата и меню --- */
     .menu-toggle, .menu-toggle-right {
-        display: flex;
+        display: flex !important;
+        position: relative !important;
+        z-index: 9999 !important; /* Гарантируем, что кнопка закрытия будет кликабельной на телефоне */
     }
     .sidebar-right {
         width: 100%;
@@ -706,32 +708,37 @@ body {
         width: 100% !important;
     }
 
-    /* 2. Контейнер колеса: убираем жесткую высоту, даем подстроиться под масштаб */
+    /* 2. Контейнер колеса: жестко изолируем его высоту, чтобы убрать невидимые перекрытия */
     .wheels-container {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         padding: 0 !important;
-        margin-top: 0 !important;
         width: 100% !important;
-        height: auto !important; 
-        min-height: 340px !important; 
-        overflow: visible !important;
+        height: 330px !important; /* Четко держит границы сжатого колеса */
+        min-height: 330px !important; 
+        overflow: hidden !important; /* Обрезает гигантские фантомные углы SVG */
+        margin-top: 10px !important;
+        position: relative !important;
     }
 
-    /* 3. ДИНАМИЧЕСКОЕ СЖАТИЕ КОЛЕСА
-       Вместо старого scale(0.85), который не влезал, ставим scale(0.5) */
+    /* 3. ДИНАМИЧЕСКОЕ СЖАТИЕ КОЛЕСА */
     .device-body {
         transform: scale(0.5) !important; 
         transform-origin: center center !important;
-        margin: -140px 0 !important; /* Убираем пустые отступы сверху и снизу */
+        margin: 0 !important; /* Обнуляем маргины, высоту теперь держит контейнер */
+        position: absolute !important;
     }
 
     /* Для совсем узких экранов (смартфоны шириной до 380px) */
     @media (max-width: 380px) {
+        .wheels-container {
+            height: 290px !important;
+            min-height: 290px !important;
+        }
         .device-body {
             transform: scale(0.44) !important;
-            margin: -160px 0 !important;
+            margin: 0 !important;
         }
     }
 
@@ -766,9 +773,13 @@ body {
         width: 100%;
     }
     /* Если колесо развернуто на весь экран на мобилке */
+    .container.wheels-expanded .wheels-container {
+        height: 360px !important;
+        min-height: 360px !important;
+    }
     .container.wheels-expanded .device-body {
         transform: scale(0.55) !important;
-        margin: -120px 0 !important;
+        margin: 0 !important;
     }
 }
 
@@ -781,5 +792,3 @@ body {
     margin: 0 16px 8px 16px !important;
     padding: 10px 12px !important;       
 }
-}
-
