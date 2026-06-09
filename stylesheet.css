@@ -656,13 +656,17 @@ body {
     }
 }
 
-/* --- МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px) --- */
+/* ==========================================================================
+   МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
+   ========================================================================== */
 @media (max-width: 768px) {
+    /* --- Ваши старые рабочие стили для чата и меню --- */
     .menu-toggle, .menu-toggle-right {
         display: flex;
     }
     .sidebar-right {
         width: 100%;
+        overflow-x: hidden !important; /* Намертво убираем горизонтальный скролл */
     }
     .chat-header {
         padding: 10px 15px;
@@ -681,9 +685,64 @@ body {
     .input-area {
         padding: 10px 12px;
     }
+
+    /* --- НОВЫЕ СТИЛИ: Исправление поиска и колеса на смартфонах --- */
+    
+    /* 1. Возвращаем поиск в нормальный поток, чтобы он не наезжал на колесо */
+    .search-theme-compact {
+        position: relative !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin: 12px 16px 8px 16px !important;
+        height: 40px !important;
+        justify-content: space-between !important; /* Распределяем лупу и бейдж */
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    #themeSearch:focus {
+        width: 100% !important;
+    }
+
+    /* 2. Контейнер колеса: убираем жесткую высоту, даем подстроиться под масштаб */
     .wheels-container {
-        transform: scale(0.85);
-        min-height: 580px;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+        width: 100% !important;
+        height: auto !important; 
+        min-height: 340px !important; 
+        overflow: visible !important;
+    }
+
+    /* 3. ДИНАМИЧЕСКОЕ СЖАТИЕ КОЛЕСА
+       Вместо старого scale(0.85), который не влезал, ставим scale(0.5) */
+    .device-body {
+        transform: scale(0.5) !important; 
+        transform-origin: center center !important;
+        margin: -140px 0 !important; /* Убираем пустые отступы сверху и снизу */
+    }
+
+    /* Для совсем узких экранов (смартфоны шириной до 380px) */
+    @media (max-width: 380px) {
+        .device-body {
+            transform: scale(0.44) !important;
+            margin: -160px 0 !important;
+        }
+    }
+
+    /* Адаптируем карточки под колесом */
+    .wheels-display {
+        padding: 8px 12px 24px 12px !important;
+    }
+
+    .mini-dash-item {
+        margin: 0 0 8px 0 !important;
+        padding: 8px 12px !important;
     }
 }
 
@@ -706,15 +765,21 @@ body {
     .container.wheels-expanded .sidebar-right {
         width: 100%;
     }
-    .container.wheels-expanded .wheels-container {
-        transform: scale(1);
+    /* Если колесо развернуто на весь экран на мобилке */
+    .container.wheels-expanded .device-body {
+        transform: scale(0.55) !important;
+        margin: -120px 0 !important;
     }
 }
+
+/* --- ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ КАРТОЧЕК (Для десктопа) --- */
 .wheels-display {
-    padding: 0 16px 20px 16px !important; /* Добавляем отступ снизу, чтобы карточки не прижимались к краю */
+    padding: 0 16px 20px 16px !important;
 }
 
 .mini-dash-item {
-    margin: 0 16px 8px 16px !important; /* Немного уменьшаем отступы между карточками (с 10px до 8px) */
-    padding: 10px 12px !important;       /* Делаем сами карточки чуть компактнее по высоте */
+    margin: 0 16px 8px 16px !important;
+    padding: 10px 12px !important;       
 }
+}
+
