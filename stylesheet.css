@@ -581,9 +581,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0 10px 10px 10px; /* Уменьшаем верхний отступ до нуля */
+    padding: 0; /* Убираем боковые отступы, давая колесу максимум места */
     position: relative;
-    overflow: visible;
+    overflow: hidden !important; /* Обрезает невидимые углы вращающегося блока */
+    width: 100%; /* Контейнер строго держится в рамках панели */
+    flex-shrink: 0;
+   /* Сдвигаем контейнер вверх на 46 пикселей, прямо на территорию поиска */
+    margin-top: -46px !important;
 }
 
 /* Карточки итоговых фраз (Результат сопоставления) */
