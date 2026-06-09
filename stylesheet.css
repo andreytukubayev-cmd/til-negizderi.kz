@@ -682,16 +682,21 @@ body {
 
 
 /* ==========================================================================
-   ИЗОЛИРОВАННАЯ МОБИЛЬНАЯ ВЕРСИЯ (Срабатывает ТОЛЬКО на экранах меньше 768px)
+МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* --- Восстановление базовой структуры для смартфонов --- */
+    /* --- Восстановление базовой структуры окон для смартфонов --- */
     .sidebar-right {
         width: 100% !important;
-        overflow-x: hidden !important; /* Убираем горизонтальный скролл на телефонах */
+        overflow-x: hidden !important;
         background: #f8fafc !important;
-        position: relative !important;
     }
+    
+    /* Убедимся, что область чата и правое окно не ломают друг друга */
+    .chat-area {
+        width: 100% !important;
+    }
+    
     .chat-header {
         padding: 10px 15px;
     }
@@ -710,103 +715,104 @@ body {
         padding: 10px 12px;
     }
 
-    /* --- Управление кнопками на смартфонах --- */
+    /* --- УПРАВЛЕНИЕ КНОПКАМИ НА СМАРТФОНАХ --- */
     
-    /* Скрываем левую кнопку ☰ внутри правой панели ТОЛЬКО на мобилках */
+    /* Скрываем левую кнопку ☰ внутри правой панели, так как она лишняя */
     .sidebar-right .menu-toggle,
     .sidebar-right div.menu-toggle,
     .sidebar-right button.menu-toggle {
         display: none !important;
     }
 
-    /* Кнопка выхода 🎡 на мобильных фиксируется в углу */
-    .menu-toggle-right {
+    /* Возвращаем кнопку 🎡, но фиксируем её в верхнем левом углу панели, 
+       чтобы она работала как кнопка «Назад к чату» и не ломала JS-логику */
+    .sidebar-right .menu-toggle-right {
         display: flex !important;
         position: absolute !important;
         top: 12px !important;
-        right: 16px !important;
+        left: 16px !important; /* Переносим влево, чтобы освободить место под поиск и бейдж */
         margin: 0 !important;
         z-index: 9999 !important;
-        flex-shrink: 0 !important;
     }
 
-    /* --- Адаптация шапки на смартфонах --- */
+    /* --- АДАПТАЦИЯ ШАПКИ ПРАВОЙ ПАНЕЛИ --- */
+    
+    /* Сдвигаем контейнер поиска вправо, чтобы освободить место под кнопку «Назад» (🎡) */
     .search-theme-compact {
-        position: absolute !important;
-        top: 12px !important;
-        left: 16px !important;
-        right: 16px !important;
+        position: relative !important;
+        margin: 12px 16px 12px 60px !important; /* Левый отступ 60px дает место для 🎡 */
         height: 40px !important;
-        display: block !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        margin: 0 !important;
         z-index: 210 !important;
     }
 
+    /* Поиск */
     #themeSearch {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 45% !important;
+        flex: 1 !important;
         height: 100% !important;
+        position: static !important;
     }
 
     #themeSearch:focus {
-        width: 45% !important;
+        width: auto !important;
     }
 
+    /* Желтый бейдж «столовая» встает справа в строку, не перекрывая текст */
     .current-theme-badge {
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
+        position: static !important;
+        transform: none !important;
         margin: 0 !important;
+        flex-shrink: 0 !important;
         white-space: nowrap !important;
     }
 
-    /* --- Масштабирование колеса на смартфонах --- */
+    /* --- СЖАТИЕ КОЛЕСА (Отображение без пустот) --- */
+    
     .wheels-container {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         padding: 0 !important;
         width: 100% !important;
-        height: 340px !important; 
+        height: auto !important; 
         min-height: 340px !important; 
-        overflow: hidden !important; 
-        margin: 64px 0 0 0 !important; /* Смещаем колесо вниз на мобилке из-под абсолютной шапки */
+        overflow: visible !important; 
+        margin: 10px 0 0 0 !important;
         position: relative !important;
     }
 
     .device-body {
         transform: scale(0.5) !important; 
         transform-origin: center center !important;
-        margin: 0 !important; 
-        position: absolute !important;
+        margin: -140px 0 !important; /* Сжимаем невидимые области */
+        position: static !important;
     }
 
-    /* Для узких экранов (смартфоны до 380px) */
+    /* Смартфоны до 380px */
     @media (max-width: 380px) {
-        #themeSearch {
-            width: 40% !important;
-        }
-        #themeSearch:focus {
-            width: 40% !important;
+        .search-theme-compact {
+            margin: 12px 10px 12px 50px !important;
+            gap: 6px !important;
         }
         .wheels-container {
-            height: 300px !important;
             min-height: 300px !important;
         }
         .device-body {
             transform: scale(0.44) !important;
+            margin: -160px 0 !important;
         }
     }
 
-    /* Карточки результатов под колесом на смартфонах */
+    /* Карточки результатов под колесом */
     .wheels-display {
-        padding: 12px 12px 24px 12px !important;
+        padding: 8px 12px 24px 12px !important;
     }
 
     .mini-dash-item {
@@ -814,18 +820,11 @@ body {
         padding: 12px !important;
     }
 
-    /* Мобильный вариант расширенного режима */
+    /* Поведение развернутого режима на мобильных */
     .container.wheels-expanded .chat-area {
-        display: none;
+        display: none !important;
     }
     .container.wheels-expanded .sidebar-right {
-        width: 100%;
-    }
-    .container.wheels-expanded .wheels-container {
-        height: 380px !important;
-        min-height: 380px !important;
-    }
-    .container.wheels-expanded .device-body {
-        transform: scale(0.56) !important;
+        width: 100% !important;
     }
 }
