@@ -682,121 +682,112 @@ body {
 
 
 /* ==========================================================================
-   МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
+   МОБИЛЬНАЯ ВЕРСИЯ (Для выдвижной шторки)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* --- Стили для текста сообщений в чате --- */
-    .chat-header {
-        padding: 10px 15px;
-    }
-    .header-text h1 {
-        font-size: 1em;
-    }
-    .messages {
-        padding: 10px;
-    }
-    .message-content {
-        max-width: 85%;
-        padding: 8px 14px;
-        font-size: 0.9em;
-    }
-    .input-area {
-        padding: 10px 12px;
-    }
-
-    /* --- УПРАВЛЕНИЕ КНОПКАМИ --- */
     
-    /* Скрываем левую кнопку ☰ внутри ПРАВОЙ панели, чтобы она не дублировалась */
-    .sidebar-right .menu-toggle {
-        display: none !important;
-    }
-
-    /* Фиксируем фиолетовую кнопку 🎡 строго в левом верхнем углу ПРАВОЙ панели */
-    .sidebar-right .menu-toggle-right {
-        display: flex !important;
-        position: absolute !important;
-        top: 12px !important;
-        left: 16px !important; /* Кнопка уходит влево */
-        margin: 0 !important;
-        z-index: 9999 !important; /* Поверх поиска и колеса */
-    }
-
-    /* --- СТРОКА ПОИСКА И БЕЙДЖ --- */
-    
-    /* Сдвигаем весь контейнер поиска вправо на 60px, освобождая угол для кнопки 🎡 */
-    .search-theme-compact {
+    /* --- Настройка выдвижной панели (шторки) --- */
+    .sidebar-right {
+        background: #f8fafc !important;
         position: relative !important;
-        margin: 12px 16px 12px 60px !important; 
-        height: 40px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-top: 60px !important; /* Освобождаем фиксированное место сверху под шапку */
+    }
+
+    /* Изолируем фиксированную мобильную шапку внутри шторки */
+    .search-theme-compact {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 50px !important;
+        margin: 0 !important;
+        padding: 8px 55px 8px 16px !important; /* Правый паддинг 55px защищает место под кнопку 🎡 */
         display: flex !important;
         flex-direction: row !important;
-        justify-content: space-between !important;
+        justify-content: flex-start !important;
         align-items: center !important;
-        gap: 10px !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        z-index: 210 !important;
+        gap: 12px !important;
+        background: #f8fafc !important; /* Перекрываем колесо фоном шапки */
+        border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+        z-index: 9999 !important;
     }
 
+    /* Поле поиска внутри шапки */
     #themeSearch {
         flex: 1 !important;
-        height: 100% !important;
-        position: static !important;
+        height: 34px !important;
+        margin: 0 !important;
     }
 
-    #themeSearch:focus {
-        width: auto !important;
-    }
-
-    /* Желтый бейдж «столовая» встает аккуратно справа в строке */
+    /* Желтый бейдж «столовая» */
     .current-theme-badge {
         position: static !important;
         transform: none !important;
         margin: 0 !important;
         flex-shrink: 0 !important;
-        white-space: nowrap !important;
     }
 
-    /* --- МАСШТАБИРОВАНИЕ КОЛЕСА --- */
+    /* --- УПРАВЛЕНИЕ КНОПКАМИ --- */
+
+    /* Убираем дублирующий бургер ☰ из шторки */
+    .sidebar-right .menu-toggle {
+        display: none !important;
+    }
+
+    /* Кнопка 🎡: жестко сажаем в правый угол шапки, поверх всего контента */
+    .sidebar-right .menu-toggle-right {
+        display: flex !important;
+        position: absolute !important;
+        top: 7px !important;
+        right: 12px !important;
+        margin: 0 !important;
+        z-index: 10000 !important; /* Самый верхний слой */
+    }
+
+    /* --- КОНТЕЙНЕР И МАСШТАБ КОЛЕСА --- */
+    
     .wheels-container {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         padding: 0 !important;
         width: 100% !important;
-        height: auto !important; 
-        min-height: 340px !important; 
-        overflow: visible !important; 
-        margin: 10px 0 0 0 !important;
+        height: 280px !important; /* Фиксируем высоту контейнера */
+        min-height: 280px !important;
+        margin: 15px 0 0 0 !important; /* Никаких отрицательных маргинов! */
+        overflow: hidden !important; /* Обрезаем невидимые кликабельные слои */
         position: relative !important;
     }
 
+    /* Уменьшаем само колесо, центрируя его внутри контейнера */
     .device-body {
-        transform: scale(0.5) !important; 
+        transform: scale(0.46) !important; 
         transform-origin: center center !important;
-        margin: -140px 0 !important; 
-        position: static !important;
+        position: absolute !important;
+        margin: 0 !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(0.46) !important;
     }
 
-    /* Для узких дисплеев (до 380px) */
+    /* Коррекция для узких экранов (до 380px) и при открытой клавиатуре */
     @media (max-width: 380px) {
-        .search-theme-compact {
-            margin: 12px 10px 12px 50px !important;
-            gap: 6px !important;
-        }
         .wheels-container {
-            min-height: 300px !important;
+            height: 240px !important;
+            min-height: 240px !important;
         }
         .device-body {
-            transform: scale(0.44) !important;
-            margin: -160px 0 !important;
+            transform: translate(-50%, -50%) scale(0.40) !important;
         }
     }
 
     /* Карточки результатов под колесом */
     .wheels-display {
-        padding: 8px 12px 24px 12px !important;
+        padding: 12px !important;
     }
 
     .mini-dash-item {
