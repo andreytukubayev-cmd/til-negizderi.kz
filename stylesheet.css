@@ -657,7 +657,7 @@ body {
 }
 
 /* ==========================================================================
-   МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
+   ОТЛАЖЕННАЯ МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
     /* --- Базовые стили чата и панелей --- */
@@ -665,6 +665,7 @@ body {
         width: 100% !important;
         overflow-x: hidden !important; /* Намертво убираем горизонтальный скролл */
         background: #f8fafc !important;
+        position: relative !important; /* База для абсолютного позиционирования шапки */
     }
     .chat-header {
         padding: 10px 15px;
@@ -686,51 +687,64 @@ body {
 
     /* --- УПРАВЛЕНИЕ КНОПКАМИ В ШАПКЕ --- */
     
-    /* Жесткое скрытие левой кнопки ☰ внутри правой панели (увеличена специфичность селектора) */
+    /* Скрываем левую кнопку ☰ внутри правой панели */
     .sidebar-right .menu-toggle,
     .sidebar-right div.menu-toggle,
     .sidebar-right button.menu-toggle {
         display: none !important;
     }
 
-    /* Кнопка выхода 🎡 больше не парит «в абсолюте» поверх текста, а аккуратно сидит в общем ряду */
+    /* Кнопка выхода 🎡 жестко фиксируется в верхнем правом углу */
     .menu-toggle-right {
         display: flex !important;
-        position: static !important; /* Выстраиваем в линию с поиском и бейджем */
+        position: absolute !important;
+        top: 12px !important;
+        right: 16px !important;
         margin: 0 !important;
-        z-index: 250 !important;
+        z-index: 9999 !important; /* Поверх всего контента */
         flex-shrink: 0 !important;
     }
 
-    /* --- АДАПТАЦИЯ ЕДИНОЙ СТРОКИ ШАПКИ --- */
+    /* --- АДАПТАЦИЯ ИСПРАВЛЕННОЙ ШАПКИ --- */
     
-    /* Превращаем всю верхнюю строку в упорядоченный ряд, куда поместятся: поиск + бейдж + кнопка 🎡 */
+    /* Контейнер шапки снова абсолютный, чтобы не сжимать элементы */
     .search-theme-compact {
-        position: relative !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        margin: 12px 16px !important; /* Возвращаем стандартные отступы со всех сторон */
+        position: absolute !important;
+        top: 12px !important;
+        left: 16px !important;
+        right: 16px !important;
         height: 40px !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important; /* Расталкивает элементы по ширине равномерно */
-        align-items: center !important;
-        gap: 10px !important; /* Безопасное расстояние между инпутом, бейджем и кнопкой */
+        display: block !important; /* Отключаем флекс, переходим на позиционирование */
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        margin: 0 !important;
+        z-index: 210 !important;
     }
 
-    /* Ограничиваем максимальную ширину инпута, чтобы он не вытеснял бейдж и кнопку */
+    /* Поле поиска занимает левую половину шапки и не схлопывается */
     #themeSearch {
-        flex: 1 !important; /* Забирает всё свободное место слева */
-        min-width: 100px !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 45% !important; /* Выделяем фиксированное место */
+        height: 100% !important;
     }
 
-    /* Желтый бейдж «столовая» */
+    /* При фокусе на мобильном поиск не должен перекрывать всю строку */
+    #themeSearch:focus {
+        width: 45% !important;
+    }
+
+    /* Желтый бейдж «столовая» встает ровно по центру шапки */
     .current-theme-badge {
-        flex-shrink: 0 !important; /* Запрещаем тексту сжиматься или переноситься */
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important; /* Центрирование по осям X и Y */
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
     }
 
     /* --- Изоляция и масштабирование колеса --- */
@@ -743,7 +757,7 @@ body {
         height: 340px !important; 
         min-height: 340px !important; 
         overflow: hidden !important; 
-        margin: 10px 0 0 0 !important;
+        margin: 64px 0 0 0 !important; /* Отступ сверху 64px, чтобы колесо ушло из-под абсолютной шапки */
         position: relative !important;
     }
 
@@ -756,13 +770,16 @@ body {
 
     /* Коррекция для узких экранов (смартфоны до 380px) */
     @media (max-width: 380px) {
-        .search-theme-compact {
-            gap: 6px !important;
-            margin: 12px 10px !important;
+        #themeSearch {
+            width: 40% !important;
+        }
+        #themeSearch:focus {
+            width: 40% !important;
         }
         .wheels-container {
             height: 300px !important;
             min-height: 300px !important;
+            margin-top: 55px !important;
         }
         .device-body {
             transform: scale(0.44) !important;
