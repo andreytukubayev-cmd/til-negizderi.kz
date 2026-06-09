@@ -682,21 +682,10 @@ body {
 
 
 /* ==========================================================================
-   ИСПРАВЛЕННАЯ МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
+   МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* --- Базовая структура окон для смартфонов --- */
-    .sidebar-right {
-        width: 100% !important;
-        overflow-x: hidden !important;
-        background: #f8fafc !important;
-        position: relative !important;
-    }
-    
-    .chat-area {
-        width: 100% !important;
-    }
-    
+    /* --- Стили для текста сообщений в чате --- */
     .chat-header {
         padding: 10px 15px;
     }
@@ -715,28 +704,26 @@ body {
         padding: 10px 12px;
     }
 
-    /* --- УПРАВЛЕНИЕ КНОПКАМИ НА СМАРТФОНАХ --- */
+    /* --- УПРАВЛЕНИЕ КНОПКАМИ --- */
     
-    /* Скрываем левую кнопку ☰ внутри правой панели */
-    .sidebar-right .menu-toggle,
-    .sidebar-right div.menu-toggle,
-    .sidebar-right button.menu-toggle {
+    /* Скрываем левую кнопку ☰ внутри ПРАВОЙ панели, чтобы она не дублировалась */
+    .sidebar-right .menu-toggle {
         display: none !important;
     }
 
-    /* ВОЗВРАЩАЕМ фиолетовую кнопку 🎡 в левый верхний угол */
+    /* Фиксируем фиолетовую кнопку 🎡 строго в левом верхнем углу ПРАВОЙ панели */
     .sidebar-right .menu-toggle-right {
         display: flex !important;
         position: absolute !important;
         top: 12px !important;
-        left: 16px !important; /* Четко позиционируем слева */
+        left: 16px !important; /* Кнопка уходит влево */
         margin: 0 !important;
-        z-index: 9999 !important; /* Поверх всего контента */
+        z-index: 9999 !important; /* Поверх поиска и колеса */
     }
 
-    /* --- АДАПТАЦИЯ ШАПКИ ПРАВОЙ ПАНЕЛИ --- */
+    /* --- СТРОКА ПОИСКА И БЕЙДЖ --- */
     
-    /* Контейнер поиска сдвигаем вправо (margin-left: 60px), освобождая угол для кнопки 🎡 */
+    /* Сдвигаем весь контейнер поиска вправо на 60px, освобождая угол для кнопки 🎡 */
     .search-theme-compact {
         position: relative !important;
         margin: 12px 16px 12px 60px !important; 
@@ -752,7 +739,6 @@ body {
         z-index: 210 !important;
     }
 
-    /* Поле поиска */
     #themeSearch {
         flex: 1 !important;
         height: 100% !important;
@@ -763,7 +749,7 @@ body {
         width: auto !important;
     }
 
-    /* Желтый бейдж «столовая» встает справа в строке */
+    /* Желтый бейдж «столовая» встает аккуратно справа в строке */
     .current-theme-badge {
         position: static !important;
         transform: none !important;
@@ -793,7 +779,7 @@ body {
         position: static !important;
     }
 
-    /* Смартфоны до 380px */
+    /* Для узких дисплеев (до 380px) */
     @media (max-width: 380px) {
         .search-theme-compact {
             margin: 12px 10px 12px 50px !important;
@@ -816,13 +802,5 @@ body {
     .mini-dash-item {
         margin: 0 0 10px 0 !important;
         padding: 12px !important;
-    }
-
-    /* Поведение развернутого режима на мобильных */
-    .container.wheels-expanded .chat-area {
-        display: none !important;
-    }
-    .container.wheels-expanded .sidebar-right {
-        width: 100% !important;
     }
 }
