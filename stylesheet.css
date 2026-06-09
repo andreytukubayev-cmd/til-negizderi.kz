@@ -705,3 +705,11 @@ body {
         transform: scale(1);
     }
 }
+.wheels-display {
+    padding: 0 16px 20px 16px !important; /* Добавляем отступ снизу, чтобы карточки не прижимались к краю */
+}
+
+.mini-dash-item {
+    margin: 0 16px 8px 16px !important; /* Немного уменьшаем отступы между карточками (с 10px до 8px) */
+    padding: 10px 12px !important;       /* Делаем сами карточки чуть компактнее по высоте */
+}
