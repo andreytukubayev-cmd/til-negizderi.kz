@@ -91,6 +91,8 @@
         </div>
 
         <div class="sidebar-right" id="sidebarRight">
+            <button class="menu-close-right" id="menuCloseRight">🎡</button>
+
             <div class="search-theme-compact">
                 <input type="text" id="themeSearch" placeholder="🔍 Поиск темы..." />
                 <span class="current-theme-badge" id="currentTheme">столовая</span>
@@ -115,7 +117,8 @@
                     <div class="mini-dash-ru">-</div>
                 </div>
             </div>
-        </div> </div>
+        </div> 
+    </div>
 
     <div class="action-menu" id="actionMenu">
         <div class="action-menu-overlay" id="actionMenuOverlay"></div>
@@ -206,6 +209,7 @@
 
         // === 3. Управление правой панелью (Колеса) ===
         const menuToggleRight = document.getElementById('menuToggleRight');
+        const menuCloseRight = document.getElementById('menuCloseRight'); // Наша новая мобильная кнопка
         const sidebarRight = document.getElementById('sidebarRight');
         const menuOverlayRight = document.getElementById('menuOverlayRight');
         
@@ -221,6 +225,7 @@
             document.body.style.overflow = '';
         }
         
+        // Открытие/закрытие по кнопке из чата
         if (menuToggleRight) {
             menuToggleRight.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -229,6 +234,14 @@
                 } else {
                     openRightMenu();
                 }
+            });
+        }
+
+        // Закрытие по кнопке, которая находится ВНУТРИ самой шторки
+        if (menuCloseRight) {
+            menuCloseRight.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeRightMenu();
             });
         }
         
