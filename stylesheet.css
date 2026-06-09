@@ -494,47 +494,59 @@ body {
 
 /* Динамический блок поиска и темы */
 .search-theme-compact {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    margin: 16px 16px 4px 16px;
-    padding: 8px 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-end; /* Сдвигает лупу и бейдж вправо */
     align-items: center;
+    gap: 8px;
+    margin: 16px 16px 0 16px;  /* Отступы от краев панели */
+    padding: 0;                /* Обнуляем внутренние отступы, чтобы поднять колесо */
     position: relative;
     z-index: 210;
-    height: 46px; /* Фиксируем высоту строки поиска */
+    height: 40px;              /* Фиксированная высота строки */
+    background: transparent !important; /* Убираем старый белый фон */
+    border: none !important;            /* Уничтожаем старую рамку */
+    box-shadow: none !important;        /* Удаляем тень контейнера */
     flex-shrink: 0;
 }
 
+/* Кнопка-лупа в свернутом (дефолтном) состоянии */
 #themeSearch {
-    background: #f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
-    background-size: 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 20px;
-    padding: 8px 14px 8px 36px;
-    color: #1e293b;
-    font-size: 0.9em;
-    width: 40px;
-    text-indent: -9999px;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat center !important;
+    background-size: 18px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 50% !important; /* Делает кнопку идеально круглой */
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;          /* Центрируем иконку лупы */
+    color: transparent !important;  /* Скрываем плейсхолдер и текст */
+    text-indent: -9999px;          /* Выносим текст за пределы экрана */
     cursor: pointer;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-radius 0.3s ease, 
+                background-position 0.3s ease !important;
 }
 
+/* Ховер-эффект на круглую кнопку */
 #themeSearch:hover {
-    background-color: #e2e8f0;
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
 }
 
+/* СОСТОЯНИЕ АКТИВАЦИИ (ФОКУС): плавно превращается в полноценную строку поиска */
 #themeSearch:focus {
-    width: 100%;
-    text-indent: 0px;
-    background-color: #ffffff;
-    border-color: #00b4d8;
-    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+    width: 100% !important;        /* Растягивается на всю доступную ширину */
+    height: 40px !important;
+    border-radius: 20px !important; /* Превращается в овальную капсулу */
+    text-indent: 0px;              /* Возвращаем текст ввода на место */
+    padding: 8px 14px 8px 38px !important; /* Сдвигаем вводимый текст правее лупы */
+    background-color: #ffffff !important;
+    background-position: 14px center !important; /* Смещаем лупу влево */
+    color: #1e293b !important;
+    border-color: #00b4d8 !important;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.15) !important;
     cursor: text;
-    outline: none;
+    outline: none !important;
 }
 
 .current-theme-box {
@@ -563,15 +575,14 @@ body {
     white-space: nowrap;
 }
 
-/* Контейнер для вывода колес */
+/* Корректировка контейнера колеса, чтобы оно встало вплотную к поиску */
 .wheels-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
-    height: 660px; /* Фиксированная высота чуть больше самого колеса */
+    padding: 0 10px 10px 10px; /* Уменьшаем верхний отступ до нуля */
     position: relative;
-    flex-shrink: 0; /* Запрещаем контейнеру сжиматься */
+    overflow: visible;
 }
 
 /* Карточки итоговых фраз (Результат сопоставления) */
