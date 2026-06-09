@@ -657,15 +657,40 @@ body {
 }
 
 /* ==========================================================================
-   ОТЛАЖЕННАЯ МОБИЛЬНАЯ ВЕРСИЯ (Экраны до 768px)
+   ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ КАРТОЧЕК И ДЕСКТОПА (Для больших экранов)
+   ========================================================================== */
+.wheels-display {
+    padding: 0 16px 20px 16px !important;
+}
+
+.mini-dash-item {
+    margin: 0 16px 8px 16px !important;
+    padding: 10px 12px !important;       
+}
+
+/* --- РАСШИРЕННЫЙ РЕЖИМ ДЕСКТОПА (Колеса на весь экран) --- */
+.container.wheels-expanded .sidebar {
+    display: none;
+}
+.container.wheels-expanded .chat-area {
+    width: 35%;
+    flex: 0 0 35%;
+}
+.container.wheels-expanded .sidebar-right {
+    width: 65%;
+}
+
+
+/* ==========================================================================
+   ИЗОЛИРОВАННАЯ МОБИЛЬНАЯ ВЕРСИЯ (Срабатывает ТОЛЬКО на экранах меньше 768px)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* --- Базовые стили чата и панелей --- */
+    /* --- Восстановление базовой структуры для смартфонов --- */
     .sidebar-right {
         width: 100% !important;
-        overflow-x: hidden !important; /* Намертво убираем горизонтальный скролл */
+        overflow-x: hidden !important; /* Убираем горизонтальный скролл на телефонах */
         background: #f8fafc !important;
-        position: relative !important; /* База для абсолютного позиционирования шапки */
+        position: relative !important;
     }
     .chat-header {
         padding: 10px 15px;
@@ -685,36 +710,34 @@ body {
         padding: 10px 12px;
     }
 
-    /* --- УПРАВЛЕНИЕ КНОПКАМИ В ШАПКЕ --- */
+    /* --- Управление кнопками на смартфонах --- */
     
-    /* Скрываем левую кнопку ☰ внутри правой панели */
+    /* Скрываем левую кнопку ☰ внутри правой панели ТОЛЬКО на мобилках */
     .sidebar-right .menu-toggle,
     .sidebar-right div.menu-toggle,
     .sidebar-right button.menu-toggle {
         display: none !important;
     }
 
-    /* Кнопка выхода 🎡 жестко фиксируется в верхнем правом углу */
+    /* Кнопка выхода 🎡 на мобильных фиксируется в углу */
     .menu-toggle-right {
         display: flex !important;
         position: absolute !important;
         top: 12px !important;
         right: 16px !important;
         margin: 0 !important;
-        z-index: 9999 !important; /* Поверх всего контента */
+        z-index: 9999 !important;
         flex-shrink: 0 !important;
     }
 
-    /* --- АДАПТАЦИЯ ИСПРАВЛЕННОЙ ШАПКИ --- */
-    
-    /* Контейнер шапки снова абсолютный, чтобы не сжимать элементы */
+    /* --- Адаптация шапки на смартфонах --- */
     .search-theme-compact {
         position: absolute !important;
         top: 12px !important;
         left: 16px !important;
         right: 16px !important;
         height: 40px !important;
-        display: block !important; /* Отключаем флекс, переходим на позиционирование */
+        display: block !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -722,32 +745,28 @@ body {
         z-index: 210 !important;
     }
 
-    /* Поле поиска занимает левую половину шапки и не схлопывается */
     #themeSearch {
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
-        width: 45% !important; /* Выделяем фиксированное место */
+        width: 45% !important;
         height: 100% !important;
     }
 
-    /* При фокусе на мобильном поиск не должен перекрывать всю строку */
     #themeSearch:focus {
         width: 45% !important;
     }
 
-    /* Желтый бейдж «столовая» встает ровно по центру шапки */
     .current-theme-badge {
         position: absolute !important;
         left: 50% !important;
         top: 50% !important;
-        transform: translate(-50%, -50%) !important; /* Центрирование по осям X и Y */
+        transform: translate(-50%, -50%) !important;
         margin: 0 !important;
-        flex-shrink: 0 !important;
         white-space: nowrap !important;
     }
 
-    /* --- Изоляция и масштабирование колеса --- */
+    /* --- Масштабирование колеса на смартфонах --- */
     .wheels-container {
         display: flex !important;
         justify-content: center !important;
@@ -757,7 +776,7 @@ body {
         height: 340px !important; 
         min-height: 340px !important; 
         overflow: hidden !important; 
-        margin: 64px 0 0 0 !important; /* Отступ сверху 64px, чтобы колесо ушло из-под абсолютной шапки */
+        margin: 64px 0 0 0 !important; /* Смещаем колесо вниз на мобилке из-под абсолютной шапки */
         position: relative !important;
     }
 
@@ -768,7 +787,7 @@ body {
         position: absolute !important;
     }
 
-    /* Коррекция для узких экранов (смартфоны до 380px) */
+    /* Для узких экранов (смартфоны до 380px) */
     @media (max-width: 380px) {
         #themeSearch {
             width: 40% !important;
@@ -779,15 +798,13 @@ body {
         .wheels-container {
             height: 300px !important;
             min-height: 300px !important;
-            margin-top: 55px !important;
         }
         .device-body {
             transform: scale(0.44) !important;
-            margin: 0 !important;
         }
     }
 
-    /* Адаптируем нижние карточки результатов */
+    /* Карточки результатов под колесом на смартфонах */
     .wheels-display {
         padding: 12px 12px 24px 12px !important;
     }
@@ -795,5 +812,20 @@ body {
     .mini-dash-item {
         margin: 0 0 10px 0 !important;
         padding: 12px !important;
+    }
+
+    /* Мобильный вариант расширенного режима */
+    .container.wheels-expanded .chat-area {
+        display: none;
+    }
+    .container.wheels-expanded .sidebar-right {
+        width: 100%;
+    }
+    .container.wheels-expanded .wheels-container {
+        height: 380px !important;
+        min-height: 380px !important;
+    }
+    .container.wheels-expanded .device-body {
+        transform: scale(0.56) !important;
     }
 }
