@@ -61,6 +61,10 @@
                     <span class="stat-label">Переведено фраз:</span>
                     <span class="stat-value" id="totalTranslations">0</span>
                 </div>
+                <div class="stat-item" id="authSection" style="flex-direction: column; gap: 8px;">
+    <button id="loginBtn" style="width:100%; background:#ffd700; border:none; padding:8px; border-radius:8px; cursor:pointer;">🔑 Войти по email</button>
+    <button id="logoutBtn" style="width:100%; background:#e74c3c; border:none; padding:8px; border-radius:8px; cursor:pointer; color:white; display:none;">🚪 Выйти</button>
+</div>
             </div>
         </div>
 
@@ -123,6 +127,8 @@
     <script src="js/localTranslator.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/right-panel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
     
    <script>
     // === Управление левым меню ===
@@ -211,6 +217,56 @@
             closeRightMenu();
         }
     });
+       // Инициализация авторизации
+async function initAuth() {
+    const user = await checkUser();
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (user) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        
+        const profile = await getUserProfile();
+        if (profile?.name) {
+            localStorage.setItem('userName', profile.name);
+            updateStatsTitle();
+        }
+        
+        // Загружаем статистику из БД
+        const total = profile?.total_translations || 0;
+        document.getElementById('totalTranslations').innerText = total;
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+}
+
+// Обработчики кнопок
+document.getElementById('loginBtn')?.addEventListener('click', () => {
+    const email = prompt('Введите ваш email:');
+    if (email && email.includes('@')) {
+        signInWithEmail(email);
+    } else if (email) {
+        alert('Введите корректный email');
+    }
+});
+
+document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    signOut();
+});
+
+// Слушаем изменение состояния авторизации
+supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN') {
+        location.reload();
+    } else if (event === 'SIGNED_OUT') {
+        location.reload();
+    }
+});
+
+// Запускаем при загрузке
+initAuth();
 </script>
 </body>
 </html>
