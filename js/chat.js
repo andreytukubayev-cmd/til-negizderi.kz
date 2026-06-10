@@ -3,7 +3,6 @@
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
-let currentTheme = 'столовая'; // Объявляем базовую тему, чтобы не было ReferenceError
 
 // Функции для работы со статистикой (теперь через Supabase)
 async function updateStats() {
