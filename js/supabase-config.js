@@ -2,19 +2,23 @@
 const SUPABASE_URL = 'https://dozirkpilsfxthhzlfiv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_lRzYypPaoMrWUgbznU2zKg_T4kW_nkB';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Создаём глобальный объект supabaseClient чтобы не конфликтовать
+if (typeof supabaseClient === 'undefined') {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase клиент создан');
+}
 
 // Проверка авторизации
 async function checkUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     if (error) console.error('checkUser error:', error);
     return user;
 }
 
 // Вход по магической ссылке
-async function signInWithEmail(email) {
-    console.log('Trying to sign in with:', email);
-    const { data, error } = await supabase.auth.signInWithOtp({
+window.signInWithEmail = async function(email) {
+    console.log('Пытаюсь войти с email:', email);
+    const { data, error } = await window.supabaseClient.auth.signInWithOtp({
         email: email,
         options: {
             emailRedirectTo: window.location.origin
@@ -22,29 +26,29 @@ async function signInWithEmail(email) {
     });
     
     if (error) {
-        console.error('Sign in error:', error);
+        console.error('Ошибка входа:', error);
         alert('Ошибка: ' + error.message);
         return false;
     }
     
-    console.log('Success, check your email:', data);
+    console.log('Успешно, проверьте почту');
     alert('Проверьте почту! Ссылка для входа отправлена на ' + email);
     return true;
-}
+};
 
 // Выход
-async function signOut() {
-    await supabase.auth.signOut();
+window.signOut = async function() {
+    await window.supabaseClient.auth.signOut();
     localStorage.clear();
     location.reload();
-}
+};
 
 // Получить профиль
-async function getUserProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
+window.getUserProfile = async function() {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return null;
     
-    const { data, error } = await supabase
+    const { data, error } = await window.supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -53,16 +57,15 @@ async function getUserProfile() {
     if (error && error.code !== 'PGRST116') {
         console.error('Ошибка загрузки профиля:', error);
     }
-    
     return data;
-}
+};
 
 // Сохранить имя
-async function saveUserName(name) {
-    const { data: { user } } = await supabase.auth.getUser();
+window.saveUserName = async function(name) {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return;
     
-    const { error } = await supabase
+    const { error } = await window.supabaseClient
         .from('profiles')
         .update({ name: name })
         .eq('id', user.id);
@@ -72,32 +75,30 @@ async function saveUserName(name) {
     } else {
         localStorage.setItem('userName', name);
     }
-}
+};
 
-// Обновить статистику переводов
-async function incrementTranslations() {
-    const { data: { user } } = await supabase.auth.getUser();
+// Обновить статистику
+window.incrementTranslations = async function() {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return;
     
-    const profile = await getUserProfile();
+    const profile = await window.getUserProfile();
     const newCount = (profile?.total_translations || 0) + 1;
     
-    const { error } = await supabase
+    await window.supabaseClient
         .from('profiles')
         .update({ total_translations: newCount })
         .eq('id', user.id);
     
-    if (!error) {
-        document.getElementById('totalTranslations').innerText = newCount;
-    }
-}
+    document.getElementById('totalTranslations').innerText = newCount;
+};
 
-// Сохранить перевод в историю
-async function saveTranslation(russian, kazakh, theme = 'general') {
-    const { data: { user } } = await supabase.auth.getUser();
+// Сохранить перевод
+window.saveTranslation = async function(russian, kazakh, theme = 'general') {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return;
     
-    await supabase
+    await window.supabaseClient
         .from('translations')
         .insert({ 
             user_id: user.id, 
@@ -105,28 +106,28 @@ async function saveTranslation(russian, kazakh, theme = 'general') {
             kazakh_translation: kazakh,
             theme: theme
         });
-}
+};
 
-// Сохранить сообщение в историю чата
-async function saveMessage(role, content) {
-    const { data: { user } } = await supabase.auth.getUser();
+// Сохранить сообщение
+window.saveMessage = async function(role, content) {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return;
     
-    await supabase
+    await window.supabaseClient
         .from('messages')
         .insert({ 
             user_id: user.id, 
             role: role, 
             content: content 
         });
-}
+};
 
-// Загрузить историю чата
-async function loadChatHistory() {
-    const { data: { user } } = await supabase.auth.getUser();
+// Загрузить историю
+window.loadChatHistory = async function() {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
     if (!user) return [];
     
-    const { data } = await supabase
+    const { data } = await window.supabaseClient
         .from('messages')
         .select('*')
         .eq('user_id', user.id)
@@ -134,34 +135,14 @@ async function loadChatHistory() {
         .limit(30);
     
     return data || [];
-}
+};
 
-// Сохранить состояние колёс
-async function saveWheelStates(outer, middle, inner) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    await supabase
-        .from('user_wheel_states')
-        .upsert({ 
-            user_id: user.id, 
-            outer_rot: outer, 
-            middle_rot: middle, 
-            inner_rot: inner,
-            updated_at: new Date()
-        });
-}
-
-// Загрузить состояние колёс
-async function loadWheelStates() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    
-    const { data } = await supabase
-        .from('user_wheel_states')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-    
-    return data;
-}
+// Слушаем изменения авторизации
+window.supabaseClient.auth.onAuthStateChange((event) => {
+    console.log('Auth state change:', event);
+    if (event === 'SIGNED_IN') {
+        location.reload();
+    } else if (event === 'SIGNED_OUT') {
+        location.reload();
+    }
+});
