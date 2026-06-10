@@ -1,6 +1,8 @@
 // Правая панель с колёсами Луллия
-
-let currentTheme = 'столовая';
+// Проверяем, не объявлена ли уже переменная
+if (typeof currentTheme === 'undefined') {
+    var currentTheme = 'столовая';
+}
 let rotations = { inner: 0, middle: 0, outer: 0 };
 let originalEngineInitialized = false;
 
