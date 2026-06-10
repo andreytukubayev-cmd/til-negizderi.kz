@@ -146,3 +146,34 @@ window.supabaseClient.auth.onAuthStateChange((event) => {
         location.reload();
     }
 });
+// === НАСТРАИВАЕМ КНОПКИ ПОСЛЕ ЗАГРУЗКИ СТРАНИЦЫ ===
+document.addEventListener('DOMContentLoaded', function() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (loginBtn) {
+        // Убираем все старые обработчики
+        const newLoginBtn = loginBtn.cloneNode(true);
+        loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
+        
+        newLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = prompt('Введите ваш email:');
+            if (email && email.includes('@')) {
+                signInWithEmail(email);
+            } else if (email) {
+                alert('Введите корректный email');
+            }
+        });
+    }
+    
+    if (logoutBtn) {
+        const newLogoutBtn = logoutBtn.cloneNode(true);
+        logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+        
+        newLogoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            signOut();
+        });
+    }
+});
