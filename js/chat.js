@@ -3,6 +3,7 @@
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
+let currentTheme = 'столовая'; // Объявляем базовую тему, чтобы не было ReferenceError
 
 // Функции для работы со статистикой (теперь через Supabase)
 async function updateStats() {
@@ -138,22 +139,31 @@ async function checkUserName() {
         addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
     } else {
         waitingForName = true;
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = '';
         addMessage(`👋 <strong>Здравствуйте!</strong><br><br>Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br><strong>Как ваше имя?</strong>`, 'bot', null, true);
     }
 }
 
 function saveUserName() {
     const nameInput = document.getElementById('userName');
+    if (!nameInput) return;
     const name = nameInput.value.trim();
     
     if (name && name.length > 0) {
         userName = name;
         localStorage.setItem('userName', userName);
         
-        // Сохраняем в Supabase если авторизован
-        saveUserName(userName);
+        // ИСПРАВЛЕНО: Вызываем функцию сохранения профиля из supabase-config (избегаем рекурсии)
+        if (typeof saveProfileName === 'function') {
+            saveProfileName(userName);
+        } else if (typeof updateProfileName === 'function') {
+            updateProfileName(userName);
+        }
         
-        document.getElementById('nameModal').style.display = 'none';
+        const nameModal = document.getElementById('nameModal');
+        if (nameModal) nameModal.style.display = 'none';
+        
         waitingForName = false;
         updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
@@ -382,7 +392,7 @@ function getLocalDiscussFallback(message) {
 
 📖 **Разбор слов:**
   • **Кешіріңіз** — извините
-  • **көмектесе аласыз ба** — не могли бы вы помочь
+  • **kөмектесе аласыз ба** — не могли бы вы помочь
 
 💬 **Коротко:** Көмектесесіз бе?`;
 }
@@ -628,7 +638,7 @@ function escapeHtml(text) {
 
 function formatMessage(text) {
     let formatted = text.replace(/\n/g, '<br>');
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>');
     return formatted;
 }
 
@@ -637,8 +647,12 @@ function saveUserNameFromMessage(name) {
         userName = name.trim();
         localStorage.setItem('userName', userName);
         
-        // Сохраняем в Supabase
-        saveUserName(userName);
+        // Сохраняем в Supabase через внешнюю функцию
+        if (typeof saveProfileName === 'function') {
+            saveProfileName(userName);
+        } else if (typeof updateProfileName === 'function') {
+            updateProfileName(userName);
+        }
         
         waitingForName = false;
         const messages = document.getElementById('messages');
@@ -691,6 +705,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.key === 'Enter') saveUserName();
     });
     
+    const chatForm = document.getElementById('chatForm');
     const sendBtn = document.getElementById('sendBtn');
     const actionMenu = document.getElementById('actionMenu');
     const actionMenuOverlay = document.getElementById('actionMenuOverlay');
@@ -711,7 +726,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (actionMenu) actionMenu.classList.add('active');
     }
     
-    if (sendBtn) sendBtn.addEventListener('click', showActionMenu);
+    // ИСПРАВЛЕНО: Перехватываем submit формы, чтобы страница не обновлялась при нажатии Enter/Отправить
+    if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            showActionMenu();
+        });
+    }
+    
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showActionMenu();
+        });
+    }
+    
     if (actionMenuOverlay) actionMenuOverlay.addEventListener('click', closeActionMenu);
     
     if (actionTranslate) {
@@ -738,16 +767,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             addMessage(message, 'user');
             input.value = '';
             discussSituation(message);
-        });
-    }
-    
-    const userInput = document.getElementById('userInput');
-    if (userInput) {
-        userInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                showActionMenu();
-            }
         });
     }
 });
