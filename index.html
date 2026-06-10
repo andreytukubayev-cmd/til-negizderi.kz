@@ -152,42 +152,83 @@
         updateStatsTitle();
         window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
 
-        // === НАТИВНОЕ УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ ===
-        const menuToggleRight = document.getElementById('menuToggleRight');
-        const menuCloseRight = document.getElementById('menuCloseRight'); // Мобильная кнопка
-        const sidebarRight = document.getElementById('sidebarRight');
-        const menuOverlayRight = document.getElementById('menuOverlayRight');
-        
-        function openRightMenu() {
-            sidebarRight.classList.add('open');
-            menuOverlayRight.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeRightMenu() {
-            sidebarRight.classList.remove('open');
-            menuOverlayRight.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-        
-        if (menuToggleRight) {
-            menuToggleRight.addEventListener('click', (e) => {
-                e.stopPropagation();
-                sidebarRight.classList.contains('open') ? closeRightMenu() : openRightMenu();
-            });
-        }
+       // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ (ИСПРАВЛЕНО) ===
+const menuToggleRight = document.getElementById('menuToggleRight');
+const menuCloseRight = document.getElementById('menuCloseRight');
+const sidebarRight = document.getElementById('sidebarRight');
+const menuOverlayRight = document.getElementById('menuOverlayRight');
 
-        // Клик по реальной кнопке внутри шторки гарантированно закроет её
-        if (menuCloseRight) {
-            menuCloseRight.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeRightMenu();
-            });
-        }
-        
-        if (menuOverlayRight) {
-            menuOverlayRight.addEventListener('click', closeRightMenu);
-        }
+function openRightMenu() {
+    sidebarRight.classList.add('open');
+    if (menuOverlayRight) menuOverlayRight.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    // Сохраняем состояние в localStorage (опционально)
+    localStorage.setItem('rightPanelOpen', 'true');
+}
+
+function closeRightMenu() {
+    sidebarRight.classList.remove('open');
+    if (menuOverlayRight) menuOverlayRight.classList.remove('active');
+    document.body.style.overflow = '';
+    localStorage.setItem('rightPanelOpen', 'false');
+}
+
+function toggleRightMenu() {
+    if (sidebarRight.classList.contains('open')) {
+        closeRightMenu();
+    } else {
+        openRightMenu();
+    }
+}
+
+// Основная кнопка открытия/закрытия
+if (menuToggleRight) {
+    // Убираем все старые обработчики
+    const newToggle = menuToggleRight.cloneNode(true);
+    menuToggleRight.parentNode.replaceChild(newToggle, menuToggleRight);
+    
+    newToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleRightMenu();
+    });
+}
+
+// Кнопка закрытия внутри панели (для мобилок)
+if (menuCloseRight) {
+    const newClose = menuCloseRight.cloneNode(true);
+    menuCloseRight.parentNode.replaceChild(newClose, menuCloseRight);
+    
+    newClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeRightMenu();
+    });
+}
+
+// Оверлей (клик вне панели)
+if (menuOverlayRight) {
+    const newOverlay = menuOverlayRight.cloneNode(true);
+    menuOverlayRight.parentNode.replaceChild(newOverlay, menuOverlayRight);
+    
+    newOverlay.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeRightMenu();
+    });
+}
+
+// Закрытие при нажатии Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
+        closeRightMenu();
+    }
+});
+
+// Восстановление состояния при загрузке (опционально)
+// if (localStorage.getItem('rightPanelOpen') === 'true') {
+//     openRightMenu();
+// }
     </script>
 </body>
 </html>
