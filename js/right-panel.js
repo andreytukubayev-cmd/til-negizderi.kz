@@ -31,31 +31,13 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
+    // Создаем основной контейнер колеса — все стили теперь должны быть в CSS (.device-body)
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
-    deviceBody.style.position = 'relative';
-    deviceBody.style.width = '646px';
-    deviceBody.style.height = '646px';
-    deviceBody.style.margin = '0 auto';
-    deviceBody.style.background = '#e6e9ef';
-    deviceBody.style.borderRadius = '50%';
-    deviceBody.style.display = 'flex';
-    deviceBody.style.alignItems = 'center';
-    deviceBody.style.justifyContent = 'center';
-    deviceBody.style.boxShadow = '15px 15px 30px #d1d5db, -15px -15px 30px #ffffff';
     
+    // Стрелка-указатель — аналогично, стили переносим в CSS (.pointer-needle)
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
-    pointer.style.position = 'absolute';
-    pointer.style.top = '-8px';
-    pointer.style.left = '50%';
-    pointer.style.transform = 'translateX(-50%)';
-    pointer.style.width = '0';
-    pointer.style.height = '0';
-    pointer.style.borderLeft = '10px solid transparent';
-    pointer.style.borderRight = '10px solid transparent';
-    pointer.style.borderTop = '18px solid #00b4d8';
-    pointer.style.zIndex = '11';
     
     const outerWheel = document.createElement('div');
     outerWheel.className = 'wheel outer-wheel';
@@ -73,6 +55,7 @@ function regenerateWheels() {
     centerBtn.className = 'center-cap';
     centerBtn.innerText = 'СБРОС';
     
+    // Собираем структуру DOM
     deviceBody.appendChild(outerWheel);
     deviceBody.appendChild(middleWheel);
     deviceBody.appendChild(innerWheel);
@@ -81,7 +64,7 @@ function regenerateWheels() {
     
     container.appendChild(deviceBody);
     
-    // Генерируем сектора
+    // Генерируем сектора (размеры dMax внутри функции остаются для SVG, это нормально)
     generateWheelCells(outerWheel, window.dataset.outer, 'outer');
     generateWheelCells(middleWheel, window.dataset.middle, 'middle');
     generateWheelCells(innerWheel, window.dataset.inner, 'inner');
