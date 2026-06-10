@@ -27,15 +27,22 @@ window.signInWithEmail = async function(email) {
     
     if (error) {
         console.error('Ошибка входа:', error);
-        alert('Ошибка: ' + error.message);
+        
+        // Понятные сообщения для пользователя
+        if (error.message.includes('rate limit')) {
+            alert('⚠️ Слишком много попыток. Подождите 5-10 минут и попробуйте снова.');
+        } else if (error.message.includes('invalid email')) {
+            alert('❌ Введите корректный email адрес (например, name@domain.com)');
+        } else {
+            alert('❌ Ошибка: ' + error.message);
+        }
         return false;
     }
     
     console.log('Успешно, проверьте почту');
-    alert('Проверьте почту! Ссылка для входа отправлена на ' + email);
+    alert('✅ Письмо отправлено!\n\nПроверьте ваш почтовый ящик (и папку Спам) и перейдите по ссылке для входа.');
     return true;
 };
-
 // Выход
 window.signOut = async function() {
     await window.supabaseClient.auth.signOut();
