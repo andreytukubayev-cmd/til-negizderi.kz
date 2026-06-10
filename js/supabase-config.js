@@ -6,13 +6,15 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Проверка авторизации
 async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) console.error('checkUser error:', error);
     return user;
 }
 
 // Вход по магической ссылке
 async function signInWithEmail(email) {
-    const { error } = await supabase.auth.signInWithOtp({
+    console.log('Trying to sign in with:', email);
+    const { data, error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
             emailRedirectTo: window.location.origin
@@ -20,11 +22,12 @@ async function signInWithEmail(email) {
     });
     
     if (error) {
-        console.error('Ошибка:', error);
+        console.error('Sign in error:', error);
         alert('Ошибка: ' + error.message);
         return false;
     }
     
+    console.log('Success, check your email:', data);
     alert('Проверьте почту! Ссылка для входа отправлена на ' + email);
     return true;
 }
@@ -118,7 +121,7 @@ async function saveMessage(role, content) {
         });
 }
 
-// Загрузить историю чата (последние 30 сообщений)
+// Загрузить историю чата
 async function loadChatHistory() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
