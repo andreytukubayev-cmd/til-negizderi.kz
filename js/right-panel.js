@@ -89,6 +89,9 @@ function regenerateWheels() {
     
     updateWheelsDisplay(0, 0, 0);
     originalEngineInitialized = true;
+   if (typeof updateCurrentTheme === 'function') {
+    updateCurrentTheme(currentTheme);
+}
 }
 
 function generateWheelCells(wheelEl, items, type) {
