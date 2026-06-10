@@ -1,35 +1,48 @@
-// js/chat.js - с двумя режимами через меню
+// js/chat.js - с интеграцией Supabase
 
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
 
-// Функции для работы со статистикой
-function saveUserStat(userName, count) {
-    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
-    allStats[userName] = count;
-    localStorage.setItem('kazakhStats', JSON.stringify(allStats));
-}
-
-function getUserStat(userName) {
-    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
-    return allStats[userName] || 0;
-}
-
-function incrementUserStat(userName) {
-    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
-    allStats[userName] = (allStats[userName] || 0) + 1;
-    localStorage.setItem('kazakhStats', JSON.stringify(allStats));
-    return allStats[userName];
-}
-
-function updateStats() {
+// Функции для работы со статистикой (теперь через Supabase)
+async function updateStats() {
     if (userName) {
+        // Если пользователь авторизован в Supabase, берём статистику оттуда
+        const user = await checkUser();
+        if (user) {
+            const profile = await getUserProfile();
+            if (profile) {
+                document.getElementById('totalTranslations').textContent = profile.total_translations || 0;
+                return;
+            }
+        }
+        // Fallback на localStorage
         let userStat = getUserStat(userName);
         document.getElementById('totalTranslations').textContent = userStat;
     } else {
         document.getElementById('totalTranslations').textContent = '0';
     }
+}
+
+// Вспомогательные функции (совместимость со старым кодом)
+function getUserStat(userName) {
+    let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
+    return allStats[userName] || 0;
+}
+
+async function incrementUserStat(userName) {
+    // Пытаемся сохранить через Supabase
+    const user = await checkUser();
+    if (user) {
+        await incrementTranslations();
+        await saveTranslation(message, result.translation, currentTheme);
+    } else {
+        // Fallback на localStorage
+        let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
+        allStats[userName] = (allStats[userName] || 0) + 1;
+        localStorage.setItem('kazakhStats', JSON.stringify(allStats));
+    }
+    updateStats();
 }
 
 // ГЛАВНАЯ ФУНКЦИЯ ПРОКРУТКИ
@@ -49,6 +62,7 @@ function forceScrollToBottom() {
 // Флаги для автоматического переключения
 let aiAvailable = true;
 let lastAICheck = 0;
+let currentTheme = 'столовая'; // текущая тема для колёс
 
 // Загружаем JSON с фразами
 async function loadPhrases() {
@@ -65,15 +79,65 @@ async function loadPhrases() {
     }
 }
 
-function checkUserName() {
+// Загрузка истории чата из Supabase
+async function loadChatHistoryFromDB() {
+    const user = await checkUser();
+    if (!user) return [];
+    
+    const history = await loadChatHistory();
+    return history;
+}
+
+// Восстановление истории чата при загрузке
+async function restoreChatHistory() {
+    const history = await loadChatHistoryFromDB();
+    
+    if (history && history.length > 0) {
+        // Очищаем текущие сообщения (кроме приветствия)
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = '';
+        
+        // Загружаем сохранённые сообщения
+        for (const msg of history) {
+            addMessage(msg.content, msg.role, null, true); // silent mode
+        }
+    } else {
+        // Если истории нет — показываем приветствие
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = '';
+        addMessage(`👋 <strong>Здравствуйте!</strong><br><br>Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br><strong>Как ваше имя?</strong>`, 'bot', null, true);
+    }
+    
+    forceScrollToBottom();
+}
+
+async function checkUserName() {
+    // Проверяем авторизацию в Supabase
+    const user = await checkUser();
+    
+    if (user) {
+        const profile = await getUserProfile();
+        if (profile?.name) {
+            userName = profile.name;
+            localStorage.setItem('userName', userName);
+            updateStats();
+            
+            // Восстанавливаем историю чата
+            await restoreChatHistory();
+            
+            addMessage(`👋 С возвращением, ${userName}!`, 'bot');
+            return;
+        }
+    }
+    
+    // Если нет авторизации или имени — спрашиваем
     if (userName) {
-        document.getElementById('nameModal').style.display = 'none';
         updateStats();
         addMessage(`👋 Рад познакомиться, ${userName}! Я помогу тебе выучить казахский язык.`, 'bot');
         addMessage(`💡 Напишите фразу, нажмите "Отправить" и выберите действие: "Перевести" или "Обсудить ситуацию".`, 'bot');
     } else {
-        document.getElementById('nameModal').style.display = 'flex';
         waitingForName = true;
+        addMessage(`👋 <strong>Здравствуйте!</strong><br><br>Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br><strong>Как ваше имя?</strong>`, 'bot', null, true);
     }
 }
 
@@ -84,6 +148,10 @@ function saveUserName() {
     if (name && name.length > 0) {
         userName = name;
         localStorage.setItem('userName', userName);
+        
+        // Сохраняем в Supabase если авторизован
+        saveUserName(userName);
+        
         document.getElementById('nameModal').style.display = 'none';
         waitingForName = false;
         updateStats();
@@ -94,7 +162,7 @@ function saveUserName() {
     }
 }
 
-// Функция для парсинга ответа от ИИ (DeepSeek) - без произношения
+// Функция для парсинга ответа от ИИ (DeepSeek)
 function formatAIResponse(text) {
     const lines = text.split('\n');
     let translation = '';
@@ -119,15 +187,12 @@ function formatAIResponse(text) {
                 formatted += `  • **${word}** — ${meaning}\n`;
             }
         }
-        // Пропускаем транскрипцию/произношение
         else if (line.startsWith('Транскрипция:') || line.startsWith('🔊 Транскрипция:') || 
                  line.startsWith('Произношение:') || line.startsWith('🔊 Произношение:')) {
             continue;
         }
-        else if (line.startsWith('Коротко:') || 
-                 line.startsWith('Разговорный:') || 
-                 line.startsWith('Разговорный вариант:') ||
-                 line.startsWith('💬 Разговорный вариант:')) {
+        else if (line.startsWith('Коротко:') || line.startsWith('Разговорный:') || 
+                 line.startsWith('Разговорный вариант:') || line.startsWith('💬 Разговорный вариант:')) {
             const short = line.replace(/^(💬 )?(Разговорный вариант:|Разговорный:|Коротко:)\s*/, '');
             if (short && short.trim() !== '') {
                 formatted += `\n💬 **Разговорный вариант:** ${short}\n`;
@@ -142,7 +207,6 @@ function formatAIResponse(text) {
     };
 }
 
-// Форматирование локального ответа - без произношения
 function formatLocalResponse(result) {
     let output = `✅ **${result.translation}**\n\n`;
     
@@ -162,7 +226,6 @@ function formatLocalResponse(result) {
     return output;
 }
 
-// Функция для режима "Обсудить ситуацию"
 async function discussSituation(message) {
     showTypingIndicator();
     
@@ -238,10 +301,15 @@ async function discussSituation(message) {
     }
     
     hideTypingIndicator();
+    
+    // Сохраняем в историю чата
+    await saveMessage('user', message);
+    await saveMessage('bot', reply);
+    
     addMessage(reply, 'bot', wordBreakdown);
     
     if (userName) {
-        incrementUserStat(userName);
+        await incrementUserStat(userName);
         updateStats();
     }
     
@@ -249,11 +317,9 @@ async function discussSituation(message) {
 }
 
 function formatDiscussResponse(text) {
-    // Удаляем строки с произношением
     let cleaned = text.replace(/🔊 Произношение:.*?(?=\n|$)/g, '');
     cleaned = cleaned.replace(/Произношение:.*?(?=\n|$)/g, '');
     
-    // Заменяем заголовки
     cleaned = cleaned
         .replace(/💡 \*\*Совет:\*\*/g, '💡 **Совет:**')
         .replace(/📝 \*\*Пример фразы:\*\*/g, '\n📝 **Пример фразы:**')
@@ -263,10 +329,7 @@ function formatDiscussResponse(text) {
         .replace(/Разбор слов:/g, '\n📖 **Разбор слов:**')
         .replace(/Разбор:/g, '\n📖 **Разбор слов:**');
     
-    // Форматируем строки вида "слово = перевод" или "слово — перевод"
     cleaned = cleaned.replace(/^([•*]?)\s*([а-яёәіңғүұқөһa-z]+)\s*[=—]\s*(.+)$/gmi, '  • **$2** — $3');
-    
-    // Убираем лишние пустые строки
     cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
     
     return cleaned;
@@ -342,6 +405,7 @@ async function sendTranslate() {
     
     let reply = '';
     let wordBreakdown = [];
+    let translationText = '';
     let success = false;
     
     if (aiAvailable) {
@@ -378,6 +442,7 @@ async function sendTranslate() {
                     success = true;
                     const parsedAI = formatAIResponse(data.reply);
                     reply = parsedAI.formatted;
+                    translationText = parsedAI.translation;
                     wordBreakdown = parsedAI.breakdown || [];
                     aiAvailable = true;
                 } else {
@@ -397,6 +462,7 @@ async function sendTranslate() {
     if (!success) {
         const localResult = localTranslator.translate(message);
         reply = formatLocalResponse(localResult);
+        translationText = localResult.translation;
         wordBreakdown = localResult.breakdown || [];
         
         if (!aiAvailable && (Date.now() - lastAICheck) > 120000) {
@@ -410,18 +476,27 @@ async function sendTranslate() {
         reply = reply.replace('Пользователь', userName);
     }
     
+    // Сохраняем перевод в БД
+    if (translationText) {
+        await saveTranslation(message, translationText, currentTheme);
+    }
+    
+    // Сохраняем сообщения в историю чата
+    await saveMessage('user', message);
+    await saveMessage('bot', reply);
+    
     addMessage(reply, 'bot', wordBreakdown);
     
     if (userName) {
-        incrementUserStat(userName);
+        await incrementUserStat(userName);
         updateStats();
     }
     
     forceScrollToBottom();
 }
 
-// Форматирование ответа с подсказками
-function addMessage(text, sender, wordBreakdown = null) {
+// Функция для подсветки слов с подсказками
+function addMessage(text, sender, wordBreakdown = null, silent = false) {
     const messagesContainer = document.getElementById('messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
@@ -439,7 +514,9 @@ function addMessage(text, sender, wordBreakdown = null) {
     messageDiv.appendChild(contentDiv);
     messagesContainer.appendChild(messageDiv);
     
-    forceScrollToBottom();
+    if (!silent) {
+        forceScrollToBottom();
+    }
 }
 
 function formatMessageWithTooltips(text, wordBreakdown) {
@@ -558,6 +635,10 @@ function saveUserNameFromMessage(name) {
     if (name && name.trim().length > 0) {
         userName = name.trim();
         localStorage.setItem('userName', userName);
+        
+        // Сохраняем в Supabase
+        saveUserName(userName);
+        
         waitingForName = false;
         const messages = document.getElementById('messages');
         const botQuestion = messages.querySelector('.message.bot:last-child');
@@ -591,12 +672,21 @@ function hideTypingIndicator() {
     }
 }
 
+// Обновляем текущую тему (вызывается из right-panel.js)
+function updateCurrentTheme(theme) {
+    currentTheme = theme;
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', async function() {
     await loadPhrases();
-    checkUserName();
     
-    document.getElementById('userName').addEventListener('keypress', function(e) {
+    // Ждём загрузку Supabase
+    setTimeout(() => {
+        checkUserName();
+    }, 500);
+    
+    document.getElementById('userName')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') saveUserName();
     });
     
@@ -607,7 +697,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const actionDiscuss = document.getElementById('actionDiscuss');
     
     function closeActionMenu() {
-        actionMenu.classList.remove('active');
+        if (actionMenu) actionMenu.classList.remove('active');
     }
     
     function showActionMenu() {
@@ -617,7 +707,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             addMessage('💡 Напишите фразу или ситуацию, а затем выберите действие.', 'bot');
             return;
         }
-        actionMenu.classList.add('active');
+        if (actionMenu) actionMenu.classList.add('active');
     }
     
     if (sendBtn) sendBtn.addEventListener('click', showActionMenu);
