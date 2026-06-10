@@ -679,17 +679,18 @@ body {
 .container.wheels-expanded .sidebar-right {
     width: 65%;
 }
+
 /* ==========================================================================
-   ЧИСТАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны до 768px)
+   ПОЛНАЯ И ЧИСТАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
     
-    /* Скрываем кнопку вызова из чата, когда шторка открыта поверх экрана */
+    /* Скрываем кнопку вызова из чата, когда шторка открыта */
     .sidebar-right.open ~ .chat-area .menu-toggle-right {
         display: none;
     }
 
-    /* Скрываем мобильную кнопку закрытия на десктопах, показываем тут */
+    /* Мобильная кнопка закрытия inside DOM */
     .menu-close-right {
         display: flex;
         position: absolute;
@@ -737,7 +738,7 @@ body {
         transform: translateX(0);
     }
 
-    /* Компактный поиск с отступом справа под кнопку 🎡 */
+    /* Шапка шторки: Поиск и Бейдж */
     .search-theme-compact {
         position: absolute;
         top: 0;
@@ -758,10 +759,20 @@ body {
         box-sizing: border-box;
     }
 
+    /* Исправление формы поля поиска (Rounded Rectangle) */
     #themeSearch {
         flex: 1;
         height: 100%;
         margin: 0;
+        border-radius: 8px; /* Стандартный скругленный прямоугольник */
+        border: 1px solid rgba(0,0,0,0.1);
+        padding-left: 36px; /* Место под иконку 🔍 */
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    #themeSearch:focus {
+        border-color: #00bcd4;
     }
 
     .current-theme-badge {
@@ -772,7 +783,7 @@ body {
         white-space: nowrap;
     }
 
-    /* Стабилизация Колеса Луллия при открытии клавиатуры */
+    /* ЖЕСТКАЯ СТАБИЛИЗАЦИЯ КОЛЕСА ЛУЛЛИЯ (Возврат на место) */
     .wheels-container {
         display: flex;
         justify-content: center;
@@ -782,7 +793,7 @@ body {
         height: 320px;
         min-height: 320px;
         max-height: 320px;
-        margin: 15px 0 0 0;
+        margin: 15px 0 0 0; /* Нормальный отступ сверху */
         position: relative;
         overflow: visible;
     }
@@ -796,7 +807,7 @@ body {
         transform-origin: center center;
     }
 
-    /* Оптимизация для узких экранов */
+    /* Оптимизация под узкие экраны */
     @media (max-width: 380px) {
         .wheels-container {
             height: 270px;
@@ -808,11 +819,15 @@ body {
         }
     }
 
-    /* Стили вывода результатов */
-    .wheels-display {
-        padding: 10px 16px 35px 16px;
-    }
+    /* Отступы чата */
+    .chat-header { padding: 10px 15px; }
+    .header-text h1 { font-size: 1.1em; }
+    .messages { padding: 10px; }
+    .message-content { max-width: 85%; padding: 8px 14px; font-size: 0.95em; }
+    .input-area { padding: 10px 12px; }
 
+    /* Результаты */
+    .wheels-display { padding: 10px 16px 35px 16px; }
     .mini-dash-item {
         margin: 0 0 12px 0;
         padding: 12px 14px;
