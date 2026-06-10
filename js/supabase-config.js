@@ -43,6 +43,7 @@ window.signInWithEmail = async function(email) {
     alert('✅ Письмо отправлено!\n\nПроверьте ваш почтовый ящик (и папку Спам) и перейдите по ссылке для входа.');
     return true;
 };
+
 // Выход
 window.signOut = async function() {
     await window.supabaseClient.auth.signOut();
@@ -144,15 +145,37 @@ window.loadChatHistory = async function() {
     return data || [];
 };
 
-// Слушаем изменения авторизации
-window.supabaseClient.auth.onAuthStateChange((event) => {
-    console.log('Auth state change:', event);
-    if (event === 'SIGNED_IN') {
-        location.reload();
-    } else if (event === 'SIGNED_OUT') {
-        location.reload();
+// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
+async function updateAuthUI() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const totalSpan = document.getElementById('totalTranslations');
+    
+    try {
+        const user = await checkUser();
+        if (user) {
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            
+            // Загружаем профиль и обновляем статистику
+            const profile = await window.getUserProfile();
+            if (profile?.name) {
+                localStorage.setItem('userName', profile.name);
+                if (totalSpan) totalSpan.innerText = profile.total_translations || 0;
+            }
+            // Обновляем заголовок статистики с именем
+            if (typeof updateStatsTitle === 'function') updateStatsTitle();
+        } else {
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.log('Не авторизован:', error.message);
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
     }
-});
+}
+
 // === НАСТРАИВАЕМ КНОПКИ ПОСЛЕ ЗАГРУЗКИ СТРАНИЦЫ ===
 document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.getElementById('loginBtn');
@@ -167,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const email = prompt('Введите ваш email:');
             if (email && email.includes('@')) {
-                signInWithEmail(email);
+                window.signInWithEmail(email);
             } else if (email) {
                 alert('Введите корректный email');
             }
@@ -180,42 +203,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         newLogoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            signOut();
+            window.signOut();
         });
     }
-});
-// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
-async function updateAuthUI() {
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
     
-    try {
-        const user = await checkUser();
-        if (user) {
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (logoutBtn) logoutBtn.style.display = 'block';
-            
-            // Загружаем профиль и обновляем статистику
-            const profile = await getUserProfile();
-            if (profile?.name) {
-                localStorage.setItem('userName', profile.name);
-                document.getElementById('totalTranslations').innerText = profile.total_translations || 0;
-            }
-        } else {
-            if (loginBtn) loginBtn.style.display = 'block';
-            if (logoutBtn) logoutBtn.style.display = 'none';
-        }
-    } catch (error) {
-        console.log('Не авторизован');
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-}
+    // Вызываем обновление UI
+    updateAuthUI();
+});
 
-// Вызываем при загрузке
-document.addEventListener('DOMContentLoaded', updateAuthUI);
-
-// Слушаем изменения авторизации
+// Слушаем изменения авторизации (только один раз)
 window.supabaseClient.auth.onAuthStateChange((event) => {
     console.log('Auth state change:', event);
     if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
