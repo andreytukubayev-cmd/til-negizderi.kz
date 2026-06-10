@@ -64,7 +64,6 @@ function forceScrollToBottom() {
 // Флаги для автоматического переключения
 let aiAvailable = true;
 let lastAICheck = 0;
-let currentTheme = 'столовая'; // текущая тема для колёс
 
 // Загружаем JSON с фразами
 async function loadPhrases() {
