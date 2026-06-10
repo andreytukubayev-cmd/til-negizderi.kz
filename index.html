@@ -124,111 +124,93 @@
     <script src="js/chat.js"></script>
     <script src="js/right-panel.js"></script>
     
-    <script>
-        // === Управление левым меню (Оставлено как у вас) ===
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const menuOverlay = document.getElementById('menuOverlay');
-        
-        function openMenu() {
-            sidebar.classList.add('open');
-            menuOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeMenu() {
-            sidebar.classList.remove('open');
-            menuOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-        if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
-        if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
-        
-        // === Управление статистикой (Оставлено как у вас) ===
-        function updateStatsTitle() {
-            const statsTitle = document.getElementById('statsTitle');
-            const userName = localStorage.getItem('userName');
-            statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
-        }
-        updateStatsTitle();
-        window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
-
-       // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ (ИСПРАВЛЕНО) ===
-const menuToggleRight = document.getElementById('menuToggleRight');
-const menuCloseRight = document.getElementById('menuCloseRight');
-const sidebarRight = document.getElementById('sidebarRight');
-const menuOverlayRight = document.getElementById('menuOverlayRight');
-
-function openRightMenu() {
-    sidebarRight.classList.add('open');
-    if (menuOverlayRight) menuOverlayRight.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    // Сохраняем состояние в localStorage (опционально)
-    localStorage.setItem('rightPanelOpen', 'true');
-}
-
-function closeRightMenu() {
-    sidebarRight.classList.remove('open');
-    if (menuOverlayRight) menuOverlayRight.classList.remove('active');
-    document.body.style.overflow = '';
-    localStorage.setItem('rightPanelOpen', 'false');
-}
-
-function toggleRightMenu() {
-    if (sidebarRight.classList.contains('open')) {
-        closeRightMenu();
-    } else {
-        openRightMenu();
+   <script>
+    // === Управление левым меню ===
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
+    
+    function openMenu() {
+        sidebar.classList.add('open');
+        menuOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-}
-
-// Основная кнопка открытия/закрытия
-if (menuToggleRight) {
-    // Убираем все старые обработчики
-    const newToggle = menuToggleRight.cloneNode(true);
-    menuToggleRight.parentNode.replaceChild(newToggle, menuToggleRight);
-    
-    newToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleRightMenu();
-    });
-}
-
-// Кнопка закрытия внутри панели (для мобилок)
-if (menuCloseRight) {
-    const newClose = menuCloseRight.cloneNode(true);
-    menuCloseRight.parentNode.replaceChild(newClose, menuCloseRight);
-    
-    newClose.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeRightMenu();
-    });
-}
-
-// Оверлей (клик вне панели)
-if (menuOverlayRight) {
-    const newOverlay = menuOverlayRight.cloneNode(true);
-    menuOverlayRight.parentNode.replaceChild(newOverlay, menuOverlayRight);
-    
-    newOverlay.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeRightMenu();
-    });
-}
-
-// Закрытие при нажатии Escape
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
-        closeRightMenu();
+    function closeMenu() {
+        sidebar.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
     }
-});
+    if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
+    if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
+    
+    // === Управление статистикой ===
+    function updateStatsTitle() {
+        const statsTitle = document.getElementById('statsTitle');
+        const userName = localStorage.getItem('userName');
+        statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
+    }
+    updateStatsTitle();
+    window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
 
-// Восстановление состояния при загрузке (опционально)
-// if (localStorage.getItem('rightPanelOpen') === 'true') {
-//     openRightMenu();
-// }
-    </script>
+    // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ (ЧИСТАЯ ВЕРСИЯ) ===
+    const menuToggleRight = document.getElementById('menuToggleRight');
+    const menuCloseRight = document.getElementById('menuCloseRight');
+    const sidebarRight = document.getElementById('sidebarRight');
+    const menuOverlayRight = document.getElementById('menuOverlayRight');
+
+    function openRightMenu() {
+        sidebarRight.classList.add('open');
+        if (menuOverlayRight) menuOverlayRight.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRightMenu() {
+        sidebarRight.classList.remove('open');
+        if (menuOverlayRight) menuOverlayRight.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function toggleRightMenu() {
+        if (sidebarRight.classList.contains('open')) {
+            closeRightMenu();
+        } else {
+            openRightMenu();
+        }
+    }
+
+    // Кнопка открытия/закрытия (основная)
+    if (menuToggleRight) {
+        menuToggleRight.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleRightMenu();
+        });
+    }
+
+    // Кнопка закрытия внутри панели (мобильная)
+    if (menuCloseRight) {
+        menuCloseRight.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeRightMenu();
+        });
+    }
+
+    // Оверлей (клик вне панели)
+    if (menuOverlayRight) {
+        menuOverlayRight.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeRightMenu();
+        });
+    }
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
+            closeRightMenu();
+        }
+    });
+</script>
 </body>
 </html>
