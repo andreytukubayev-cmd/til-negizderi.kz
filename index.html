@@ -89,8 +89,7 @@
                 <button id="sendBtn">📤 Отправить</button>
             </div>
         </div>
-
-        <div class="sidebar-right" id="sidebarRight">
+<div class="sidebar-right" id="sidebarRight">
             <button class="menu-close-right" id="menuCloseRight">🎡</button>
 
             <div class="search-theme-compact">
@@ -120,43 +119,13 @@
         </div> 
     </div>
 
-    <div class="action-menu" id="actionMenu">
-        <div class="action-menu-overlay" id="actionMenuOverlay"></div>
-        <div class="action-menu-content">
-            <div class="action-menu-title">Выберите действие</div>
-            <button id="actionTranslate" class="action-btn translate-btn">
-                <span class="action-icon">🔄</span>
-                <div class="action-text">
-                    <div class="action-name">Перевести</div>
-                    <div class="action-desc">Точный перевод с разбором слов</div>
-                </div>
-            </button>
-            <button id="actionDiscuss" class="action-btn discuss-btn">
-                <span class="action-icon">💬</span>
-                <div class="action-text">
-                    <div class="action-name">Обсудить ситуацию</div>
-                    <div class="action-desc">Получить совет и пример диалога</div>
-                </div>
-            </button>
-        </div>
-    </div>
-
-    <div id="nameModal" class="modal">
-        <div class="modal-content">
-            <h2>👋 Добро пожаловать!</h2>
-            <p>Как мне к вам обращаться?</p>
-            <input type="text" id="userName" placeholder="Ваше имя..." autocomplete="off">
-            <button onclick="saveUserName()">Продолжить</button>
-        </div>
-    </div>
-
     <script src="js/wheels_library.js"></script>
     <script src="js/localTranslator.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/right-panel.js"></script>
     
     <script>
-        // === 1. Управление левым выдвижным меню ===
+        // === Управление левым меню (Оставлено как у вас) ===
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const menuOverlay = document.getElementById('menuOverlay');
@@ -166,50 +135,26 @@
             menuOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
         function closeMenu() {
             sidebar.classList.remove('open');
             menuOverlay.classList.remove('active');
             document.body.style.overflow = '';
         }
+        if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
+        if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
         
-        if (menuToggle) {
-            menuToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (sidebar.classList.contains('open')) {
-                    closeMenu();
-                } else {
-                    openMenu();
-                }
-            });
-        }
-        
-        if (menuOverlay) {
-            menuOverlay.addEventListener('click', closeMenu);
-        }
-        
-        // === 2. Обновление заголовка статистики ===
+        // === Управление статистикой (Оставлено как у вас) ===
         function updateStatsTitle() {
             const statsTitle = document.getElementById('statsTitle');
             const userName = localStorage.getItem('userName');
-            if (statsTitle && userName) {
-                statsTitle.innerHTML = `📊 Ваша статистика, ${userName}`;
-            } else if (statsTitle) {
-                statsTitle.innerHTML = `📊 Ваша статистика`;
-            }
+            statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
         }
-        
         updateStatsTitle();
-        
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'userName') {
-                updateStatsTitle();
-            }
-        });
+        window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
 
-        // === 3. Управление правой панелью (Колеса) ===
+        // === НАТИВНОЕ УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ ===
         const menuToggleRight = document.getElementById('menuToggleRight');
-        const menuCloseRight = document.getElementById('menuCloseRight'); // Наша новая мобильная кнопка
+        const menuCloseRight = document.getElementById('menuCloseRight'); // Мобильная кнопка
         const sidebarRight = document.getElementById('sidebarRight');
         const menuOverlayRight = document.getElementById('menuOverlayRight');
         
@@ -225,19 +170,14 @@
             document.body.style.overflow = '';
         }
         
-        // Открытие/закрытие по кнопке из чата
         if (menuToggleRight) {
             menuToggleRight.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (sidebarRight.classList.contains('open')) {
-                    closeRightMenu();
-                } else {
-                    openRightMenu();
-                }
+                sidebarRight.classList.contains('open') ? closeRightMenu() : openRightMenu();
             });
         }
 
-        // Закрытие по кнопке, которая находится ВНУТРИ самой шторки
+        // Клик по реальной кнопке внутри шторки гарантированно закроет её
         if (menuCloseRight) {
             menuCloseRight.addEventListener('click', (e) => {
                 e.stopPropagation();
