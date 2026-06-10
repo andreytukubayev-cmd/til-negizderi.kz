@@ -222,56 +222,6 @@
             closeRightMenu();
         }
     });
-       // Инициализация авторизации
-async function initAuth() {
-    const user = await checkUser();
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    
-    if (user) {
-        if (loginBtn) loginBtn.style.display = 'none';
-        if (logoutBtn) logoutBtn.style.display = 'block';
-        
-        const profile = await getUserProfile();
-        if (profile?.name) {
-            localStorage.setItem('userName', profile.name);
-            updateStatsTitle();
-        }
-        
-        // Загружаем статистику из БД
-        const total = profile?.total_translations || 0;
-        document.getElementById('totalTranslations').innerText = total;
-    } else {
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'none';
-    }
-}
-
-// Обработчики кнопок
-document.getElementById('loginBtn')?.addEventListener('click', () => {
-    const email = prompt('Введите ваш email:');
-    if (email && email.includes('@')) {
-        signInWithEmail(email);
-    } else if (email) {
-        alert('Введите корректный email');
-    }
-});
-
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    signOut();
-});
-
-// Слушаем изменение состояния авторизации
-supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_IN') {
-        location.reload();
-    } else if (event === 'SIGNED_OUT') {
-        location.reload();
-    }
-});
-
-// Запускаем при загрузке
-initAuth();
 </script>
 </body>
 </html>
