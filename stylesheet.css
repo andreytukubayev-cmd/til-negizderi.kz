@@ -679,150 +679,152 @@ body {
 .container.wheels-expanded .sidebar-right {
     width: 65%;
 }
-
-
 /* ==========================================================================
-   АДАПТИВНАЯ МОБИЛЬНАЯ ВЕРСИЯ (Для архитектуры с overlay-шторками)
+   ЧИСТАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
+    
+    /* Скрываем кнопку вызова из чата, когда шторка открыта поверх экрана */
+    .sidebar-right.open ~ .chat-area .menu-toggle-right {
+        display: none;
+    }
 
-    /* --- 1. ПРАВАЯ ВЫДВИЖНАЯ ШТОРКА (КОЛЕСА) --- */
+    /* Скрываем мобильную кнопку закрытия на десктопах, показываем тут */
+    .menu-close-right {
+        display: flex;
+        position: absolute;
+        top: 15px;
+        right: 16px;
+        width: 42px;
+        height: 42px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 50%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        cursor: pointer;
+        z-index: 10010;
+        padding: 0;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .menu-close-right:active {
+        background: #f1f5f9;
+    }
+
+    /* Мобильная шторка на всю ширину */
     .sidebar-right {
-        position: fixed !important;
-        top: 0 !important;
-        right: -100% !important; /* Исходно спрятана за экраном */
-        width: 100% !important;  /* На мобильных разворачивается во всю ширину */
-        height: 100% !important;
-        background: #f8fafc !important;
-        z-index: 9999 !important; /* Перекрывает чат */
-        transition: transform 0.3s ease !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow-y: auto !important;
-        padding-top: 70px !important; /* Освобождаем место сверху под фиксированную шапку */
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100%;
+        background: #f8fafc;
+        z-index: 9999;
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding-top: 75px;
+        box-sizing: border-box;
     }
 
-    /* Когда JS добавляет класс .open, шторка выезжает */
     .sidebar-right.open {
-        right: 0 !important;
-        transform: translateX(0) !important;
+        right: 0;
+        transform: translateX(0);
     }
 
-    /* --- 2. ВОЗВРАТ КНОПКИ ВЫХОДА «🎡» ВНУТРЬ ШТОРКИ --- */
-    /* Так как родная кнопка перекрыта, мы создаем её точную копию в правом углу шторки */
-    .sidebar-right::before {
-        content: "🎡" !important;
-        position: absolute !important;
-        top: 15px !important;
-        right: 16px !important;
-        width: 40px !important;
-        height: 40px !important;
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 50% !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 18px !important;
-        cursor: pointer !important;
-        z-index: 10001 !important;
-        pointer-events: none !important; /* Пропускает клик сквозь себя на слой ниже */
-    }
-
-    /* Делаем невидимую, но 100% рабочую зону закрытия. 
-       Клик по этой области сработает как клик по overlayRight и закроет шторку! */
-    #menuOverlayRight.active {
-        position: fixed !important;
-        top: 15px !important;
-        right: 16px !important;
-        width: 40px !important;
-        height: 40px !important;
-        border-radius: 50% !important;
-        background: transparent !important;
-        z-index: 10002 !important; /* Самый верхний слой для перехвата тапа */
-    }
-
-    /* --- 3. КОМПАКТНАЯ СТРОКА ПОИСКА ТЕМЫ --- */
+    /* Компактный поиск с отступом справа под кнопку 🎡 */
     .search-theme-compact {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 70px !important;
-        margin: 0 !important;
-        padding: 15px 70px 15px 16px !important; /* Правый отступ 70px защищает кнопку 🎡 от наезда */
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 10px !important;
-        background: #f8fafc !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        box-shadow: none !important;
-        z-index: 10000 !important;
-        box-sizing: border-box !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 75px;
+        margin: 0;
+        padding: 15px 70px 15px 16px; 
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: none;
+        z-index: 10000;
+        box-sizing: border-box;
     }
 
     #themeSearch {
-        flex: 1 !important;
-        height: 100% !important;
-        margin: 0 !important;
+        flex: 1;
+        height: 100%;
+        margin: 0;
     }
 
     .current-theme-badge {
-        position: static !important;
-        transform: none !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
-        white-space: nowrap !important;
+        position: static;
+        transform: none;
+        margin: 0;
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
-    /* --- 4. СТАБИЛИЗАЦИЯ КОЛЕСА ЛУЛЛИЯ --- */
-    /* Задаем жесткую высоту. Теперь при вызове клавиатуры колесо не сожмется */
+    /* Стабилизация Колеса Луллия при открытии клавиатуры */
     .wheels-container {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        padding: 0 !important;
-        width: 100% !important;
-        height: 320px !important;
-        min-height: 320px !important;
-        max-height: 320px !important;
-        margin: 20px 0 0 0 !important;
-        position: relative !important;
-        overflow: visible !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        width: 100%;
+        height: 320px;
+        min-height: 320px;
+        max-height: 320px;
+        margin: 15px 0 0 0;
+        position: relative;
+        overflow: visible;
     }
 
-    /* Центрируем колесо по осям и аккуратно масштабируем */
     .device-body {
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        margin: 0 !important;
-        transform: translate(-50%, -50%) scale(0.47) !important;
-        transform-origin: center center !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin: 0;
+        transform: translate(-50%, -50%) scale(0.48);
+        transform-origin: center center;
     }
 
-    /* Коррекция для маленьких экранов (до 380px) */
+    /* Оптимизация для узких экранов */
     @media (max-width: 380px) {
         .wheels-container {
-            height: 280px !important;
-            min-height: 280px !important;
-            max-height: 280px !important;
+            height: 270px;
+            min-height: 270px;
+            max-height: 270px;
         }
         .device-body {
-            transform: translate(-50%, -50%) scale(0.41) !important;
+            transform: translate(-50%, -50%) scale(0.41);
         }
     }
 
-    /* --- 5. ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ПОД КОЛЕСОМ --- */
+    /* Стили вывода результатов */
     .wheels-display {
-        padding: 10px 16px 30px 16px !important;
+        padding: 10px 16px 35px 16px;
     }
 
     .mini-dash-item {
-        margin: 0 0 10px 0 !important;
-        padding: 12px 14px !important;
+        margin: 0 0 12px 0;
+        padding: 12px 14px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+    }
+}
+
+/* Скрываем мобильную кнопку на десктопах */
+@media (min-width: 769px) {
+    .menu-close-right {
+        display: none;
     }
 }
