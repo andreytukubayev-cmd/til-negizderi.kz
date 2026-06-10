@@ -177,3 +177,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
+async function updateAuthUI() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    try {
+        const user = await checkUser();
+        if (user) {
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            
+            // Загружаем профиль и обновляем статистику
+            const profile = await getUserProfile();
+            if (profile?.name) {
+                localStorage.setItem('userName', profile.name);
+                document.getElementById('totalTranslations').innerText = profile.total_translations || 0;
+            }
+        } else {
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.log('Не авторизован');
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+}
+
+// Вызываем при загрузке
+document.addEventListener('DOMContentLoaded', updateAuthUI);
+
+// Слушаем изменения авторизации
+window.supabaseClient.auth.onAuthStateChange((event) => {
+    console.log('Auth state change:', event);
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        location.reload();
+    }
+});
