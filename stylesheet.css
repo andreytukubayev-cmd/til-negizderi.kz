@@ -350,6 +350,7 @@ body {
     justify-content: center;
     box-shadow: 15px 15px 30px #d1d5db, -15px -15px 30px #ffffff;
     border: 3px solid #f8f9fa;
+    margin: 0 auto; /* ДОБАВЛЕНО: центрирование по горизонтали */
 }
 
 .pointer-needle {
@@ -510,7 +511,7 @@ body {
     flex-shrink: 0;
 }
 
-/* Кнопка-лупа в свернутом состоянии (УБРАНЫ !important) */
+/* Кнопка-лупа в свернутом состоянии */
 #themeSearch {
     background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat center;
     background-size: 18px;
@@ -533,7 +534,7 @@ body {
     border-color: #cbd5e1;
 }
 
-/* ПК фокус: разворачивание в капсулу (УБРАНЫ !important) */
+/* ПК фокус: разворачивание в капсулу */
 #themeSearch:focus {
     width: 100%;        
     height: 40px;
@@ -575,7 +576,7 @@ body {
     white-space: nowrap;
 }
 
-/* Контейнер колеса на ПК (УБРАН !important) */
+/* Контейнер колеса на ПК */
 .wheels-container {
     display: flex;
     justify-content: center;
@@ -724,7 +725,7 @@ body {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        padding-top: 85px; /* Даем место под шапку поиска */
+        padding-top: 85px;
         box-sizing: border-box;
     }
 
@@ -741,7 +742,7 @@ body {
         width: 100%;
         height: 75px;
         margin: 0;
-        padding: 15px 70px 15px 16px; /* 70px справа защищают от наложения на кнопку 🎡 */
+        padding: 15px 70px 15px 16px;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -754,17 +755,17 @@ body {
         box-sizing: border-box;
     }
 
-    /* Честный Скругленный Прямоугольник (Никаких эллипсов) */
+    /* Честный Скругленный Прямоугольник */
     #themeSearch {
         flex: 1;
         width: 100%;
         height: 100%;
         margin: 0;
-        border-radius: 8px; /* Четкий прямоугольник с небольшим скруглением */
+        border-radius: 8px;
         border: 1px solid #cbd5e1;
         background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
         background-size: 18px;
-        padding: 0 12px 0 38px; /* Текст сдвинут, чтобы не нализать на лупу */
+        padding: 0 12px 0 38px;
         color: #1e293b;
         text-indent: 0;
         cursor: text;
@@ -789,39 +790,38 @@ body {
         white-space: nowrap;
     }
 
-    /* ПОЛНЫЙ ВОЗВРАТ КОЛЕСА НА МЕСТО */
+    /* ========== ИСПРАВЛЕНИЕ КОЛЕСА НА МОБИЛЬНЫХ ========== */
     .wheels-container {
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 0;
         width: 100%;
-        height: 340px;
-        min-height: 340px;
-        max-height: 340px;
-        margin: 20px 0 0 0; /* Опускаем колесо вниз, убирая отрицательный маргин ПК-версии */
+        min-height: 350px; /* ИЗМЕНЕНО: фиксированная минимальная высота */
+        height: auto;
+        margin: 20px 0 0 0;
         position: relative;
-        overflow: visible; /* Разрешаем SVG выходить за рамки контейнера при скейле */
+        overflow: visible;
     }
 
     .device-body {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin: 0;
-        transform: translate(-50%, -50%) scale(0.5); /* Аккуратное уменьшение под экраны */
-        transform-origin: center center;
+        position: relative; /* ИЗМЕНЕНО: было absolute, стало relative */
+        top: auto; /* ИЗМЕНЕНО: сброс top */
+        left: auto; /* ИЗМЕНЕНО: сброс left */
+        transform: scale(0.5); /* ИЗМЕНЕНО: убрал translate, оставил только scale */
+        transform-origin: center top; /* ИЗМЕНЕНО: якорь для масштабирования */
+        margin: 0 auto; /* ДОБАВЛЕНО: центрирование */
+        width: 646px;
+        height: 646px;
     }
 
     /* Оптимизация под узкие экраны смартфонов */
     @media (max-width: 380px) {
         .wheels-container {
-            height: 290px;
-            min-height: 290px;
-            max-height: 290px;
+            min-height: 300px;
         }
         .device-body {
-            transform: translate(-50%, -50%) scale(0.43);
+            transform: scale(0.43);
         }
     }
 
