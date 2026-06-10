@@ -62,9 +62,9 @@
                     <span class="stat-value" id="totalTranslations">0</span>
                 </div>
                 <div class="stat-item" id="authSection" style="flex-direction: column; gap: 8px;">
-    <button id="loginBtn" style="width:100%; background:#ffd700; border:none; padding:8px; border-radius:8px; cursor:pointer;">🔑 Войти по email</button>
-    <button id="logoutBtn" style="width:100%; background:#e74c3c; border:none; padding:8px; border-radius:8px; cursor:pointer; color:white; display:none;">🚪 Выйти</button>
-</div>
+                    <button id="loginBtn" style="width:100%; background:#ffd700; border:none; padding:8px; border-radius:8px; cursor:pointer;">🔑 Войти по email</button>
+                    <button id="logoutBtn" style="width:100%; background:#e74c3c; border:none; padding:8px; border-radius:8px; cursor:pointer; color:white; display:none;">🚪 Выйти</button>
+                </div>
             </div>
         </div>
 
@@ -93,7 +93,7 @@
                 <button id="sendBtn">📤 Отправить</button>
             </div>
         </div>
-<div class="sidebar-right" id="sidebarRight">
+        <div class="sidebar-right" id="sidebarRight">
             <button class="menu-close-right" id="menuCloseRight">🎡</button>
 
             <div class="search-theme-compact">
@@ -123,105 +123,97 @@
         </div> 
     </div>
 
-<!-- Сначала Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-config.js"></script>
-
-<!-- Потом библиотеки -->
-<script src="js/wheels_library.js"></script>
-<script src="js/localTranslator.js"></script>
-
-<!-- Потом остальное -->
-<script src="js/right-panel.js"></script>
-<script src="js/chat.js"></script>
+    <!-- Скрипты -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/wheels_library.js"></script>
+    <script src="js/localTranslator.js"></script>
+    <script src="js/right-panel.js"></script>
+    <script src="js/chat.js"></script>
     
-   <script>
-    // === Управление левым меню ===
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const menuOverlay = document.getElementById('menuOverlay');
-    
-    function openMenu() {
-        sidebar.classList.add('open');
-        menuOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeMenu() {
-        sidebar.classList.remove('open');
-        menuOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-    if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
-    if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
-    
-    // === Управление статистикой ===
-    function updateStatsTitle() {
-        const statsTitle = document.getElementById('statsTitle');
-        const userName = localStorage.getItem('userName');
-        statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
-    }
-    updateStatsTitle();
-    window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
-
-    // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ (ЧИСТАЯ ВЕРСИЯ) ===
-    const menuToggleRight = document.getElementById('menuToggleRight');
-    const menuCloseRight = document.getElementById('menuCloseRight');
-    const sidebarRight = document.getElementById('sidebarRight');
-    const menuOverlayRight = document.getElementById('menuOverlayRight');
-
-    function openRightMenu() {
-        sidebarRight.classList.add('open');
-        if (menuOverlayRight) menuOverlayRight.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeRightMenu() {
-        sidebarRight.classList.remove('open');
-        if (menuOverlayRight) menuOverlayRight.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    function toggleRightMenu() {
-        if (sidebarRight.classList.contains('open')) {
-            closeRightMenu();
-        } else {
-            openRightMenu();
+    <script>
+        // === Управление левым меню ===
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+        
+        function openMenu() {
+            sidebar.classList.add('open');
+            menuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-    }
-
-    // Кнопка открытия/закрытия (основная)
-    if (menuToggleRight) {
-        menuToggleRight.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleRightMenu();
-        });
-    }
-
-    // Кнопка закрытия внутри панели (мобильная)
-    if (menuCloseRight) {
-        menuCloseRight.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeRightMenu();
-        });
-    }
-
-    // Оверлей (клик вне панели)
-    if (menuOverlayRight) {
-        menuOverlayRight.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeRightMenu();
-        });
-    }
-
-    // Закрытие по Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
-            closeRightMenu();
+        function closeMenu() {
+            sidebar.classList.remove('open');
+            menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
         }
-    });
-</script>
+        if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
+        if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
+        
+        // === Управление статистикой ===
+        function updateStatsTitle() {
+            const statsTitle = document.getElementById('statsTitle');
+            const userName = localStorage.getItem('userName');
+            statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
+        }
+        updateStatsTitle();
+        window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
+
+        // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ ===
+        const menuToggleRight = document.getElementById('menuToggleRight');
+        const menuCloseRight = document.getElementById('menuCloseRight');
+        const sidebarRight = document.getElementById('sidebarRight');
+        const menuOverlayRight = document.getElementById('menuOverlayRight');
+
+        function openRightMenu() {
+            sidebarRight.classList.add('open');
+            if (menuOverlayRight) menuOverlayRight.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRightMenu() {
+            sidebarRight.classList.remove('open');
+            if (menuOverlayRight) menuOverlayRight.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function toggleRightMenu() {
+            if (sidebarRight.classList.contains('open')) {
+                closeRightMenu();
+            } else {
+                openRightMenu();
+            }
+        }
+
+        if (menuToggleRight) {
+            menuToggleRight.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleRightMenu();
+            });
+        }
+
+        if (menuCloseRight) {
+            menuCloseRight.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeRightMenu();
+            });
+        }
+
+        if (menuOverlayRight) {
+            menuOverlayRight.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeRightMenu();
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
+                closeRightMenu();
+            }
+        });
+    </script>
 </body>
 </html>
