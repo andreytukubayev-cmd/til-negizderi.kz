@@ -429,7 +429,7 @@ body {
 }
 
 /* ==========================================================================
-   5. ПРАВАЯ ПАНЕЛЬ И РЕЗУЛЬТАТЫ
+   5. ПРАВАЯ ПАНЕЛЬ И РЕЗУЛЬТАТЫ (ДЕФОЛТНЫЙ ДЕСКТОП)
    ========================================================================== */
 .sidebar-right {
     position: fixed;
@@ -446,7 +446,7 @@ body {
     z-index: 200;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-   overflow-x: hidden !important;
+    overflow-x: hidden !important;
 }
 
 .sidebar-right.open {
@@ -493,61 +493,60 @@ body {
     cursor: pointer;
 }
 
-/* Динамический блок поиска и темы */
+/* Строка поиска и темы на ПК */
 .search-theme-compact {
     display: flex;
-    justify-content: flex-end; /* Сдвигает лупу и бейдж вправо */
+    justify-content: flex-end;
     align-items: center;
     gap: 8px;
-    margin: 16px 16px 0 16px;  /* Отступы от краев панели */
-    padding: 0;                /* Обнуляем внутренние отступы, чтобы поднять колесо */
+    margin: 16px 16px 0 16px;  
+    padding: 0;                
     position: relative;
     z-index: 210;
-    height: 40px;              /* Фиксированная высота строки */
-    background: transparent !important; /* Убираем старый белый фон */
-    border: none !important;            /* Уничтожаем старую рамку */
-    box-shadow: none !important;        /* Удаляем тень контейнера */
+    height: 40px;              
+    background: transparent; 
+    border: none;            
+    box-shadow: none;        
     flex-shrink: 0;
 }
 
-/* Кнопка-лупа в свернутом (дефолтном) состоянии */
+/* Кнопка-лупа в свернутом состоянии (УБРАНЫ !important) */
 #themeSearch {
-    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat center !important;
-    background-size: 18px !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 50% !important; /* Делает кнопку идеально круглой */
-    width: 40px !important;
-    height: 40px !important;
-    padding: 0 !important;          /* Центрируем иконку лупы */
-    color: transparent !important;  /* Скрываем плейсхолдер и текст */
-    text-indent: -9999px;          /* Выносим текст за пределы экрана */
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat center;
+    background-size: 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%; 
+    width: 40px;
+    height: 40px;
+    padding: 0;          
+    color: transparent;  
+    text-indent: -9999px;          
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                 border-radius 0.3s ease, 
-                background-position 0.3s ease !important;
+                background-position 0.3s ease;
 }
 
-/* Ховер-эффект на круглую кнопку */
 #themeSearch:hover {
-    background-color: #f8fafc !important;
-    border-color: #cbd5e1 !important;
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
 }
 
-/* СОСТОЯНИЕ АКТИВАЦИИ (ФОКУС): плавно превращается в полноценную строку поиска */
+/* ПК фокус: разворачивание в капсулу (УБРАНЫ !important) */
 #themeSearch:focus {
-    width: 100% !important;        /* Растягивается на всю доступную ширину */
-    height: 40px !important;
-    border-radius: 20px !important; /* Превращается в овальную капсулу */
-    text-indent: 0px;              /* Возвращаем текст ввода на место */
-    padding: 8px 14px 8px 38px !important; /* Сдвигаем вводимый текст правее лупы */
-    background-color: #ffffff !important;
-    background-position: 14px center !important; /* Смещаем лупу влево */
-    color: #1e293b !important;
-    border-color: #00b4d8 !important;
-    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.15) !important;
+    width: 100%;        
+    height: 40px;
+    border-radius: 20px; 
+    text-indent: 0px;              
+    padding: 8px 14px 8px 38px; 
+    background-color: #ffffff;
+    background-position: 14px center; 
+    color: #1e293b;
+    border-color: #00b4d8;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.15);
     cursor: text;
-    outline: none !important;
+    outline: none;
 }
 
 .current-theme-box {
@@ -576,21 +575,20 @@ body {
     white-space: nowrap;
 }
 
-/* Корректировка контейнера колеса, чтобы оно встало вплотную к поиску */
+/* Контейнер колеса на ПК (УБРАН !important) */
 .wheels-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0; /* Убираем боковые отступы, давая колесу максимум места */
+    padding: 0; 
     position: relative;
-    overflow: hidden !important; /* Обрезает невидимые углы вращающегося блока */
-    width: 100%; /* Контейнер строго держится в рамках панели */
+    overflow: hidden; 
+    width: 100%; 
     flex-shrink: 0;
-   /* Сдвигаем контейнер вверх на 46 пикселей, прямо на территорию поиска */
-    margin-top: -46px !important;
+    margin-top: -46px;
 }
 
-/* Карточки итоговых фраз (Результат сопоставления) */
+/* Карточки итоговых фраз */
 .mini-dash-item {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -630,7 +628,7 @@ body {
 }
 
 /* ==========================================================================
-   6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ (МЕДИА-СЕТКА)
+   6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
    ========================================================================== */
 
 /* --- ДЕСКТОП (Экраны шире 768px) --- */
@@ -656,9 +654,6 @@ body {
     }
 }
 
-/* ==========================================================================
-   ГЛОБАЛЬНЫЕ СТИЛИ ДЛЯ КАРТОЧЕК И ДЕСКТОПА (Для больших экранов)
-   ========================================================================== */
 .wheels-display {
     padding: 0 16px 20px 16px !important;
 }
@@ -668,7 +663,7 @@ body {
     padding: 10px 12px !important;       
 }
 
-/* --- РАСШИРЕННЫЙ РЕЖИМ ДЕСКТОПА (Колеса на весь экран) --- */
+/* --- РАСШИРЕННЫЙ РЕЖИМ ДЕСКТОПА --- */
 .container.wheels-expanded .sidebar {
     display: none;
 }
@@ -681,7 +676,7 @@ body {
 }
 
 /* ==========================================================================
-   ПОЛНАЯ И ЧИСТАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны до 768px)
+   7. ЧИСТАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны до 768px)
    ========================================================================== */
 @media (max-width: 768px) {
     
@@ -690,7 +685,7 @@ body {
         display: none;
     }
 
-    /* Мобильная кнопка закрытия inside DOM */
+    /* Мобильная кнопка закрытия 🎡 */
     .menu-close-right {
         display: flex;
         position: absolute;
@@ -729,7 +724,7 @@ body {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        padding-top: 75px;
+        padding-top: 85px; /* Даем место под шапку поиска */
         box-sizing: border-box;
     }
 
@@ -738,7 +733,7 @@ body {
         transform: translateX(0);
     }
 
-    /* Шапка шторки: Поиск и Бейдж */
+    /* Шапка шторки на мобильных: фиксированная строка */
     .search-theme-compact {
         position: absolute;
         top: 0;
@@ -746,7 +741,7 @@ body {
         width: 100%;
         height: 75px;
         margin: 0;
-        padding: 15px 70px 15px 16px; 
+        padding: 15px 70px 15px 16px; /* 70px справа защищают от наложения на кнопку 🎡 */
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -759,20 +754,31 @@ body {
         box-sizing: border-box;
     }
 
-    /* Исправление формы поля поиска (Rounded Rectangle) */
+    /* Честный Скругленный Прямоугольник (Никаких эллипсов) */
     #themeSearch {
         flex: 1;
+        width: 100%;
         height: 100%;
         margin: 0;
-        border-radius: 8px; /* Стандартный скругленный прямоугольник */
-        border: 1px solid rgba(0,0,0,0.1);
-        padding-left: 36px; /* Место под иконку 🔍 */
+        border-radius: 8px; /* Четкий прямоугольник с небольшим скруглением */
+        border: 1px solid #cbd5e1;
+        background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
+        background-size: 18px;
+        padding: 0 12px 0 38px; /* Текст сдвинут, чтобы не нализать на лупу */
+        color: #1e293b;
+        text-indent: 0;
+        cursor: text;
+        box-shadow: none;
         outline: none;
-        transition: border-color 0.2s;
     }
 
     #themeSearch:focus {
-        border-color: #00bcd4;
+        border-color: #00b4d8;
+        box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.15);
+        border-radius: 8px;
+        width: 100%;
+        padding: 0 12px 0 38px;
+        background-position: 12px center;
     }
 
     .current-theme-badge {
@@ -783,19 +789,19 @@ body {
         white-space: nowrap;
     }
 
-    /* ЖЕСТКАЯ СТАБИЛИЗАЦИЯ КОЛЕСА ЛУЛЛИЯ (Возврат на место) */
+    /* ПОЛНЫЙ ВОЗВРАТ КОЛЕСА НА МЕСТО */
     .wheels-container {
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 0;
         width: 100%;
-        height: 320px;
-        min-height: 320px;
-        max-height: 320px;
-        margin: 15px 0 0 0; /* Нормальный отступ сверху */
+        height: 340px;
+        min-height: 340px;
+        max-height: 340px;
+        margin: 20px 0 0 0; /* Опускаем колесо вниз, убирая отрицательный маргин ПК-версии */
         position: relative;
-        overflow: visible;
+        overflow: visible; /* Разрешаем SVG выходить за рамки контейнера при скейле */
     }
 
     .device-body {
@@ -803,19 +809,19 @@ body {
         top: 50%;
         left: 50%;
         margin: 0;
-        transform: translate(-50%, -50%) scale(0.48);
+        transform: translate(-50%, -50%) scale(0.5); /* Аккуратное уменьшение под экраны */
         transform-origin: center center;
     }
 
-    /* Оптимизация под узкие экраны */
+    /* Оптимизация под узкие экраны смартфонов */
     @media (max-width: 380px) {
         .wheels-container {
-            height: 270px;
-            min-height: 270px;
-            max-height: 270px;
+            height: 290px;
+            min-height: 290px;
+            max-height: 290px;
         }
         .device-body {
-            transform: translate(-50%, -50%) scale(0.41);
+            transform: translate(-50%, -50%) scale(0.43);
         }
     }
 
@@ -827,17 +833,17 @@ body {
     .input-area { padding: 10px 12px; }
 
     /* Результаты */
-    .wheels-display { padding: 10px 16px 35px 16px; }
+    .wheels-display { padding: 10px 16px 35px 16px !important; }
     .mini-dash-item {
-        margin: 0 0 12px 0;
-        padding: 12px 14px;
+        margin: 0 0 12px 0 !important;
+        padding: 12px 14px !important;
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
     }
 }
 
-/* Скрываем мобильную кнопку на десктопах */
+/* Скрываем мобильную кнопку закрытия на десктопах */
 @media (min-width: 769px) {
     .menu-close-right {
         display: none;
