@@ -631,7 +631,6 @@ body {
 /* ==========================================================================
    6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
    ========================================================================== */
-
 /* --- ДЕСКТОП (Экраны шире 768px) --- */
 @media (min-width: 769px) {
     .sidebar {
@@ -639,58 +638,46 @@ body {
         transform: translateX(0);
         width: 300px;
     }
+    
     .menu-toggle {
         display: none;
     }
+    
     .menu-overlay {
         display: none !important;
     }
-.sidebar-right {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 100%;
-        height: 100%;
-        background: #f8fafc;
-        z-index: 9999;
-        transition: transform 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        padding-top: 85px;
-        box-sizing: border-box;
-        transform: translateX(100%); /* ← ключевое: выдвигаем */
+    
+    /* ПРАВАЯ ПАНЕЛЬ НА ДЕСКТОПЕ — ВСЕГДА ОТКРЫТА */
+    .sidebar-right {
+        position: relative;
+        transform: translateX(0) !important;
+        width: 660px;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     }
-
-    .sidebar-right.open {
-        transform: translateX(0); /* ← задвигаем */
-        right: 0;
+    
+    .menu-toggle-right {
+        display: none !important;
     }
-
+    
     .menu-overlay-right {
         display: none !important;
     }
-}
-
-.wheels-display {
-    padding: 0 16px 20px 16px !important;
-}
-
-.mini-dash-item {
-    margin: 0 16px 8px 16px !important;
-    padding: 10px 12px !important;       
-}
-
-/* --- РАСШИРЕННЫЙ РЕЖИМ ДЕСКТОПА --- */
-.container.wheels-expanded .sidebar {
-    display: none;
-}
-.container.wheels-expanded .chat-area {
-    width: 35%;
-    flex: 0 0 35%;
-}
-.container.wheels-expanded .sidebar-right {
-    width: 65%;
+    
+    .menu-close-right {
+        display: none !important;
+    }
+    
+    /* Колесо на десктопе — нормальный размер */
+    .device-body {
+        transform: none;
+        width: 646px;
+        height: 646px;
+    }
+    
+    .wheels-container {
+        margin-top: -46px;
+        overflow: visible;
+    }
 }
 
 /* ==========================================================================
@@ -733,7 +720,7 @@ body {
     .sidebar-right {
         position: fixed;
         top: 0;
-        right: 0;                    /* ← было -100%, стало 0 */
+        right: 0;
         width: 100%;
         height: 100%;
         background: #f8fafc;
@@ -744,15 +731,12 @@ body {
         overflow-y: auto;
         padding-top: 85px;
         box-sizing: border-box;
-        transform: translateX(100%); /* ← добавляем эту строку */
+        transform: translateX(100%);
     }
 
     .sidebar-right.open {
-        transform: translateX(0);    /* ← добавляем эту строку */
-        right: 0;                    /* ← оставляем */
+        transform: translateX(0);
     }
-}
-
 
     /* Шапка шторки на мобильных: фиксированная строка */
     .search-theme-compact {
@@ -817,7 +801,7 @@ body {
         align-items: center;
         padding: 0;
         width: 100%;
-        min-height: 350px; /* ИЗМЕНЕНО: фиксированная минимальная высота */
+        min-height: 350px;
         height: auto;
         margin: 20px 0 0 0;
         position: relative;
@@ -825,12 +809,12 @@ body {
     }
 
     .device-body {
-        position: relative; /* ИЗМЕНЕНО: было absolute, стало relative */
-        top: auto; /* ИЗМЕНЕНО: сброс top */
-        left: auto; /* ИЗМЕНЕНО: сброс left */
-        transform: scale(0.5); /* ИЗМЕНЕНО: убрал translate, оставил только scale */
-        transform-origin: center top; /* ИЗМЕНЕНО: якорь для масштабирования */
-        margin: 0 auto; /* ДОБАВЛЕНО: центрирование */
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: scale(0.5);
+        transform-origin: center top;
+        margin: 0 auto;
         width: 646px;
         height: 646px;
     }
@@ -846,14 +830,28 @@ body {
     }
 
     /* Отступы чата */
-    .chat-header { padding: 10px 15px; }
-    .header-text h1 { font-size: 1.1em; }
-    .messages { padding: 10px; }
-    .message-content { max-width: 85%; padding: 8px 14px; font-size: 0.95em; }
-    .input-area { padding: 10px 12px; }
+    .chat-header { 
+        padding: 10px 15px; 
+    }
+    .header-text h1 { 
+        font-size: 1.1em; 
+    }
+    .messages { 
+        padding: 10px; 
+    }
+    .message-content { 
+        max-width: 85%; 
+        padding: 8px 14px; 
+        font-size: 0.95em; 
+    }
+    .input-area { 
+        padding: 10px 12px; 
+    }
 
     /* Результаты */
-    .wheels-display { padding: 10px 16px 35px 16px !important; }
+    .wheels-display { 
+        padding: 10px 16px 35px 16px !important; 
+    }
     .mini-dash-item {
         margin: 0 0 12px 0 !important;
         padding: 12px 14px !important;
