@@ -30,12 +30,14 @@ function getUserStat(userName) {
     return allStats[userName] || 0;
 }
 
-async function incrementUserStat(userName) {
+async function incrementUserStat(userName, userMessage, translatedText) {
     // Пытаемся сохранить через Supabase
     const user = await checkUser();
     if (user) {
         await incrementTranslations();
-        await saveTranslation(message, result.translation, currentTheme);
+        if (userMessage && translatedText) {
+            await saveTranslation(userMessage, translatedText, currentTheme);
+        }
     } else {
         // Fallback на localStorage
         let allStats = JSON.parse(localStorage.getItem('kazakhStats') || '{}');
