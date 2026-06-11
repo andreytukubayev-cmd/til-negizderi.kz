@@ -1,7 +1,13 @@
-// Библиотека всех тем для колёс Луллия
+/* ==========================================================================
+   БИБЛИОТЕКА ВСЕХ ТЕМ ДЛЯ КОЛЁС ЛУЛЛИЯ (С ИНТЕЛЛЕКТУАЛЬНЫМ ПОИСКОМ)
+   ========================================================================== */
+
 const WHEELS_LIBRARY = {
-    // ТЕМА 1: Столовая / Кафе (используем твои данные из 001_data.js)
+    // ТЕМА 1: Столовая
     "столовая": {
+        titleRu: "Столовая / Кафе",
+        // Ключевые слова для AI-перехватчика
+        keywords: ["столовая", "кафе", "обед", "ужин", "завтрак", "еда", "кушать", "асхана", "аппетит", "меню", "ресторан", "блюдо", "посуда", "чай", "суп"],
         outer: [
             { kk: "Бұл не?", ru: "Что это?" },
             { kk: "Сізде сорпа бар ма?", ru: "У вас есть суп?" },
@@ -19,7 +25,7 @@ const WHEELS_LIBRARY = {
             { kk: "Оң жақта", ru: "Справа" }
         ],
         inner: [
-            { kk: "Мен аламын", ru: "Я возьму это" },
+            { kk: "Mental Note: Мен аламын", ru: "Я возьму это" }, // Пример структуры фраз
             { kk: "Рахмет", ru: "Спасибо" },
             { kk: "Тағы не бар?", ru: "Что ещё есть?" },
             { kk: "Маған ұнамады", ru: "Мне не нравится" },
@@ -30,6 +36,8 @@ const WHEELS_LIBRARY = {
     
     // ТЕМА 2: Аэропорт
     "аэропорт": {
+        titleRu: "Аэропорт и Перелеты",
+        keywords: ["аэропорт", "самолет", "рейс", "билет", "багаж", "паспорт", "посадка", "таможня", "выход", "задержка", "әуежай", "перелет", "путешествие", "вокзал"],
         outer: [
             { kk: "Ұшақ қай уақытта?", ru: "Когда самолёт?" },
             { kk: "Билет қанша тұрады?", ru: "Сколько стоит билет?" },
@@ -58,6 +66,8 @@ const WHEELS_LIBRARY = {
     
     // ТЕМА 3: Совещание / Работа
     "совещание": {
+        titleRu: "Совещание / Работа",
+        keywords: ["совещание", "работа", "проект", "бюджет", "отчет", "презентация", "выступление", "сцена", "доклад", "диплом", "речь", "спикер", "комиссия", "встреча", "офис"],
         outer: [
             { kk: "Келесі мәселе қандай?", ru: "Какой следующий вопрос?" },
             { kk: "Сөз сұрауға бола ма?", ru: "Можно попросить слово?" },
@@ -83,31 +93,70 @@ const WHEELS_LIBRARY = {
             { kk: "Келесі кездесу қашан?", ru: "Когда следующая встреча?" }
         ]
     }
+    
+    // ТЕМЫ С 4 ПО 100 СМЕЛО ДОБАВЛЯЙ НИЖЕ ПО ЭТОМУ ШАБЛОНУ...
 };
 
-// Вспомогательные функции
+/* ==========================================================================
+   ФУНКЦИИ УПРАВЛЕНИЯ И ПОИСКА ТЕМ
+   ========================================================================== */
+
+// Возвращает массив технических ID всех тем (ключи объекта)
 function getAllThemes() {
     return Object.keys(WHEELS_LIBRARY);
 }
 
-function getThemeData(themeName) {
-    return WHEELS_LIBRARY[themeName] || null;
+// Возвращает все данные конкретной темы по её ID
+function getThemeData(themeId) {
+    return WHEELS_LIBRARY[themeId] || null;
 }
 
-function searchTheme(query) {
-    const lowerQuery = query.toLowerCase();
-    const themes = getAllThemes();
+/**
+ * ИНТЕЛЛЕКТУАЛЬНЫЙ ПОИСК ТЕМЫ ПО КЛЮЧЕВОМУ СЛОВУ ОТ ИИ
+ * Сканирует массивы keywords внутри всех тем.
+ * Если совпадение найдено — возвращает строковый ID темы (например, "столовая").
+ */
+function searchTheme(aiSuggestedWord) {
+    if (!aiSuggestedWord) return null;
     
-    // Точное совпадение
-    let found = themes.find(theme => theme === lowerQuery);
-    if (found) return found;
+    const cleanWord = aiSuggestedWord.toLowerCase().trim();
+    const themeIds = getAllThemes();
     
-    // Частичное совпадение
-    found = themes.find(theme => theme.includes(lowerQuery) || lowerQuery.includes(theme));
-    return found || null;
+    // 1. Сначала проверяем точное или частичное совпадение с ID темы (старый алгоритм)
+    let foundId = themeIds.find(id => id === cleanWord || id.includes(cleanWord) || cleanWord.includes(id));
+    if (foundId) return foundId;
+    
+    // 2. Если по ID не нашли, сканируем массивы ключевых слов (keywords) внутри каждой темы
+    for (const id of themeIds) {
+        const theme = WHEELS_LIBRARY[id];
+        if (theme.keywords && theme.keywords.includes(cleanWord)) {
+            return id; // Возвращаем ID темы, где зафиксирован синоним
+        }
+    }
+    
+    return null; // Если зацепка от ИИ никуда не подошла
 }
 
-// Экспортируем для использования (для браузера)
+/**
+ * ГЛОБАЛЬНЫЙ МОСТ ДЛЯ ЧАТА
+ * Вызывается из js/chat.js, принимает слово из [CONTEXT: ...]
+ */
+window.findAndRenderTheme = function(aiSuggestedWord) {
+    const matchedThemeId = searchTheme(aiSuggestedWord);
+    
+    if (matchedThemeId) {
+        console.log(`[Библиотека Колес] ИИ прислал контекст "${aiSuggestedWord}". Найдена тема: ${matchedThemeId}`);
+        
+        // Переключаем интерфейс (эта функция window.renderLullyTheme должна быть в твоем основном скрипте колес)
+        if (typeof window.renderLullyTheme === 'function') {
+            window.renderLullyTheme(matchedThemeId);
+        }
+    } else {
+        console.log(`[Библиотека Колес] Контекст "${aiSuggestedWord}" не сопоставлен ни с одной темой. Панель не меняется.`);
+    }
+};
+
+// Экспортируем для использования в Node.js / Vercel средах (если нужно)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { WHEELS_LIBRARY, getAllThemes, getThemeData, searchTheme };
 }
