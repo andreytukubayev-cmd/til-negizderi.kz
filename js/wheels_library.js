@@ -1592,7 +1592,6 @@ const WHEELS_LIBRARY = {
 
     ]
 
-},
 }
 };
 
