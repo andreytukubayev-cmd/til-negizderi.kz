@@ -14,29 +14,21 @@ async function checkUser() {
     return user;
 }
 
-// Вход по магической ссылке
-window.signInWithEmail = async function(email) {
-    console.log('Пытаюсь войти с email:', email);
-    const { data, error } = await window.supabaseClient.auth.signInWithOtp({
-        email: email,
+// === ВХОД ЧЕРЕЗ GOOGLE ===
+window.signInWithGoogle = async function() {
+    console.log('Инициирую вход через Google...');
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-            emailRedirectTo: window.location.origin
+            redirectTo: window.location.origin // Возвращает пользователя на твой домен Vercel
         }
     });
     
     if (error) {
-        console.error('Ошибка входа:', error);
-        if (error.message.includes('rate limit')) {
-            alert('⚠️ Слишком много попыток. Подождите 5-10 минут и попробуйте снова.');
-        } else if (error.message.includes('invalid email')) {
-            alert('❌ Введите корректный email адрес');
-        } else {
-            alert('❌ Ошибка: ' + error.message);
-        }
+        console.error('Ошибка входа через Google:', error.message);
+        alert('❌ Ошибка авторизации: ' + error.message);
         return false;
     }
-    
-    alert('✅ Письмо отправлено!\n\nПроверьте ваш почтовый ящик и перейдите по ссылке для входа.');
     return true;
 };
 
@@ -44,7 +36,7 @@ window.signInWithEmail = async function(email) {
 window.signOut = async function() {
     await window.supabaseClient.auth.signOut();
     localStorage.clear();
-    location.reload(); // Тут рефреш оправдан, так как мы полностью чистим сессию
+    location.reload(); 
 };
 
 // Получить профиль
@@ -75,19 +67,17 @@ window.saveUserName = async function(name) {
         .eq('id', user.id);
     
     if (error) {
-        console.error('Ошибка сохранения имени:', error);
+        console.error('Ошибка保存 имени:', error);
     } else {
         localStorage.setItem('userName', name);
     }
 };
 
-// Обновить статистику (Безопасный динамический подсчет без race condition)
+// Обновить статистику
 window.incrementTranslations = async function() {
     const user = await checkUser();
     if (!user) return;
 
-    // Вместо опасного математического апдейта на клиенте, 
-    // запрашиваем реальное количество строк в таблице переводов
     const { count, error } = await window.supabaseClient
         .from('translations')
         .select('*', { count: 'exact', head: true })
@@ -98,7 +88,6 @@ window.incrementTranslations = async function() {
         return;
     }
 
-    // Синхронизируем это значение с таблицей профилей (опционально, если поле нужно в БД)
     await window.supabaseClient
         .from('profiles')
         .update({ total_translations: count })
@@ -171,10 +160,16 @@ async function updateAuthUI() {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         
+        // Автоматически вытягиваем имя из Google-аккаунта, если в профиле пусто
+        let displayName = user.user_metadata?.full_name || 'Пользователь';
+        
         const profile = await window.getUserProfile();
         if (profile?.name) {
-            localStorage.setItem('userName', profile.name);
+            displayName = profile.name;
         }
+        
+        localStorage.setItem('userName', displayName);
+        
         if (totalSpan) {
             totalSpan.innerText = profile?.total_translations || 0;
         }
@@ -194,14 +189,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const newLoginBtn = loginBtn.cloneNode(true);
         loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
         
+        // Вешаем событие вызова окна Google
         newLoginBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            const email = prompt('Введите ваш email:');
-            if (email && email.includes('@')) {
-                window.signInWithEmail(email);
-            } else if (email) {
-                alert('Введите корректный email');
-            }
+            window.signInWithGoogle();
         });
     }
     
@@ -221,6 +212,5 @@ document.addEventListener('DOMContentLoaded', function() {
 // Слушаем изменения авторизации реактивно БЕЗ перезагрузки страницы
 window.supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('Auth state change:', event);
-    // Просто обновляем UI интерфейса на лету при входе/выходе
     updateAuthUI();
 });
