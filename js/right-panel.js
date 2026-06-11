@@ -1,7 +1,7 @@
 // Правая панель с колёсами Луллия
-// Проверяем, не объявлена ли уже переменная
+
 if (typeof currentTheme === 'undefined') {
-    var currentTheme = 'столовая';
+    var currentTheme = ''; // Инициализируем пустой строкой, выставим динамически
 }
 let rotations = { inner: 0, middle: 0, outer: 0 };
 let originalEngineInitialized = false;
@@ -11,13 +11,18 @@ function loadTheme(themeName) {
     if (!themeData) return false;
     
     currentTheme = themeName;
-    document.getElementById('currentTheme').innerText = themeName;
     
-    // Обновляем глобальный dataset
+    // Отображаем красивое русское название темы, если оно есть, иначе ID
+    const themeTitleEl = document.getElementById('currentTheme');
+    if (themeTitleEl) {
+        themeTitleEl.innerText = themeData.titleRu || themeName;
+    }
+    
+    // Обновляем глобальный dataset безопасным способом
     window.dataset = {
-        outer: themeData.outer,
-        middle: themeData.middle,
-        inner: themeData.inner
+        outer: themeData.outer || [],
+        middle: themeData.middle || [],
+        inner: themeData.inner || []
     };
     
     if (originalEngineInitialized) {
@@ -33,11 +38,11 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
-    // Создаем основной контейнер колеса — все стили теперь должны быть в CSS (.device-body)
+    // Создаем основной контейнер колеса
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
     
-    // Стрелка-указатель — аналогично, стили переносим в CSS (.pointer-needle)
+    // Стрелка-указатель
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
     
@@ -66,7 +71,7 @@ function regenerateWheels() {
     
     container.appendChild(deviceBody);
     
-    // Генерируем сектора (размеры dMax внутри функции остаются для SVG, это нормально)
+    // Генерируем сектора
     generateWheelCells(outerWheel, window.dataset.outer, 'outer');
     generateWheelCells(middleWheel, window.dataset.middle, 'middle');
     generateWheelCells(innerWheel, window.dataset.inner, 'inner');
@@ -91,12 +96,16 @@ function regenerateWheels() {
     
     updateWheelsDisplay(0, 0, 0);
     originalEngineInitialized = true;
-   if (typeof updateCurrentTheme === 'function') {
-    updateCurrentTheme(currentTheme);
-}
+    
+    // Ваш актуальный хук внешнего обновления темы
+    if (typeof updateCurrentTheme === 'function') {
+        updateCurrentTheme(currentTheme);
+    }
 }
 
 function generateWheelCells(wheelEl, items, type) {
+    if (!items || items.length === 0) return;
+    
     const count = items.length;
     const angleStep = 360 / count;
     
@@ -161,6 +170,7 @@ function generateWheelCells(wheelEl, items, type) {
         };
         
         const splitText = (text, limit) => {
+            if (!text) return ['', ''];
             if (text.length <= limit || !text.includes(' ')) return [text, ''];
             const words = text.split(' ');
             let line1 = '', line2 = '';
@@ -232,7 +242,6 @@ function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
     return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
 }
 
-// Звук
 let clickAudio = null;
 try {
     clickAudio = new Audio('short-click.mp3');
@@ -308,6 +317,8 @@ function setupDragForWheel(wheelEl, key) {
 }
 
 function updateWheelsDisplay(outerRot, middleRot, innerRot) {
+    if (!window.dataset || !window.dataset.outer) return;
+
     const getIndex = (rotation) => {
         let norm = (-rotation) % 360;
         if (norm < 0) norm += 360;
@@ -344,25 +355,36 @@ function updateWheelsDisplay(outerRot, middleRot, innerRot) {
     }
 }
 
+// ГЛОБАЛЬНЫЙ МОСТ ДЛЯ ИИ-КОНТЕКСТА И ТЕСТОВОГО СТЕНДА
+window.findAndRenderTheme = function(aiSuggestedWord) {
+    if (typeof searchTheme !== 'function') return;
+    const matchedThemeId = searchTheme(aiSuggestedWord);
+    if (matchedThemeId) {
+        loadTheme(matchedThemeId);
+    }
+};
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    const defaultTheme = getThemeData('столовая');
-    window.dataset = {
-        outer: defaultTheme.outer,
-        middle: defaultTheme.middle,
-        inner: defaultTheme.inner
-    };
-    
-    regenerateWheels();
+    // Безопасно получаем список всех зарегистрированных ключей тем
+    if (typeof getAllThemes === 'function') {
+        const allThemes = getAllThemes();
+        if (allThemes.length > 0) {
+            // Динамически загружаем самую первую тему из 38 существующих
+            loadTheme(allThemes[0]);
+        }
+    }
     
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const found = searchTheme(themeSearch.value);
-                if (found) {
-                    loadTheme(found);
-                    themeSearch.value = '';
+                if (typeof searchTheme === 'function') {
+                    const found = searchTheme(themeSearch.value);
+                    if (found) {
+                        loadTheme(found);
+                        themeSearch.value = '';
+                    }
                 }
             }
         });
