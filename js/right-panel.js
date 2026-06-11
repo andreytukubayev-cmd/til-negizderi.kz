@@ -12,22 +12,20 @@ function loadTheme(themeName) {
     
     currentTheme = themeName;
     
-    // Отображаем красивое русское название темы, если оно есть, иначе ID
     const themeTitleEl = document.getElementById('currentTheme');
     if (themeTitleEl) {
         themeTitleEl.innerText = themeData.titleRu || themeName;
     }
     
-    // Обновляем глобальный dataset безопасным способом
     window.dataset = {
         outer: themeData.outer || [],
         middle: themeData.middle || [],
         inner: themeData.inner || []
     };
     
-    if (originalEngineInitialized) {
-        regenerateWheels();
-    }
+    // ИСПРАВЛЕНИЕ: Если это первая загрузка ИЛИ движок уже работает — 
+    // в обоих случаях нам нужно построить (или перестроить) колёса!
+    regenerateWheels();
     
     return true;
 }
@@ -38,11 +36,9 @@ function regenerateWheels() {
     
     container.innerHTML = '';
     
-    // Создаем основной контейнер колеса
     const deviceBody = document.createElement('div');
     deviceBody.className = 'device-body';
     
-    // Стрелка-указатель
     const pointer = document.createElement('div');
     pointer.className = 'pointer-needle';
     
@@ -62,7 +58,6 @@ function regenerateWheels() {
     centerBtn.className = 'center-cap';
     centerBtn.innerText = 'СБРОС';
     
-    // Собираем структуру DOM
     deviceBody.appendChild(outerWheel);
     deviceBody.appendChild(middleWheel);
     deviceBody.appendChild(innerWheel);
@@ -71,20 +66,19 @@ function regenerateWheels() {
     
     container.appendChild(deviceBody);
     
-    // Генерируем сектора
-    generateWheelCells(outerWheel, window.dataset.outer, 'outer');
-    generateWheelCells(middleWheel, window.dataset.middle, 'middle');
-    generateWheelCells(innerWheel, window.dataset.inner, 'inner');
+    // ЗАЩИТА: Если в базе пусто, не падаем
+    if (window.dataset && window.dataset.outer) {
+        generateWheelCells(outerWheel, window.dataset.outer, 'outer');
+        generateWheelCells(middleWheel, window.dataset.middle, 'middle');
+        generateWheelCells(innerWheel, window.dataset.inner, 'inner');
+    }
     
-    // Сброс вращений
     rotations = { inner: 0, middle: 0, outer: 0 };
     
-    // Настраиваем вращение
     setupDragForWheel(innerWheel, 'inner');
     setupDragForWheel(middleWheel, 'middle');
     setupDragForWheel(outerWheel, 'outer');
     
-    // Кнопка сброса
     centerBtn.addEventListener('click', () => {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerWheel.style.transform = 'rotate(0deg)';
@@ -95,14 +89,14 @@ function regenerateWheels() {
     });
     
     updateWheelsDisplay(0, 0, 0);
+    
+    // Фиксируем, что движок успешно стартовал
     originalEngineInitialized = true;
     
-    // Ваш актуальный хук внешнего обновления темы
     if (typeof updateCurrentTheme === 'function') {
         updateCurrentTheme(currentTheme);
     }
 }
-
 function generateWheelCells(wheelEl, items, type) {
     if (!items || items.length === 0) return;
     
