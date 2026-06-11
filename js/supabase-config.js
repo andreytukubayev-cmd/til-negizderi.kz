@@ -156,14 +156,18 @@ async function updateAuthUI() {
     const totalSpan = document.getElementById('totalTranslations');
     
     const user = await checkUser();
+    console.log('Проверка UI. Пользователь в системе:', user ? 'ДА' : 'НЕТ');
+    console.log('Найдены элементы HTML:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn, totalSpan: !!totalSpan });
+    
     if (user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         
-        // Автоматически вытягиваем имя из Google-аккаунта, если в профиле пусто
         let displayName = user.user_metadata?.full_name || 'Пользователь';
         
         const profile = await window.getUserProfile();
+        console.log('Загружен профиль из БД:', profile);
+        
         if (profile?.name) {
             displayName = profile.name;
         }
@@ -173,7 +177,13 @@ async function updateAuthUI() {
         if (totalSpan) {
             totalSpan.innerText = profile?.total_translations || 0;
         }
-        if (typeof updateStatsTitle === 'function') updateStatsTitle();
+        
+        if (typeof updateStatsTitle === 'function') {
+            console.log('Вызываю обновление заголовка статистики...');
+            updateStatsTitle();
+        } else {
+            console.warn('Функция updateStatsTitle не найдена в глобальной видимости!');
+        }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
