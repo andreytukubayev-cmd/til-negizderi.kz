@@ -3,6 +3,7 @@
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
+let currentTheme = 'obshie_frazy';
 
 // Функции для работы со статистикой (теперь через Supabase)
 async function updateStats() {
