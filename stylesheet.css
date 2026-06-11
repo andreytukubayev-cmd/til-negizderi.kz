@@ -173,6 +173,71 @@ body {
     color: #ffd700;
 }
 
+/* АВТОРИЗАЦИЯ GOOGLE Контейнер для центрирования кнопки */
+/* Контейнер для центрирования кнопки */
+#auth-google-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Стиль самой кнопки Google */
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #1f1f1f;
+    font-family: 'Roboto', sans-serif, system-ui;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: 0.25px;
+    padding: 11px 24px;
+    border: 1px solid #747775;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+}
+
+/* Эффект при наведении */
+.btn-google:hover {
+    background-color: #f8fafd;
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+}
+
+/* Эффект при нажатии */
+.btn-google:active {
+    background-color: #f1f3f4;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+}
+
+/* Отступ для иконки */
+.btn-google img {
+    margin-right: 12px;
+    display: block;
+}
+
+/* Аккуратная кнопка выхода */
+.btn-logout {
+    display: block;
+    margin: 15px auto;
+    background-color: transparent;
+    color: #b3261e;
+    border: 1px solid #b3261e;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+    background-color: rgba(179, 38, 30, 0.08);
+}
+
 /* ==========================================================================
    3. ЦЕНТРАЛЬНАЯ ЗОНА: ЧАТ С AI
    ========================================================================== */
