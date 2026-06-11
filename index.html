@@ -62,19 +62,14 @@
                     <span class="stat-value" id="totalTranslations">0</span>
                 </div>
                 
-                <div class="stat-item" id="authSection" style="flex-direction: column; gap: 8px; margin-top: 15px;">
-                    <div id="authFormContainer" style="display: block; width: 100%;">
-                        <input type="email" id="authEmail" placeholder="Email" style="width: 100%; padding: 8px; margin-bottom: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;" required />
-                        <input type="password" id="authPassword" placeholder="Пароль (от 6 символов)" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;" required />
-                        
-                        <div style="display: flex; gap: 6px;">
-                            <button id="loginBtn" style="flex: 1; background: #ffd700; border: none; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; color: #1a1a1a;">🔑 Войти</button>
-                            <button id="regBtn" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 8px; border-radius: 8px; cursor: pointer; color: white;">📝 Рега</button>
-                        </div>
-                    </div>
+<div id="auth-google-container">
+    <button id="google-signin-btn" class="btn-google">
+        <img src="https://authjs.dev/img/providers/google.svg" alt="Google" width="20" height="20">
+        Войти через Google
+    </button>
+</div>
 
-                    <button id="logoutBtn" style="width:100%; background:#e74c3c; border:none; padding:8px; border-radius:8px; cursor:pointer; color:white; display:none; font-weight: bold;">🚪 Выйти из аккаунта</button>
-                </div>
+<button id="logout-btn" class="btn-logout" style="display: none;">Выйти из аккаунта</button>
             </div>
         </div>
 
