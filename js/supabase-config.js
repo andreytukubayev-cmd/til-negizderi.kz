@@ -150,7 +150,6 @@ window.loadChatHistory = async function() {
 };
 
 // === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
-// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
 async function updateAuthUI() {
     // Ищем кнопки по твоим актуальным HTML ID
     const loginBtn = document.getElementById('google-signin-btn');
@@ -197,24 +196,19 @@ async function updateAuthUI() {
 
 // === НАСТРАИВАЕМ КНОПКИ ===
 document.addEventListener('DOMContentLoaded', function() {
-    const loginBtn = document.getElementById('google-signin-btn'); // Исправлено под твой HTML
+    const loginBtn = document.getElementById('google-signin-btn');
     const logoutBtn = document.getElementById('logout-btn');
     
+    // Прямая привязка БЕЗ клонирования элементов
     if (loginBtn) {
-        const newLoginBtn = loginBtn.cloneNode(true);
-        loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
-        
-        newLoginBtn.addEventListener('click', function(e) {
+        loginBtn.addEventListener('click', function(e) {
             e.preventDefault();
             window.signInWithGoogle();
         });
     }
     
     if (logoutBtn) {
-        const newLogoutBtn = logoutBtn.cloneNode(true);
-        logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
-        
-        newLogoutBtn.addEventListener('click', function(e) {
+        logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
             window.signOut();
         });
