@@ -150,9 +150,11 @@ window.loadChatHistory = async function() {
 };
 
 // === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
+// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
 async function updateAuthUI() {
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
+    // Ищем кнопки по твоим актуальным HTML ID
+    const loginBtn = document.getElementById('google-signin-btn');
+    const logoutBtn = document.getElementById('logout-btn');
     const totalSpan = document.getElementById('totalTranslations');
     
     const user = await checkUser();
@@ -163,6 +165,7 @@ async function updateAuthUI() {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         
+        // Берем имя из метаданных Google-аккаунта
         let displayName = user.user_metadata?.full_name || 'Пользователь';
         
         const profile = await window.getUserProfile();
@@ -170,6 +173,10 @@ async function updateAuthUI() {
         
         if (profile?.name) {
             displayName = profile.name;
+        } else {
+            // Если в таблице profiles имени еще нет, автоматически сохраняем туда имя из Google
+            console.log('Имя в профиле пустое. Записываю имя из Google:', displayName);
+            await window.saveUserName(displayName);
         }
         
         localStorage.setItem('userName', displayName);
@@ -181,14 +188,40 @@ async function updateAuthUI() {
         if (typeof updateStatsTitle === 'function') {
             console.log('Вызываю обновление заголовка статистики...');
             updateStatsTitle();
-        } else {
-            console.warn('Функция updateStatsTitle не найдена в глобальной видимости!');
         }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
     }
 }
+
+// === НАСТРАИВАЕМ КНОПКИ ===
+document.addEventListener('DOMContentLoaded', function() {
+    const loginBtn = document.getElementById('google-signin-btn'); // Исправлено под твой HTML
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    if (loginBtn) {
+        const newLoginBtn = loginBtn.cloneNode(true);
+        loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
+        
+        newLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.signInWithGoogle();
+        });
+    }
+    
+    if (logoutBtn) {
+        const newLogoutBtn = logoutBtn.cloneNode(true);
+        logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+        
+        newLogoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.signOut();
+        });
+    }
+    
+    updateAuthUI();
+});
 
 // === НАСТРАИВАЕМ КНОПКИ ===
 document.addEventListener('DOMContentLoaded', function() {
