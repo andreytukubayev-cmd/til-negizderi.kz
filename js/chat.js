@@ -1,9 +1,17 @@
 // js/chat.js - с интеграцией Supabase
 
+/* ==========================================================================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ЧАТА
+   ========================================================================== */
 let localTranslator = null;
 let userName = localStorage.getItem('userName') || null;
 let waitingForName = false;
-let currentTheme = 'obshie_frazy';
+
+// НЕ объявляем currentTheme через 'let', так как она уже создана в supabase-config.js.
+// Просто гарантируем, что у нее есть дефолтное значение, если бэкенд вернул пустоту.
+if (typeof currentTheme === 'undefined' || !currentTheme) {
+    window.currentTheme = 'general'; 
+}
 
 // Функции для работы со статистикой (теперь через Supabase)
 async function updateStats() {
