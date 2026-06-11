@@ -1,4 +1,6 @@
 // js/supabase-config.js
+
+// 1. КОНСТАНТЫ И НАСТРОЙКА КЛИЕНТА
 const SUPABASE_URL = 'https://dozirkpilsfxthhzlfiv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_lRzYypPaoMrWUgbznU2zKg_T4kW_nkB';
 
@@ -7,20 +9,22 @@ if (typeof supabaseClient === 'undefined') {
     console.log('✅ Supabase клиент создан');
 }
 
-// Проверка авторизации
+// Переменная-флаг для защиты от многократных фоновых вызовов
+let isUpdatingAuth = false; 
+
+// 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ БЭКЕНДА
 async function checkUser() {
     const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     if (error) return null;
     return user;
 }
 
-// === ВХОД ЧЕРЕЗ GOOGLE ===
 window.signInWithGoogle = async function() {
     console.log('Инициирую вход через Google...');
     const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin // Возвращает пользователя на твой домен Vercel
+            redirectTo: window.location.origin
         }
     });
     
@@ -32,14 +36,12 @@ window.signInWithGoogle = async function() {
     return true;
 };
 
-// Выход
 window.signOut = async function() {
     await window.supabaseClient.auth.signOut();
     localStorage.clear();
     location.reload(); 
 };
 
-// Получить профиль
 window.getUserProfile = async function() {
     const user = await checkUser();
     if (!user) return null;
@@ -56,7 +58,6 @@ window.getUserProfile = async function() {
     return data;
 };
 
-// Сохранить имя
 window.saveUserName = async function(name) {
     const user = await checkUser();
     if (!user) return;
@@ -67,13 +68,12 @@ window.saveUserName = async function(name) {
         .eq('id', user.id);
     
     if (error) {
-        console.error('Ошибка保存 имени:', error);
+        console.error('Ошибка сохранения имени:', error);
     } else {
         localStorage.setItem('userName', name);
     }
 };
 
-// Обновить статистику
 window.incrementTranslations = async function() {
     const user = await checkUser();
     if (!user) return;
@@ -97,7 +97,6 @@ window.incrementTranslations = async function() {
     if (totalSpan) totalSpan.innerText = count;
 };
 
-// Сохранить перевод
 window.saveTranslation = async function(russian, kazakh, theme = 'general') {
     const user = await checkUser();
     if (!user) return;
@@ -114,7 +113,6 @@ window.saveTranslation = async function(russian, kazakh, theme = 'general') {
     if (error) console.error('Ошибка сохранения перевода:', error);
 };
 
-// Сохранить сообщение
 window.saveMessage = async function(role, content) {
     const user = await checkUser();
     if (!user) return;
@@ -130,7 +128,6 @@ window.saveMessage = async function(role, content) {
     if (error) console.error('Ошибка сохранения сообщения:', error);
 };
 
-// Загрузить историю
 window.loadChatHistory = async function() {
     const user = await checkUser();
     if (!user) return [];
@@ -149,9 +146,11 @@ window.loadChatHistory = async function() {
     return data || [];
 };
 
-// === ОТОБРАЖАЕМ СОСТОЯНИЕ АВТОРИЗАЦИИ ===
+// 3. ФУНКЦИЯ ОБНОВЛЕНИЯ ИНТЕРФЕЙСА (БЕЗОПАСНАЯ)
 async function updateAuthUI() {
-    // Ищем кнопки по твоим актуальным HTML ID
+    if (isUpdatingAuth) return; 
+    isUpdatingAuth = true;
+
     const loginBtn = document.getElementById('google-signin-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const totalSpan = document.getElementById('totalTranslations');
@@ -164,7 +163,6 @@ async function updateAuthUI() {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         
-        // Берем имя из метаданных Google-аккаунта
         let displayName = user.user_metadata?.full_name || 'Пользователь';
         
         const profile = await window.getUserProfile();
@@ -173,7 +171,6 @@ async function updateAuthUI() {
         if (profile?.name) {
             displayName = profile.name;
         } else {
-            // Если в таблице profiles имени еще нет, автоматически сохраняем туда имя из Google
             console.log('Имя в профиле пустое. Записываю имя из Google:', displayName);
             await window.saveUserName(displayName);
         }
@@ -192,14 +189,15 @@ async function updateAuthUI() {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
     }
+
+    isUpdatingAuth = false; 
 }
 
-// === НАСТРАИВАЕМ КНОПКИ ===
+// 4. ПРИВЯЗКА СОБЫТИЙ К КНОПКАМ (БЕЗ КЛОНИРОВАНИЯ)
 document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.getElementById('google-signin-btn');
     const logoutBtn = document.getElementById('logout-btn');
     
-    // Прямая привязка БЕЗ клонирования элементов
     if (loginBtn) {
         loginBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -217,36 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateAuthUI();
 });
 
-// === НАСТРАИВАЕМ КНОПКИ ===
-document.addEventListener('DOMContentLoaded', function() {
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    
-    if (loginBtn) {
-        const newLoginBtn = loginBtn.cloneNode(true);
-        loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
-        
-        // Вешаем событие вызова окна Google
-        newLoginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.signInWithGoogle();
-        });
-    }
-    
-    if (logoutBtn) {
-        const newLogoutBtn = logoutBtn.cloneNode(true);
-        logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
-        
-        newLogoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.signOut();
-        });
-    }
-    
-    updateAuthUI();
-});
-
-// Слушаем изменения авторизации реактивно БЕЗ перезагрузки страницы
+// СЛУШАТЕЛЬ ИЗМЕНЕНИЙ АВТОРИЗАЦИИ
 window.supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('Auth state change:', event);
     updateAuthUI();
