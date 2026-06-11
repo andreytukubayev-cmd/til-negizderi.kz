@@ -401,6 +401,131 @@ body {
     transform: scale(0.97);
 }
 
+/* КОМПОНЕНТ: МЕНЮ ВЫБОРА ДЕЙСТВИЯ (ПЕРЕВЕСТИ / ОБСУДИТЬ) */
+#actionMenu {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 24px 20px 34px 20px;
+    box-sizing: border-box;
+}
+
+#actionMenu.active {
+    bottom: 0;
+}
+
+#actionMenuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#actionMenu.active + #actionMenuOverlay,
+#actionMenuOverlay.active {
+    display: block;
+    opacity: 1;
+}
+
+.action-menu-title {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+}
+
+.action-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+    background: #edf2f7;
+}
+
+.action-btn-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.action-btn-text {
+    flex: 1;
+    text-align: left;
+}
+
+.action-btn-text span {
+    display: block;
+    font-size: 0.75em;
+    font-weight: normal;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* На десктопе превращаем нижнюю шторку в аккуратное модальное окно по центру */
+@media (min-width: 769px) {
+    #actionMenu {
+        max-width: 420px;
+        bottom: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        border-radius: 20px;
+        opacity: 0;
+        pointer-events: none;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    
+    #actionMenu.active {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
 /* ==========================================================================
    4. КОМПОНЕНТ: КОЛЕСА ЛУЛЛИЯ
    ========================================================================= */
