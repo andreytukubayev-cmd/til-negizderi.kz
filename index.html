@@ -104,15 +104,12 @@
 
 <div class="wheels-management-header">
     <div class="search-theme-compact">
-        <input 
-            type="text" 
-            id="themeSearch" 
-            class="theme-search-input" 
-            placeholder="🔍 Найти тему (например: звонок, ремонт)..." 
-            autocomplete="off" 
-        />
-        <div id="searchSuggestions" class="search-suggestions-box"></div>
+    <div class="search-wrapper">
+        <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
+        <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
     </div>
+    <div id="searchSuggestions" class="search-suggestions-box"></div>
+</div>
 </div>
 
 <div id="wheelsContainer"></div>
