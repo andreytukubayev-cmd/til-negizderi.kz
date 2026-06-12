@@ -98,46 +98,52 @@
             </form>
         </div>
 
-        <div class="sidebar-right" id="sidebarRight">
-            <button class="menu-close-right" id="menuCloseRight">🎡</button>
+       <div class="sidebar-right" id="sidebarRight">
+    <button class="menu-close-right" id="menuCloseRight">🎡</button>
 
-            <div class="wheels-management-header">
-                <div class="search-theme-compact">
-                    <div class="search-wrapper">
-                        <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
-                        <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
-                    </div>
-                    <div id="searchSuggestions" class="search-suggestions-box"></div>
+    <div class="wheels-management-header">
+        <div class="search-theme-compact">
+            <div class="search-wrapper">
+                <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
+                <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
+            </div>
+            <div id="searchSuggestions" class="search-suggestions-box"></div>
+        </div>
+    </div>
+
+    <div id="wheelsDisplay" class="scoreboard-container">
+        <div class="scoreboard-screen">
+            
+            <div class="score-display outer">
+                <div class="score-label">ВОПРОС</div>
+                <div class="score-value">
+                    <span class="lang-kk" id="dash-q-kk">-</span>
+                    <span class="lang-ru" id="dash-q-ru">-</span>
                 </div>
             </div>
 
-            <div id="wheelsDisplay" class="scoreboard-container">
-                <div class="score-display outer">
-                    <div class="score-label">❓ ВОПРОС</div>
-                    <div class="score-value">
-                        <span class="lang-kk" id="dash-q-kk">-</span>
-                        <span class="lang-ru" id="dash-q-ru">-</span>
-                    </div>
-                </div>
-                <div class="score-display middle">
-                    <div class="score-label">💬 ОТВЕТ</div>
-                    <div class="score-value">
-                        <span class="lang-kk" id="dash-a-kk">-</span>
-                        <span class="lang-ru" id="dash-a-ru">-</span>
-                    </div>
-                </div>
-                <div class="score-display inner">
-                    <div class="score-label">😊 РЕАКЦИЯ</div>
-                    <div class="score-value">
-                        <span class="lang-kk" id="dash-r-kk">-</span>
-                        <span class="lang-ru" id="dash-r-ru">-</span>
-                    </div>
+            <div class="score-display middle">
+                <div class="score-label">ОТВЕТ</div>
+                <div class="score-value">
+                    <span class="lang-kk" id="dash-a-kk">-</span>
+                    <span class="lang-ru" id="dash-a-ru">-</span>
                 </div>
             </div>
 
-            <div id="wheelsContainer" class="wheels-container"></div>
-        </div> 
+            <div class="score-display inner">
+                <div class="score-label">РЕАКЦИЯ</div>
+                <div class="score-value">
+                    <span class="lang-kk" id="dash-r-kk">-</span>
+                    <span class="lang-ru" id="dash-r-ru">-</span>
+                </div>
+            </div>
 
+        </div>
+    </div>
+
+    <div id="wheelsContainer" class="wheels-container"></div>
+</div>
+        
     </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/wheels_library.js"></script>
