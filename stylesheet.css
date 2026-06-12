@@ -722,6 +722,19 @@ body {
     border-color: #cbd5e1;
 }
 
+/* Эффект при клике и вводе текста */
+#themeSearch.theme-search-input:focus {
+    background-color: #ffffff;
+    border-color: #00b4d8; 
+    box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+    cursor: text;
+    font-weight: 700; /* Делаем шрифт жирным, чтобы название темы читалось четко */
+    color: #00b4d8;   /* ЖЕСТКИЙ ФИКС: Подсвечиваем найденную тему фирменным бирюзовым цветом */
+    outline: none;
+    
+    /* Активная лупа */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300b4d8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+}
 /* Эффект при клике (когда начинается ввод) */
 #themeSearch.theme-search-input:focus {
     background-color: #ffffff;
