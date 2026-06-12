@@ -368,43 +368,46 @@ document.addEventListener('DOMContentLoaded', () => {
             loadTheme(allThemes[0]);
         }
     }
-    
-// === ПРОКАЧАННЫЙ ЖИВОЙ ПОИСК ===
+    // === ПРОКАЧАННЫЙ И БЕЗОПАСНЫЙ ЖИВОЙ ПОИСК ===
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
         
-        // 1. Живой поиск: реагирует на каждый ввод символа
+        // 1. Живой поиск: плавно ищет на лету
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
-            if (query.length >= 2) { // Начинаем искать, если введено хотя бы 2 символа
+            
+            // Ищем, только если введено хотя бы 2 символа, чтобы не ловить мусор
+            if (query.length >= 2) { 
                 if (typeof searchTheme === 'function') {
                     const found = searchTheme(query);
-                    if (found) {
-                        loadTheme(found); // Колёса переключатся на лету!
+                    // КРИТИЧЕСКИЙ ДЕБАГ: Переключаем тему ТОЛЬКО если она реально существует в базе
+                    if (found && typeof getThemeData === 'function' && getThemeData(found)) {
+                        loadTheme(found); 
                     }
                 }
             }
         });
 
-        // 2. Нажатие Enter: фиксирует выбор, убирает клавиатуру и закрывает панель
+        // 2. Нажатие Enter: закрывает всё и прячет клавиатуру
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Блокируем стандартное поведение отправки формы
+                e.preventDefault(); 
                 
-                if (typeof searchTheme === 'function') {
-                    const found = searchTheme(themeSearch.value);
-                    if (found) {
+                const query = themeSearch.value.trim();
+                if (typeof searchTheme === 'function' && query.length > 0) {
+                    const found = searchTheme(query);
+                    if (found && typeof getThemeData === 'function' && getThemeData(found)) {
                         loadTheme(found);
-                        themeSearch.value = ''; // Очищаем поле ввода
-                        
-                        // Скрываем экранную клавиатуру на телефонах
-                        themeSearch.blur(); 
-                        
-                        // Автоматически закрываем правую боковую панель, если функция закрытия доступна в HTML
-                        if (typeof closeRightMenu === 'function') {
-                            closeRightMenu();
-                        }
+                        themeSearch.value = ''; // Очищаем поле только при успешном вводе
                     }
+                }
+                
+                // В любом случае убираем фокус (прячем клаву на мобилках)
+                themeSearch.blur(); 
+                
+                // Закрываем шторку меню
+                if (typeof closeRightMenu === 'function') {
+                    closeRightMenu();
                 }
             }
         });
