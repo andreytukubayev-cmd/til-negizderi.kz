@@ -1071,4 +1071,13 @@ body {
             transform: scale(0.43);
         }
     }
+   /* На мобилках оставляем табло списком, чуть снижая шрифты */
+    .scoreboard-container {
+        margin-top: 10px;
+        position: relative;
+        z-index: 120; /* Чтобы быть поверх урезаных границ колеса */
+    }
+    .score-value {
+        font-size: 14px;
+    }
 }
