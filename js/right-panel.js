@@ -328,28 +328,26 @@ function updateWheelsDisplay(outerRot, middleRot, innerRot) {
     const middleData = window.dataset.middle[middleIdx];
     const innerData = window.dataset.inner[innerIdx];
     
-    const displayDiv = document.getElementById('wheelsDisplay');
-    if (displayDiv) {
-        displayDiv.innerHTML = `
-            <div class="mini-dash-item">
-                <div class="mini-dash-label">❓ ВОПРОС</div>
-                <div class="mini-dash-kk">${outerData?.kk || '-'}</div>
-                <div class="mini-dash-ru">${outerData?.ru || '-'}</div>
-            </div>
-            <div class="mini-dash-item">
-                <div class="mini-dash-label">💬 ОТВЕТ</div>
-                <div class="mini-dash-kk">${middleData?.kk || '-'}</div>
-                <div class="mini-dash-ru">${middleData?.ru || '-'}</div>
-            </div>
-            <div class="mini-dash-item">
-                <div class="mini-dash-label">😊 РЕАКЦИЯ</div>
-                <div class="mini-dash-kk">${innerData?.kk || '-'}</div>
-                <div class="mini-dash-ru">${innerData?.ru || '-'}</div>
-            </div>
-        `;
-    }
+    // ТОЧЕЧНОЕ ОБНОВЛЕНИЕ ТЕКСТА БЕЗ УНИЧТОЖЕНИЯ КРАСИВОЙ РАЗМЕТКИ MONTANA:
+    
+    // Вопрос (Внешний круг)
+    const qKk = document.getElementById('dash-q-kk');
+    const qRu = document.getElementById('dash-q-ru');
+    if (qKk) qKk.innerText = outerData?.kk || '-';
+    if (qRu) qRu.innerText = outerData?.ru || '-';
+    
+    // Ответ (Средний круг)
+    const aKk = document.getElementById('dash-a-kk');
+    const aRu = document.getElementById('dash-a-ru');
+    if (aKk) aKk.innerText = middleData?.kk || '-';
+    if (aRu) aRu.innerText = middleData?.ru || '-';
+    
+    // Реакция (Внутренний круг)
+    const rKk = document.getElementById('dash-r-kk');
+    const rRu = document.getElementById('dash-r-ru');
+    if (rKk) rKk.innerText = innerData?.kk || '-';
+    if (rRu) rRu.innerText = innerData?.ru || '-';
 }
-
 // ГЛОБАЛЬНЫЙ МОСТ ДЛЯ ИИ-КОНТЕКСТА И ТЕСТОВОГО СТЕНДА
 window.findAndRenderTheme = function(aiSuggestedWord) {
     if (typeof searchTheme !== 'function') return;
