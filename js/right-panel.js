@@ -370,12 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК ===
+// === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК ===
     const themeSearch = document.getElementById('themeSearch');
     const suggestionsBox = document.getElementById('searchSuggestions');
+    const clearSearchBtn = document.getElementById('clearSearchBtn'); // Ловим кнопку крестика
 
     if (themeSearch && suggestionsBox) {
         
+        // Переключатель видимости крестика в зависимости от текста
+        const toggleClearButton = (text) => {
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = text.length > 0 ? 'block' : 'none';
+            }
+        };
+
         // Функция для отрисовки подсказок
         const showSuggestions = (query) => {
             if (typeof getAllThemes !== 'function' || typeof getThemeData !== 'function') return;
@@ -409,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.addEventListener('click', () => {
                     loadTheme(themeKey);
                     themeSearch.value = title; // Записываем красивое имя в инпут
+                    toggleClearButton(title); // Проверяем крестик при выборе
                     hideSuggestions();
                     themeSearch.blur();
                     if (typeof closeRightMenu === 'function') closeRightMenu();
@@ -429,6 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Живой ввод текста
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
+            toggleClearButton(query); // Скрываем/показываем крестик на лету
+            
             if (query.length >= 2) {
                 showSuggestions(query);
             } else {
@@ -436,12 +447,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // ЛОГИКА КЛИКА ПО КРЕСТИКУ
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                themeSearch.value = ''; // Стираем текст
+                suggestionsBox.style.display = 'none'; // Скрываем подсказки
+                clearSearchBtn.style.display = 'none'; // Прячем сам крестик
+                themeSearch.focus(); // Возвращаем фокус в инпут для нового ввода
+            });
+        }
+
         // Скрытие списка при потере фокуса
         themeSearch.addEventListener('blur', hideSuggestions);
 
         // При фокусе, если там уже что-то введено, показываем варианты снова
         themeSearch.addEventListener('focus', () => {
             const query = themeSearch.value.trim();
+            toggleClearButton(query);
             if (query.length >= 2) showSuggestions(query);
         });
 
@@ -457,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         loadTheme(found);
                         const data = typeof getThemeData === 'function' ? getThemeData(found) : null;
                         themeSearch.value = data?.titleRu || found;
+                        toggleClearButton(themeSearch.value);
                     }
                 }
                 themeSearch.blur();
@@ -464,5 +487,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof closeRightMenu === 'function') closeRightMenu();
             }
         });
+
+        // Первичная проверка при инициализации
+        toggleClearButton(themeSearch.value);
     }
-});
+}); // Закрывает Слушатель DOMContentLoaded
