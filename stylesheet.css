@@ -850,13 +850,13 @@ body {
 /* 3. Каждая строка (Вопрос, Ответ, Реакция) теперь идет как отдельный блок */
 .score-display {
     display: flex !important;
-    flex-direction: row !important; /* Метка слева, текст справа */
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px dashed rgba(0, 230, 254, 0.15); /* Цифровой разделитель */
-    width: 100%;
+    flex-direction: row !important; /* Строго в линию: метка слева, текст справа */
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 25px !important;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(0, 230, 254, 0.15);
+    width: 100% !important;
     box-sizing: border-box;
 }
 
