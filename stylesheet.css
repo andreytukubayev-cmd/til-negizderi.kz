@@ -821,104 +821,90 @@ body {
 }
 
 /* ==========================================================================
-   ЭЛЕКТРОННОЕ ТАБЛО РЕЗУЛЬТАТОВ (ВНУТРИ SIDEBAR-RIGHT) - ОБНОВЛЕННОЕ
+   RETRO LED DASHBOARD (Montana Watch 80s Style)
    ========================================================================== */
 
-/* Контейнер для всего табло */
+/* 1. Общий контейнер (Внешний пластиковый корпус) */
 .scoreboard-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 15px;
-    margin: 10px 15px 20px 15px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    gap: 15px;
+    background: #2d3436; /* Темный, матовый пластик */
+    border: 4px solid #1a1a1a;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 15px;
+    box-shadow: 0 5px 0 #121212; /* "Толстая" тень */
 }
 
-/* Базовый стиль для строки (Вопрос, Ответ, Реакция) */
+/* 2. Основной синий дисплей (Montana Screen) */
+.scoreboard-screen {
+    background: #000a1c; /* Глубокий синий фон дисплея */
+    border: 3px solid #00122e;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: inset 0 0 20px rgba(0, 180, 216, 0.4); /* Синее внутреннее свечение */
+}
+
+/* 3. Оформление каждой строки результатов (как цифровой индикатор) */
 .score-display {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    border-left: 4px solid #ccc; /* Дефолтный цвет полосы слева */
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 2px dashed rgba(0, 180, 216, 0.15); /* Прерывистая разделительная линия */
 }
 
-/* Стилизация заголовков (Метки: ? ВОПРОС, 💬 ОТВЕТ, 😊 РЕАКЦИЯ) */
+/* Удаляем границу у последнего элемента */
+.score-display:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 4. Заголовки-метки (Красные светодиоды, Вопрос, Ответ, Реакция) */
 .score-label {
+    flex: 0 0 100px; /* Фиксированная ширина под заголовок */
+    font-family: 'Courier New', Courier, monospace; /* "Компьютерный" шрифт */
     font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.07em;
+    font-weight: bold;
+    color: #ff3f34; /* Красный светодиодный цвет */
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+    text-shadow: 0 0 5px rgba(255, 63, 52, 0.6); /* Красное свечение */
 }
 
-/* Контейнер для вывода текста на двух языках */
+/* 5. Контейнер вывода текста */
 .score-value {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 5px;
 }
 
-/* Строка на казахском (основная, жирная) */
-.score-value .lang-kk {
-    font-size: 15px;
-    font-weight: 700;
-    color: #ffffff;
-    display: block;
-}
-
-/* Строка на русском (перевод, чуть блеклый и меньше) */
+/* 6. Светодиодные шрифты для казахского и русского */
+.score-value .lang-kk,
 .score-value .lang-ru {
-    font-size: 13px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.7);
-    display: block;
-    margin-top: 2px;
+    font-family: 'Courier New', Courier, monospace; /* "Компьютерный" шрифт */
+    font-weight: normal;
+    text-align: left;
 }
 
-/* ==========================================================================
-   ИНДИВИДУАЛЬНАЯ ЦВЕТОВАЯ ИДЕНТИФИКАЦИЯ (По уровням колеса)
-   ========================================================================== */
-
-/* Внешнее кольцо — ВОПРОС (мягкий коралловый акцент) */
-.score-display.outer {
-    border-left-color: #ff7675;
-    background: rgba(255, 118, 117, 0.05);
-}
-.score-display.outer .score-label {
-    color: #ff7675;
+/* Основной казахский текст (Бирюзовое свечение) */
+.score-value .lang-kk {
+    font-size: 14px;
+    color: #00e6fe; /* Кислотный бирюзовый */
+    text-shadow: 0 0 10px rgba(0, 230, 254, 0.8), 0 0 20px rgba(0, 230, 254, 0.4); /* Двойное свечение */
 }
 
-/* Среднее кольцо — ОТВЕТ (мягкий голубой акцент) */
-.score-display.middle {
-    border-left-color: #74b9ff;
-    background: rgba(116, 185, 255, 0.05);
+/* Русский перевод (Тусклое синее свечение) */
+.score-value .lang-ru {
+    font-size: 12px;
+    color: rgba(0, 180, 216, 0.6); /* Тусклый синий */
+    text-shadow: 0 0 3px rgba(0, 180, 216, 0.3); /* Легкое свечение */
 }
-.score-display.middle .score-label {
-    color: #74b9ff;
-}
-
-/* Внутреннее кольцо — РЕАКЦИЯ (мягкий мятный акцент) */
-.score-display.inner {
-    border-left-color: #55efc4;
-    background: rgba(85, 239, 196, 0.05);
-}
-.score-display.inner .score-label {
-    color: #55efc4;
-}
-
-/* Эффект легкого подсвечивания при наведении */
-.score-display:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateX(2px);
-}
-
 /* ==========================================================================
    6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
    ========================================================================== */
