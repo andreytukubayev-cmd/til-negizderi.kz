@@ -821,89 +821,111 @@ body {
 }
 
 /* ==========================================================================
-   RETRO LED DASHBOARD (Montana Watch 80s Style)
+   RETRO LED DASHBOARD (Montana Watch Style) — ФИКС КОМПОНОВКИ
    ========================================================================== */
 
-/* 1. Общий контейнер (Внешний пластиковый корпус) */
+/* 1. Внешний корпус приборной панели */
 .scoreboard-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    background: #2d3436; /* Темный, матовый пластик */
-    border: 4px solid #1a1a1a;
-    border-radius: 8px;
-    padding: 10px;
+    background: #1e222b; /* Темный матовый пластик корпуса */
+    border: 3px solid #11151c;
+    border-radius: 10px;
+    padding: 12px;
     margin: 15px;
-    box-shadow: 0 5px 0 #121212; /* "Толстая" тень */
+    box-shadow: 0 4px 0 #0d1013, inset 0 1px 2px rgba(255,255,255,0.1);
+    box-sizing: border-box;
 }
 
-/* 2. Основной синий дисплей (Montana Screen) */
+/* 2. Глубокий синий электронный экран */
 .scoreboard-screen {
-    background: #000a1c; /* Глубокий синий фон дисплея */
-    border: 3px solid #00122e;
-    border-radius: 4px;
-    padding: 15px;
-    box-shadow: inset 0 0 20px rgba(0, 180, 216, 0.4); /* Синее внутреннее свечение */
-}
-
-/* 3. Оформление каждой строки результатов (как цифровой индикатор) */
-.score-display {
+    background: #030914; /* Ультра-темный синий цвет подложки ЖКИ */
+    border: 2px solid #0a1120;
+    border-radius: 6px;
+    padding: 16px 20px;
+    box-shadow: inset 0 0 20px rgba(0, 230, 254, 0.2); /* Внутреннее свечение экрана */
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 15px;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-    border-bottom: 2px dashed rgba(0, 180, 216, 0.15); /* Прерывистая разделительная линия */
+    flex-direction: column !important; /* Строго вертикально друг под друга! */
+    gap: 16px;
 }
 
-/* Удаляем границу у последнего элемента */
+/* 3. Каждая строка (Вопрос, Ответ, Реакция) теперь идет как отдельный блок */
+.score-display {
+    display: flex !important;
+    flex-direction: row !important; /* Метка слева, текст справа */
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed rgba(0, 230, 254, 0.15); /* Цифровой разделитель */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Убираем нижнюю рамку у последнего элемента */
 .score-display:last-child {
     border-bottom: none;
-    margin-bottom: 0;
     padding-bottom: 0;
+    margin-bottom: 0;
 }
 
-/* 4. Заголовки-метки (Красные светодиоды, Вопрос, Ответ, Реакция) */
+/* 4. Левые метки-индикаторы (ВОПРОС, ОТВЕТ, РЕАКЦИЯ) */
 .score-label {
-    flex: 0 0 100px; /* Фиксированная ширина под заголовок */
-    font-family: 'Courier New', Courier, monospace; /* "Компьютерный" шрифт */
+    flex: 0 0 90px; /* Фиксированная ширина, чтобы двоеточия были в один ряд */
+    font-family: 'Courier New', Courier, monospace;
     font-size: 11px;
-    font-weight: bold;
-    color: #ff3f34; /* Красный светодиодный цвет */
-    text-transform: uppercase;
+    font-weight: 800;
     letter-spacing: 2px;
-    text-shadow: 0 0 5px rgba(255, 63, 52, 0.6); /* Красное свечение */
+    text-transform: uppercase;
+    padding-top: 3px;
 }
 
-/* 5. Контейнер вывода текста */
+/* Индивидуальные неоновые цвета для подписей (как лампочки) */
+.score-display.outer .score-label {
+    color: #ff4757;
+    text-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+}
+.score-display.middle .score-label {
+    color: #2ed573;
+    text-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
+}
+.score-display.inner .score-label {
+    color: #ffa502;
+    text-shadow: 0 0 8px rgba(255, 165, 2, 0.6);
+}
+
+/* 5. Правый блок с текстом на двух языках */
 .score-value {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    display: flex !important;
+    flex-direction: column !important; /* Казахский строго над русским! */
+    gap: 4px;
+    margin: 0;
+    padding: 0;
 }
 
-/* 6. Светодиодные шрифты для казахского и русского */
+/* Светодиодный компьютерный шрифт для данных */
 .score-value .lang-kk,
 .score-value .lang-ru {
-    font-family: 'Courier New', Courier, monospace; /* "Компьютерный" шрифт */
-    font-weight: normal;
+    font-family: 'Courier New', Courier, monospace;
+    display: block !important;
     text-align: left;
+    line-height: 1.3;
 }
 
-/* Основной казахский текст (Бирюзовое свечение) */
+/* Главный казахский текст (Яркий неоновый бирюзовый) */
 .score-value .lang-kk {
-    font-size: 14px;
-    color: #00e6fe; /* Кислотный бирюзовый */
-    text-shadow: 0 0 10px rgba(0, 230, 254, 0.8), 0 0 20px rgba(0, 230, 254, 0.4); /* Двойное свечение */
+    font-size: 16px;
+    font-weight: 700;
+    color: #00f0ff;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.7), 0 0 20px rgba(0, 240, 255, 0.3);
 }
 
-/* Русский перевод (Тусклое синее свечение) */
+/* Русский подстрочный перевод (Приглушенный лазурный) */
 .score-value .lang-ru {
-    font-size: 12px;
-    color: rgba(0, 180, 216, 0.6); /* Тусклый синий */
-    text-shadow: 0 0 3px rgba(0, 180, 216, 0.3); /* Легкое свечение */
+    font-size: 13px;
+    font-weight: 400;
+    color: #70a1ff;
+    opacity: 0.8;
+    text-shadow: 0 0 4px rgba(112, 161, 255, 0.4);
 }
 /* ==========================================================================
    6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
