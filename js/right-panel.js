@@ -373,7 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ПРОКАЧАННЫЙ И БЕЗОПАСНЫЙ ЖИВОЙ ПОИСК ===
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
-        
         // 1. Живой поиск: плавно ищет на лету
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
@@ -382,15 +381,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (query.length >= 2) { 
                 if (typeof searchTheme === 'function') {
                     const found = searchTheme(query);
-                    // КРИТИЧЕСКИЙ ДЕБАГ: Переключаем тему ТОЛЬКО если она реально существует в базе
+                    // Переключаем тему ТОЛЬКО если она реально существует в базе
                     if (found && typeof getThemeData === 'function' && getThemeData(found)) {
                         loadTheme(found); 
+                        
+                        // АВТО-УБОРКА: Если тема успешно применилась на лету — 
+                        // сбрасываем фокус (скрывает клаву) и закрываем шторку панели
+                        themeSearch.blur();
+                        themeSearch.value = ''; // Очищаем поле под следующий раз
+                        
+                        if (typeof closeRightMenu === 'function') {
+                            closeRightMenu();
+                        }
                     }
                 }
             }
         });
 
-        // 2. Нажатие Enter: закрывает всё и прячет клавиатуру
+        // 2. Нажатие Enter: резервный вариант, если до этого не сработало автозакрытие
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault(); 
@@ -400,18 +408,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const found = searchTheme(query);
                     if (found && typeof getThemeData === 'function' && getThemeData(found)) {
                         loadTheme(found);
-                        themeSearch.value = ''; // Очищаем поле только при успешном вводе
+                        themeSearch.value = ''; 
                     }
                 }
                 
-                // В любом случае убираем фокус (прячем клаву на мобилках)
                 themeSearch.blur(); 
                 
-                // Закрываем шторку меню
                 if (typeof closeRightMenu === 'function') {
                     closeRightMenu();
                 }
             }
         });
-    }
-}); // <-- Теперь всё чётко закрыто!
