@@ -370,54 +370,98 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // === ПРОКАЧАННЫЙ И БЕЗОПАСНЫЙ ЖИВОЙ ПОИСК ===
+    // === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК ===
     const themeSearch = document.getElementById('themeSearch');
-    if (themeSearch) {
-        // 1. Живой поиск: плавно ищет на лету
+    const suggestionsBox = document.getElementById('searchSuggestions');
+
+    if (themeSearch && suggestionsBox) {
+        
+        // Функция для отрисовки подсказок
+        const showSuggestions = (query) => {
+            if (typeof getAllThemes !== 'function' || typeof getThemeData !== 'function') return;
+            
+            const allThemes = getAllThemes(); // Берём все ключи тем из базы
+            suggestionsBox.innerHTML = ''; // Чистим старый список
+            
+            // Фильтруем темы по совпадению с введённым текстом (ищем в id темы и в её Ru/Kk названиях)
+            const matches = allThemes.filter(themeKey => {
+                const data = getThemeData(themeKey);
+                const searchStr = `${themeKey} ${data?.titleRu || ''} ${data?.titleKk || ''}`.toLowerCase();
+                return searchStr.includes(query.toLowerCase());
+            });
+
+            if (matches.length === 0) {
+                suggestionsBox.innerHTML = '<div class="suggestion-item" style="color:#94a3b8; cursor:default;">Ничего не найдено</div>';
+                suggestionsBox.style.display = 'block';
+                return;
+            }
+
+            // Выводим подходящие варианты
+            matches.forEach(themeKey => {
+                const data = getThemeData(themeKey);
+                const title = data?.titleRu || themeKey;
+                
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerText = title;
+                
+                // При клике на подсказку — загружаем её
+                div.addEventListener('click', () => {
+                    loadTheme(themeKey);
+                    themeSearch.value = title; // Записываем красивое имя в инпут
+                    hideSuggestions();
+                    themeSearch.blur();
+                    if (typeof closeRightMenu === 'function') closeRightMenu();
+                });
+                
+                suggestionsBox.appendChild(div);
+            });
+            
+            suggestionsBox.style.display = 'block';
+        };
+
+        const hideSuggestions = () => {
+            setTimeout(() => {
+                suggestionsBox.style.display = 'none';
+            }, 250); // Задержка, чтобы клик по элементу успел сработать до скрытия
+        };
+
+        // Живой ввод текста
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
-            
-            // Ищем, только если введено хотя бы 2 символа, чтобы не ловить мусор
-            if (query.length >= 2) { 
-                if (typeof searchTheme === 'function') {
-                    const found = searchTheme(query);
-                    // Переключаем тему ТОЛЬКО если она реально существует в базе
-                    if (found && typeof getThemeData === 'function' && getThemeData(found)) {
-                        loadTheme(found); 
-                        
-                        // АВТО-УБОРКА: Если тема успешно применилась на лету — 
-                        // сбрасываем фокус (скрывает клаву) и закрываем шторку панели
-                        themeSearch.blur();
-                        themeSearch.value = ''; // Очищаем поле под следующий раз
-                        
-                        if (typeof closeRightMenu === 'function') {
-                            closeRightMenu();
-                        }
-                    }
-                }
+            if (query.length >= 2) {
+                showSuggestions(query);
+            } else {
+                suggestionsBox.style.display = 'none';
             }
         });
 
-        // 2. Нажатие Enter: резервный вариант, если до этого не сработало автозакрытие
+        // Скрытие списка при потере фокуса
+        themeSearch.addEventListener('blur', hideSuggestions);
+
+        // При фокусе, если там уже что-то введено, показываем варианты снова
+        themeSearch.addEventListener('focus', () => {
+            const query = themeSearch.value.trim();
+            if (query.length >= 2) showSuggestions(query);
+        });
+
+        // Обработка Enter
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); 
-                
+                e.preventDefault();
                 const query = themeSearch.value.trim();
+                
                 if (typeof searchTheme === 'function' && query.length > 0) {
                     const found = searchTheme(query);
-                    if (found && typeof getThemeData === 'function' && getThemeData(found)) {
+                    if (found) {
                         loadTheme(found);
-                        themeSearch.value = ''; 
+                        const data = typeof getThemeData === 'function' ? getThemeData(found) : null;
+                        themeSearch.value = data?.titleRu || found;
                     }
                 }
-                
-                themeSearch.blur(); 
-                
-                if (typeof closeRightMenu === 'function') {
-                    closeRightMenu();
-                }
+                themeSearch.blur();
+                hideSuggestions();
+                if (typeof closeRightMenu === 'function') closeRightMenu();
             }
         });
-}
-});
+    }
