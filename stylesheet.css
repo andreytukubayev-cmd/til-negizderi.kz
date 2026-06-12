@@ -821,6 +821,66 @@ body {
 }
 
 /* ==========================================================================
+   ЭЛЕКТРОННОЕ ТАБЛО РЕЗУЛЬТАТОВ (ВНУТРИ SIDEBAR-RIGHT)
+   ========================================================================== */
+.scoreboard-container {
+    padding: 0 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.score-display {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.score-display:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
+}
+
+.score-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Цветовая дифференциация кругов */
+.score-display.outer .score-label  { color: #4f46e5; } /* Внешний круг */
+.score-display.middle .score-label { color: #7c3aed; } /* Средний круг */
+.score-display.inner .score-label  { color: #0891b2; } /* Внутренний круг */
+
+.score-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+}
+
+.score-value .lang-kk {
+    font-weight: 700;
+    color: #0f172a;
+    display: block;
+}
+
+.score-value .lang-ru {
+    font-size: 13px;
+    color: #64748b;
+    display: block;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
    6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
    ========================================================================== */
 
@@ -869,6 +929,19 @@ body {
     .wheels-container {
         margin-top: 15px;
         overflow: visible;
+    }
+   /* Разворачиваем табло в горизонтальный ряд на ПК */
+    .scoreboard-container {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 15px;
+        margin-top: 20px;
+        margin-bottom: 25px;
+    }
+
+    .score-display {
+        flex: 1; /* Все три блока будут одинаковой ширины */
+        min-width: 0; /* Защита от переполнения текстом */
     }
 }
 
@@ -977,6 +1050,7 @@ body {
         min-height: 350px;
         height: auto;
         margin: 10px 0 0 0;
+        margin-bottom: -280px; /* Схлопываем пустое пространство от scale(0.5) */
         overflow: visible;
     }
 
