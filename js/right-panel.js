@@ -97,6 +97,7 @@ function regenerateWheels() {
         updateCurrentTheme(currentTheme);
     }
 }
+
 function generateWheelCells(wheelEl, items, type) {
     if (!items || items.length === 0) return;
     
@@ -368,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadTheme(allThemes[0]);
         }
     }
+    
     // === ПРОКАЧАННЫЙ И БЕЗОПАСНЫЙ ЖИВОЙ ПОИСК ===
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
@@ -411,3 +413,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+    }
+}); // <-- Теперь всё чётко закрыто!
