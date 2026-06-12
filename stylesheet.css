@@ -683,19 +683,35 @@ body {
     cursor: pointer;
 }
 
-/* --- ОБЩИЙ УНИФИЦИРОВАННЫЙ БЛОК ПОИСКА (ДЛЯ ПК И МОБИЛОК) --- */
+/* ==========================================================================
+   КОНТЕЙНЕР ПОИСКА И ОБЕРТКА
+   ========================================================================== */
+
+/* Контейнер шапки поиска — теперь занимает всю полезную ширину */
 .search-theme-compact {
     width: 100%;
-    max-width: 280px;
-    margin: 10px 0 15px 20px; /* Отступы: аккуратно сбоку */
+    max-width: none; /* Убираем жесткий лимит на ПК */
+    padding: 0 20px;
+    margin: 15px 0;
     position: relative;
-    z-index: 110; /* Выше, чем колеса */
+    z-index: 110;
+    box-sizing: border-box;
 }
 
+/* Новая обертка для инпута и крестика (чтобы крестик позиционировался внутри) */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Инпут во всю ширину */
 #themeSearch.theme-search-input {
     width: 100%;
     height: 40px;
-    padding: 8px 16px 8px 38px;
+    padding: 8px 36px 8px 38px; /* Увеличили правый отступ до 36px под крестик */
     font-size: 15px;
     font-weight: 700;
     text-align: left;
@@ -708,6 +724,7 @@ body {
     transition: all 0.2s ease-in-out;
     outline: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
 }
 
 #themeSearch.theme-search-input:hover {
@@ -723,12 +740,38 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300b4d8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
 }
 
-/* Выпадающий список автокомплита (ДЛЯ ШАГА 3) */
+/* Кнопка очистки (Крестик) внутри инпута */
+.clear-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    color: #94a3b8;
+    cursor: pointer;
+    display: none; /* Управляется через JS (block/none) */
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    transition: color 0.15s ease;
+    z-index: 5;
+}
+
+.clear-search-btn:hover {
+    color: #64748b;
+}
+
+/* Выпадающий список автокомплита */
 .search-suggestions-box {
     position: absolute;
     top: 44px;
-    left: 0;
-    width: 100%;
+    left: 20px;  /* Выравниваем ровно по границам инпута (с учетом padding контейнера) */
+    right: 20px; /* Растягиваем до правого края инпута */
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -737,6 +780,7 @@ body {
     overflow-y: auto;
     display: none;
     z-index: 120;
+    box-sizing: border-box;
 }
 
 .suggestion-item {
@@ -763,7 +807,7 @@ body {
     position: relative;
     width: 100%; 
     flex-shrink: 0;
-    margin-top: 10px; /* УБРАЛИ ОТРИЦАТЕЛЬНЫЙ МАРГИН, ЧТОБЫ КОЛЕСО СДВИНУЛОСЬ ВНИЗ */
+    margin-top: 10px;
     z-index: 10;
 }
 
@@ -779,6 +823,7 @@ body {
 /* ==========================================================================
    6. МЕДИАЗАПРОСЫ И АДАПТИВНОСТЬ
    ========================================================================== */
+
 /* --- ДЕСКТОП (Экраны шире 768px) --- */
 @media (min-width: 769px) {
     .sidebar {
@@ -891,7 +936,7 @@ body {
         width: 100%;
         height: 75px;
         margin: 0;
-        padding: 15px 70px 15px 16px;
+        padding: 15px 70px 15px 16px; /* Большой отступ справа под мобильный крестик закрытия панели */
         display: flex;
         align-items: center;
         background: #f8fafc;
@@ -901,12 +946,25 @@ body {
         max-width: none;
     }
 
-    #themeSearch.theme-search-input {
+    /* Обертка поиска занимает всё пространство внутри flex-контейнера шапки */
+    .search-wrapper {
         flex: 1;
+        width: 100%;
+        height: 100%;
+    }
+
+    #themeSearch.theme-search-input {
         width: 100%;
         height: 100%;
         margin: 0;
         border-radius: 8px;
+    }
+
+    /* Корректируем координаты подсказок автокомплита на мобильных */
+    .search-suggestions-box {
+        left: 16px;
+        right: 70px;
+        top: 60px;
     }
 
     /* ========== ИСПРАВЛЕНИЕ КОЛЕСА НА МОБИЛЬНЫХ ========== */
