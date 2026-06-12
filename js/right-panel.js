@@ -369,18 +369,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+// === ПРОКАЧАННЫЙ ЖИВОЙ ПОИСК ===
     const themeSearch = document.getElementById('themeSearch');
     if (themeSearch) {
+        
+        // 1. Живой поиск: реагирует на каждый ввод символа
+        themeSearch.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (query.length >= 2) { // Начинаем искать, если введено хотя бы 2 символа
+                if (typeof searchTheme === 'function') {
+                    const found = searchTheme(query);
+                    if (found) {
+                        loadTheme(found); // Колёса переключатся на лету!
+                    }
+                }
+            }
+        });
+
+        // 2. Нажатие Enter: фиксирует выбор, убирает клавиатуру и закрывает панель
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // Блокируем стандартное поведение отправки формы
+                
                 if (typeof searchTheme === 'function') {
                     const found = searchTheme(themeSearch.value);
                     if (found) {
                         loadTheme(found);
-                        themeSearch.value = '';
+                        themeSearch.value = ''; // Очищаем поле ввода
+                        
+                        // Скрываем экранную клавиатуру на телефонах
+                        themeSearch.blur(); 
+                        
+                        // Автоматически закрываем правую боковую панель, если функция закрытия доступна в HTML
+                        if (typeof closeRightMenu === 'function') {
+                            closeRightMenu();
+                        }
                     }
                 }
             }
         });
     }
-});
