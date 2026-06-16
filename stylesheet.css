@@ -1137,7 +1137,7 @@ body {
     width: 100%;
     max-width: 450px; /* Идеальная ширина под мобильные и десктопные панели */
     height: 780px;    /* Высота корпуса прибора */
-    background: url('calc_bg.png') no-repeat center top;
+    background: url('foncalc.png') no-repeat center top;
     background-size: contain;
     position: relative;
     box-sizing: border-box;
