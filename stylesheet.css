@@ -1128,3 +1128,174 @@ body {
         font-size: 14px;
     }
 }
+/* ==========================================================================
+   ИЗОЛИРОВАННЫЙ БЛОК: СТИЛИ ДЛЯ ИНДУСТРИАЛЬНОГО КАЛЬКУЛЯТОРА (ПРАВАЯ ПАНЕЛЬ)
+   ========================================================================== */
+
+/* 1. Главный контейнер калькулятора (вложен в sidebar-right) */
+.calculator-device {
+    width: 100%;
+    max-width: 450px; /* Идеальная ширина под мобильные и десктопные панели */
+    height: 780px;    /* Высота корпуса прибора */
+    background: url('calc_bg.png') no-repeat center top;
+    background-size: contain;
+    position: relative;
+    box-sizing: border-box;
+    padding: 20px;
+    margin: 0 auto;
+    overflow: hidden; /* Чтобы колеса не вылезали за пределы корпуса */
+}
+
+/* 2. Позиционирование инпута поиска строго поверх рамки на картинке */
+.calc-search-row {
+    position: absolute;
+    top: 35px;       /* Подгони этот параметр (отступ сверху), чтобы попасть в рамку */
+    left: 40px;
+    right: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    z-index: 50;     /* Поиск должен быть кликабельным всегда */
+}
+.calc-search-row .search-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.calc-search-row .theme-search-input {
+    width: 100%;
+    height: 100%;
+    background: transparent !important; /* Убираем стандартный фон */
+    border: none !important;
+    outline: none !important;
+    color: #ffffff !important;
+    font-size: 16px;
+    padding: 0 35px 0 10px;
+    box-sizing: border-box;
+}
+.calc-search-row .clear-search-btn {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* 3. Экран вывода результатов (Montana) */
+.calc-screen-area {
+    position: absolute;
+    top: 110px;      /* Расстояние от верха прибора до твоего нарисованного экрана */
+    left: 35px;
+    right: 35px;
+    height: 230px;   /* Высота твоего нарисованного экрана */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px 10px;
+    box-sizing: border-box;
+    background: transparent; /* Сквозь него видно текстуру нарисованного дисплея */
+    z-index: 45;
+}
+.calc-display-line {
+    display: flex;
+    flex-direction: column; /* Метка над текстом, как на концепте */
+    margin-bottom: 5px;
+}
+.calc-display-line .lbl-q, 
+.calc-display-line .lbl-a, 
+.calc-display-line .lbl-r {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+.calc-display-line .lbl-q { color: #ff453a; }
+.calc-display-line .lbl-a { color: #32d74b; }
+.calc-display-line .lbl-r { color: #ffd60a; }
+
+/* Текстовые контейнеры внутри экрана */
+.calc-display-line .txt-box {
+    display: flex;
+    flex-direction: column;
+}
+.calc-display-line .lang-kk {
+    font-size: 18px;
+    font-weight: 700;
+    color: #00f3ff;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+    line-height: 1.2;
+}
+.calc-display-line .lang-ru {
+    font-size: 12px;
+    color: #a0aec0;
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+/* 4. Нижняя палуба, где сидит механизм колес */
+.calc-wheels-deck {
+    position: absolute;
+    top: 380px;      /* Координата, где на картинке начинается физическая прорезь под колеса */
+    left: 0;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Контейнер, куда right-panel.js генерирует колеса */
+.calc-wheels-deck #wheelsContainer {
+    position: absolute;
+    top: 30px;       /* Сдвиг центральной оси колес вниз, чтобы верхний сектор был под стрелкой */
+    left: 50%;
+    transform: translateX(-50%) !important;
+    width: 640px;    /* Базовые размеры под генерацию SVG */
+    height: 640px;
+    z-index: 15;     /* Колеса лежат внутри палубы */
+}
+
+/* Синяя стрелка-указатель */
+.calc-wheels-deck .pointer-needle {
+    position: absolute;
+    top: 15px;       /* Стрелка указывает точно на верхнюю грань колеса */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 15px solid #00f3ff;
+    filter: drop-shadow(0 0 5px #00f3ff);
+    z-index: 40;     /* Стрелка поверх колеса */
+}
+
+/* 5. Главный секрет: Маска-кожух, прячущая нижнюю половину кругов */
+.calc-front-shroud {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 210px;   /* Закрывает нижнюю часть колес, где текст перевернут */
+    background: url('calc_bg.png') no-repeat center bottom;
+    background-size: contain; /* Картинка калькулятора идеально совпадает по пикселям на стыке */
+    z-index: 30;     /* Лежит НАД колесами */
+    pointer-events: none; /* Пропускает клики насквозь, чтобы колеса можно было крутить мышкои */
+}
+
+/* 6. Кнопка «СБРОС» на оси вращения */
+.calc-reset-knob {
+    position: absolute;
+    top: 350px;      /* Выставь строго по центру оси нарисованной крутилки */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: transparent; /* Полностью прозрачная, если кнопка уже нарисована на картинке */
+    cursor: pointer;
+    z-index: 35;     /* НАД маской, чтобы на нее можно было нажать */
+}
