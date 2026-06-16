@@ -1135,15 +1135,15 @@ body {
 /* 1. Главный контейнер калькулятора (вложен в sidebar-right) */
 .calculator-device {
     width: 100%;
-    max-width: 450px; /* Идеальная ширина под мобильные и десктопные панели */
-    height: 780px;    /* Высота корпуса прибора */
-    background: url('foncalc.png') no-repeat center top;
-    background-size: contain;
+    max-width: 520px; /* Увеличили ширину с 450px до 520px */
+    height: 900px;    /* Увеличили высоту с 780px до 900px */
+    background: url('calc_bg.png') no-repeat center top;
+    background-size: 100% 100%; 
     position: relative;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 0;
     margin: 0 auto;
-    overflow: hidden; /* Чтобы колеса не вылезали за пределы корпуса */
+    overflow: hidden; 
 }
 
 /* 2. Позиционирование инпута поиска строго поверх рамки на картинке */
