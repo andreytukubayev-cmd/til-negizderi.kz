@@ -1135,7 +1135,7 @@ body {
 /* 1. Главный контейнер калькулятора (вложен в sidebar-right) */
 .calculator-device {
     width: 100%;
-    height: 554px;    /* Точная пропорциональная высота прибора (520 * 1057 / 992) */
+    height: 780px;
     background: url('foncalc.png') no-repeat center top;
     background-size: 100% 100%; 
     position: relative;
