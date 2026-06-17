@@ -23,8 +23,6 @@ function loadTheme(themeName) {
         inner: themeData.inner || []
     };
     
-    // ИСПРАВЛЕНИЕ: Если это первая загрузка ИЛИ движок уже работает — 
-    // в обоих случаях нам нужно построить (или перестроить) колёса!
     regenerateWheels();
     
     return true;
@@ -54,17 +52,42 @@ function regenerateWheels() {
     innerWheel.className = 'wheel inner-wheel';
     innerWheel.id = 'originalInnerWheel';
     
-    const centerBtn = document.createElement('div');
-    centerBtn.className = 'center-cap';
-    centerBtn.innerText = 'СБРОС';
-    
     deviceBody.appendChild(outerWheel);
     deviceBody.appendChild(middleWheel);
     deviceBody.appendChild(innerWheel);
     deviceBody.appendChild(pointer);
-    deviceBody.appendChild(centerBtn);
     
     container.appendChild(deviceBody);
+    
+    // ===== НОВАЯ КНОПКА СБРОС (снаружи колеса, сверху справа) =====
+    const resetBtn = document.createElement('button');
+    resetBtn.id = 'resetWheelsBtn';
+    resetBtn.className = 'reset-btn-outside';
+    // === SVG ИКОНКА СТРЕЛКИ СБРОСА ===
+resetBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 4v6h6" />
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+    </svg>
+`;
+    // Находим .calc-wheels-deck
+const deck = document.querySelector('.calc-wheels-deck');
+if (deck) {
+    deck.appendChild(resetBtn);
+} else {
+    // fallback — если дека нет, добавляем в container
+    container.appendChild(resetBtn);
+}
+    
+    // Обработчик для новой кнопки
+    resetBtn.addEventListener('click', function() {
+        rotations = { inner: 0, middle: 0, outer: 0 };
+        innerWheel.style.transform = 'rotate(0deg)';
+        middleWheel.style.transform = 'rotate(0deg)';
+        outerWheel.style.transform = 'rotate(0deg)';
+        updateWheelsDisplay(0, 0, 0);
+        playClick();
+    });
     
     // ЗАЩИТА: Если в базе пусто, не падаем
     if (window.dataset && window.dataset.outer) {
@@ -79,24 +102,15 @@ function regenerateWheels() {
     setupDragForWheel(middleWheel, 'middle');
     setupDragForWheel(outerWheel, 'outer');
     
-    centerBtn.addEventListener('click', () => {
-        rotations = { inner: 0, middle: 0, outer: 0 };
-        innerWheel.style.transform = 'rotate(0deg)';
-        middleWheel.style.transform = 'rotate(0deg)';
-        outerWheel.style.transform = 'rotate(0deg)';
-        updateWheelsDisplay(0, 0, 0);
-        playClick();
-    });
-    
     updateWheelsDisplay(0, 0, 0);
     
-    // Фиксируем, что движок успешно стартовал
     originalEngineInitialized = true;
     
     if (typeof updateCurrentTheme === 'function') {
         updateCurrentTheme(currentTheme);
     }
 }
+
 
 function generateWheelCells(wheelEl, items, type) {
     if (!items || items.length === 0) return;
