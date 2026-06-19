@@ -425,11 +425,12 @@ body {
     border: 1px solid #e2e8f0;
     border-radius: var(--radius-md);
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    max-height: 200px;
-    overflow-y: auto;
     display: none;
     z-index: 120;
+    max-height: 380px; 
+    overflow: hidden; 
 }
+
 .suggestion-item {
     padding: 10px 14px;
     font-size: 14px;
@@ -687,6 +688,44 @@ body {
 .calc-search-row .theme-search-input:focus::placeholder {
     color: transparent !important;
     opacity: 0 !important;
+}
+
+/* Кнопки прокрутки в выпадающем списке */
+.suggestions-scroll-btn {
+    text-align: center;
+    padding: 6px 0;
+    background-color: #1e293b; /* Темный фон в тон панели */
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.suggestions-scroll-btn:hover {
+    background-color: #334155; /* Выделение при наведении */
+    color: #f8fafc;
+}
+
+.scroll-up {
+    border-bottom: 1px solid #334155;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.scroll-down {
+    border-top: 1px solid #334155;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Скрываем стандартный тонкий системный скроллбар, раз у нас теперь есть стрелки */
+.suggestions-items-container::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+.suggestions-items-container {
+    scrollbar-width: none; /* Для Firefox */
 }
 
 /* Экран результатов */
