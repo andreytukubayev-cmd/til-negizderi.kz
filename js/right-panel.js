@@ -1,265 +1,554 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="stylesheet.css">
-    <title>Изучение казахского языка по методике Тукубаева А.С.</title>
-</head>
-<body>
-    <div class="menu-overlay" id="menuOverlay"></div>
-    <div class="menu-overlay-right" id="menuOverlayRight"></div>
+// Правая панель с колёсами Луллия
 
-    <div class="container">
-        <div class="sidebar" id="sidebar">
-            <div class="profile">
-                <div class="avatar-placeholder">
-                    <img src="as.jpg" alt="Тукубаев А.С." class="avatar">
-                </div>
-                <h2>Тукубаев А.С.</h2>
-                <p>Методика изучения<br>казахского языка<br>
-                для студентов, педагогов и госслужащих</p>
-            </div>
+if (typeof currentTheme === 'undefined') {
+    var currentTheme = ''; // Инициализируем пустой строкой, выставим динамически
+}
+let rotations = { inner: 0, middle: 0, outer: 0 };
+let originalEngineInitialized = false;
 
-            <div class="method-info">
-                <h3>🎯 О методике</h3>
-                <p style="text-align: justify; margin-bottom: 5px;">
-                    В когнитивной психологии и нейробиологии уровень рабочей памяти (включая её компонент — фонологическую петлю) обычно оценивается через распределение в популяции (колоколообразная кривая Гаусса) и объем удерживаемых единиц информации.
-                </p>
-
-                <details style="margin-bottom: 15px; cursor: pointer;">
-                    <summary style="font-weight: bold; color: #00bcd4; margin-bottom: 15px; padding: 5px 0; font-size: 13px;">
-                        📖 Развернуть/свернуть...
-                    </summary>
-                    
-                    <div style="padding-left: 12px; border-left: 2px solid rgba(255,255,255,0.15); margin-top: 10px;">
-                        <p style="text-align: justify; margin-bottom: 20px;">   
-                            Понятие «магического числа 7±2» (Джордж Миллер) для рабочей памяти сейчас пересмотрено. Современные исследования (например, Нэльсона Коуэна) доказывают, что чистый объем рабочей памяти (без применения фокусов кодирования и мнемотехник) у обычного человека составляет всего 4±1 единицы информации. Однако, устоявшиеся методики обучения языкам продолжают опираться на сильную фонологическую и рабочую память, хотя людей с таким типом памяти около 10-15%. В результате такого обучения, из группы в 20 слушателей, более-менее комфортно себя чувствуют лишь 2-3 человека.<br><br>
-                            Ситуация усугубляется очередностью обучения, когда слушателю, не умеющему говорить на языке и не понимающему его, предлагается учить алфавит, числа и грамматику. Хотя в природе заложено, что ребенок сперва начинает говорить и понимать речь, а лишь затем переходит к алфавиту.
-                        </p>
-                        
-                        <p style="text-align: justify; margin-bottom: 20px;">
-                            Авторская концепция <b>Тукубаева А.С.</b> фокусируется на естественном освоении языка через контекст и практику, минуя классические академические барьеры.
-                        </p>
-
-                        <ul style="margin-bottom: 15px; padding-left: 20px;">
-                            <li style="text-align: justify; margin-bottom: 8px;"><b>Естественный алгоритм:</b> Сначала формирование навыка понимания и живой речи, затем — систематизация правил.</li>
-                            <li style="text-align: justify; margin-bottom: 8px;"><b>Деловая коммуникация на выбор:</b> Изучение структур, необходимых для студенческой жизни, профессионального общения и официального стиля.</li>
-                            <li style="text-align: justify; margin-bottom: 8px;"><b>Прикладной характер:</b> Инструменты для мгновенного внедрения языка в ежедневную учебную или рабочую деятельность.</li>
-                        </ul>
-
-                        <div style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; font-style: italic; font-size: 11px; margin-top: 15px; text-align: justify;">
-                            "Методика ориентирована на результат: от первого диалога до свободного владения в профессиональной среде."
-                        </div>
-                    </div>
-                </details>
-            </div>
-
-            <div class="stats">
-                <h3 id="statsTitle">📊 Ваша статистика</h3>
-                <div class="stat-item">
-                    <span class="stat-label">Переведено фраз:</span>
-                    <span class="stat-value" id="totalTranslations">0</span>
-                </div>
-                
-                <div id="auth-google-container">
-                    <button id="google-signin-btn" class="btn-google">
-                        <img src="https://authjs.dev/img/providers/google.svg" alt="Google" width="20" height="20">
-                        Войти через Google
-                    </button>
-                </div>
-                <button id="logout-btn" class="btn-logout" style="display: none;">Выйти из аккаунта</button>
-            </div>     
-        </div>
-
-        <div class="chat-area">
-            <div class="chat-header">
-                <button class="menu-toggle" id="menuToggle">☰</button>
-                <div class="header-text">
-                    <h1>🤖 AI-помощник по казахскому языку</h1>
-                    <p>Перевод и ситуации по методике Тукубаева А.С.</p>
-                </div>
-                <button class="menu-toggle-right" id="menuToggleRight">🎡</button>
-            </div>
-
-            <div class="messages" id="messages">
-                <div class="message bot">
-                    <div class="message-content">
-                        👋 <strong>Здравствуйте!</strong><br><br>
-                        Я - AI-помощник, обученный по методике Тукубаева А.С.<br><br>
-                        <strong>Как ваше имя?</strong>
-                    </div>
-                </div>
-            </div>
-
-            <form class="input-area" id="chatForm">
-                <input type="text" id="userInput" placeholder="Напишите фразу на русском..." required />
-                <button type="submit" id="sendBtn">📤 Отправить</button>
-            </form>
-        </div>
-
-<div class="sidebar-right" id="sidebarRight">
-            <button class="menu-close-right" id="menuCloseRight">🎡</button>
-
-            <div class="calculator-device">
-                
-                <div class="calc-search-row">
-                    <div class="search-wrapper">
-                        <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
-                        <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
-                    </div>
-                    <div id="searchSuggestions" class="search-suggestions-box"></div>
-                </div>
-
-                <div id="wheelsDisplay" class="calc-screen-area">
-                    
-                    <div class="calc-display-line">
-                        <span class="lbl-q">ВОПРОС</span>
-                        <div class="txt-box">
-                            <span class="lang-kk" id="dash-q-kk">-</span>
-                            <span class="lang-ru" id="dash-q-ru">-</span>
-                        </div>
-                    </div>
-
-                    <div class="calc-display-line">
-                        <span class="lbl-a">ОТВЕТ</span>
-                        <div class="txt-box">
-                            <span class="lang-kk" id="dash-a-kk">-</span>
-                            <span class="lang-ru" id="dash-a-ru">-</span>
-                        </div>
-                    </div>
-
-                    <div class="calc-display-line">
-                        <span class="lbl-r">РЕАКЦИЯ</span>
-                        <div class="txt-box">
-                            <span class="lang-kk" id="dash-r-kk">-</span>
-                            <span class="lang-ru" id="dash-r-ru">-</span>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="calc-wheels-deck">
+function loadTheme(themeName) {
+    const themeData = getThemeData(themeName);
+    if (!themeData) return false;
     
-    <div id="wheelsContainer" class="wheels-container"></div>
+    currentTheme = themeName;
     
-</div>
-            </div> 
-			
-			</div>
-        
-    </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/wheels_library.js"></script>
-    <script src="js/localTranslator.js"></script>
-    <script src="js/right-panel.js"></script>
-    <script src="js/chat.js"></script>
+    const themeTitleEl = document.getElementById('currentTheme');
+    if (themeTitleEl) {
+        themeTitleEl.innerText = themeData.titleRu || themeName;
+    }
     
-    <script>
-        // === Управление левым меню ===
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const menuOverlay = document.getElementById('menuOverlay');
+    window.dataset = {
+        outer: themeData.outer || [],
+        middle: themeData.middle || [],
+        inner: themeData.inner || []
+    };
+    
+    regenerateWheels();
+    
+    return true;
+}
+
+function regenerateWheels() {
+    const container = document.getElementById('wheelsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const deviceBody = document.createElement('div');
+    deviceBody.className = 'device-body';
+    
+    const pointer = document.createElement('div');
+    pointer.className = 'pointer-needle';
+    
+    const outerWheel = document.createElement('div');
+    outerWheel.className = 'wheel outer-wheel';
+    outerWheel.id = 'originalOuterWheel';
+    
+    const middleWheel = document.createElement('div');
+    middleWheel.className = 'wheel middle-wheel';
+    middleWheel.id = 'originalMiddleWheel';
+    
+    const innerWheel = document.createElement('div');
+    innerWheel.className = 'wheel inner-wheel';
+    innerWheel.id = 'originalInnerWheel';
+    
+    deviceBody.appendChild(outerWheel);
+    deviceBody.appendChild(middleWheel);
+    deviceBody.appendChild(innerWheel);
+    deviceBody.appendChild(pointer);
+    
+    container.appendChild(deviceBody);
+    
+    // ===== НОВАЯ КНОПКА СБРОС (снаружи колеса, сверху справа) =====
+    const resetBtn = document.createElement('button');
+    resetBtn.id = 'resetWheelsBtn';
+    resetBtn.className = 'reset-btn-outside';
+    // === SVG ИКОНКА СТРЕЛКИ СБРОСА ===
+resetBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 4v6h6" />
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+    </svg>
+`;
+    // Находим .calc-wheels-deck
+const deck = document.querySelector('.calc-wheels-deck');
+if (deck) {
+    deck.appendChild(resetBtn);
+} else {
+    // fallback — если дека нет, добавляем в container
+    container.appendChild(resetBtn);
+}
+    
+    // Обработчик для новой кнопки
+    resetBtn.addEventListener('click', function() {
+        rotations = { inner: 0, middle: 0, outer: 0 };
+        innerWheel.style.transform = 'rotate(0deg)';
+        middleWheel.style.transform = 'rotate(0deg)';
+        outerWheel.style.transform = 'rotate(0deg)';
+        updateWheelsDisplay(0, 0, 0);
+        playClick();
+    });
+    
+    // ЗАЩИТА: Если в базе пусто, не падаем
+    if (window.dataset && window.dataset.outer) {
+        generateWheelCells(outerWheel, window.dataset.outer, 'outer');
+        generateWheelCells(middleWheel, window.dataset.middle, 'middle');
+        generateWheelCells(innerWheel, window.dataset.inner, 'inner');
+    }
+    
+    rotations = { inner: 0, middle: 0, outer: 0 };
+    
+    setupDragForWheel(innerWheel, 'inner');
+    setupDragForWheel(middleWheel, 'middle');
+    setupDragForWheel(outerWheel, 'outer');
+    
+    updateWheelsDisplay(0, 0, 0);
+    
+    originalEngineInitialized = true;
+    
+    if (typeof updateCurrentTheme === 'function') {
+        updateCurrentTheme(currentTheme);
+    }
+}
+
+
+function generateWheelCells(wheelEl, items, type) {
+    if (!items || items.length === 0) return;
+    
+    const count = items.length;
+    const angleStep = 360 / count;
+    
+    let dMax = 0, rIn = 0, rOut = 0, textRadius = 0;
+    
+    if (type === 'outer') {
+        dMax = 640; rIn = 265; rOut = 320; textRadius = 295;
+    } else if (type === 'middle') {
+        dMax = 530; rIn = 195; rOut = 265; textRadius = 232;
+    } else if (type === 'inner') {
+        dMax = 390; rIn = 0; rOut = 195; textRadius = 160;
+    }
+    
+    const cx = dMax / 2;
+    const cy = dMax / 2;
+    
+    const colors = {
+        outer: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff'],
+        middle: ['#f4f5f7', '#eaecf0', '#e1e4ea', '#d8dce4', '#cfd4dc', '#c6cbd6'],
+        inner: ['#ffffff', '#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da']
+    };
+    
+    wheelEl.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        const obj = items[i];
+        const currentAngle = i * angleStep;
         
-        function openMenu() {
-            sidebar.classList.add('open');
-            menuOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeMenu() {
-            sidebar.classList.remove('open');
-            menuOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-        if (menuToggle) menuToggle.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
-        if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
+        const cell = document.createElement('div');
+        cell.className = 'segment-cell';
+        cell.style.position = 'absolute';
+        cell.style.width = '100%';
+        cell.style.height = '100%';
+        cell.style.top = '0';
+        cell.style.left = '0';
+        cell.style.transform = `rotate(${currentAngle}deg)`;
+        cell.style.transformOrigin = `${cx}px ${cy}px`;
+        cell.style.overflow = 'visible';
         
-        // === Управление статистикой ===
-        function updateStatsTitle() {
-            const statsTitle = document.getElementById('statsTitle');
-            const userName = localStorage.getItem('userName');
-            statsTitle.innerHTML = userName ? `📊 Ваша статистика, ${userName}` : `📊 Ваша статистика`;
-        }
-        updateStatsTitle();
-        window.addEventListener('storage', (e) => { if (e.key === 'userName') updateStatsTitle(); });
-
-        // === УПРАВЛЕНИЕ ПРАВОЙ ПАНЕЛЬЮ ===
-        const menuToggleRight = document.getElementById('menuToggleRight');
-        const menuCloseRight = document.getElementById('menuCloseRight');
-        const sidebarRight = document.getElementById('sidebarRight');
-        const menuOverlayRight = document.getElementById('menuOverlayRight');
-
-        function openRightMenu() {
-            sidebarRight.classList.add('open');
-            if (menuOverlayRight) menuOverlayRight.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeRightMenu() {
-            sidebarRight.classList.remove('open');
-            if (menuOverlayRight) menuOverlayRight.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function toggleRightMenu() {
-            if (sidebarRight.classList.contains('open')) {
-                closeRightMenu();
-            } else {
-                openRightMenu();
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "wheel-svg");
+        svg.setAttribute("viewBox", `0 0 ${dMax} ${dMax}`);
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        
+        const startAngle = -120;
+        const endAngle = -60;
+        const sectorPathData = svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle);
+        const sectorColor = colors[type][i % 6];
+        
+        const getArcPath = (radius) => {
+            const startRad = (-116 * Math.PI) / 180;
+            const endRad = (-64 * Math.PI) / 180;
+            const x1 = cx + radius * Math.cos(startRad);
+            const y1 = cy + radius * Math.sin(startRad);
+            const x2 = cx + radius * Math.cos(endRad);
+            const y2 = cy + radius * Math.sin(endRad);
+            return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
+        };
+        
+        const splitText = (text, limit) => {
+            if (!text) return ['', ''];
+            if (text.length <= limit || !text.includes(' ')) return [text, ''];
+            const words = text.split(' ');
+            let line1 = '', line2 = '';
+            for (let w = 0; w < words.length; w++) {
+                if ((line1 + words[w]).length <= limit) {
+                    line1 += (line1 === '' ? '' : ' ') + words[w];
+                } else {
+                    line2 = words.slice(w).join(' ');
+                    break;
+                }
             }
+            return line1 === '' ? [text.slice(0, limit), text.slice(limit)] : [line1, line2];
+        };
+        
+        const limit = type === 'inner' ? 12 : 50;
+        const [kkLine1, kkLine2] = splitText(obj.kk, limit);
+        const [ruLine1, ruLine2] = splitText(obj.ru, limit);
+        
+        const step = 14;
+        let svgContent = `<path d="${sectorPathData}" fill="${sectorColor}" stroke="white" stroke-width="2"/>`;
+        let currentR = textRadius;
+        
+        if (kkLine2) {
+            const pId = `p_kk_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+            currentR -= step;
+            const pId2 = `p_kk2_${type}_${i}`;
+            svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${kkLine2}</textPath></text>`;
+            currentR -= step + 4;
+        } else {
+            const pId = `p_kk_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-kk" font-size="14px" font-weight="800" fill="#1a1d24"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${kkLine1}</textPath></text>`;
+            currentR -= step + 4;
         }
+        
+        if (ruLine2) {
+            const pId = `p_ru_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+            currentR -= step;
+            const pId2 = `p_ru2_${type}_${i}`;
+            svgContent += `<defs><path id="${pId2}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId2}" startOffset="50%" text-anchor="middle">${ruLine2}</textPath></text>`;
+        } else {
+            const pId = `p_ru_${type}_${i}`;
+            svgContent += `<defs><path id="${pId}" d="${getArcPath(currentR)}" fill="none"/></defs>`;
+            svgContent += `<text class="svg-text-ru" font-size="11px" font-weight="600" fill="#4a5568"><textPath href="#${pId}" startOffset="50%" text-anchor="middle">${ruLine1}</textPath></text>`;
+        }
+        
+        svg.innerHTML = svgContent;
+        cell.appendChild(svg);
+        wheelEl.appendChild(cell);
+    }
+}
 
-        if (menuToggleRight) {
-            menuToggleRight.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleRightMenu();
+function svgSectorPath(cx, cy, rIn, rOut, startAngle, endAngle) {
+    const toRad = Math.PI / 180;
+    const x1_out = cx + rOut * Math.cos(startAngle * toRad);
+    const y1_out = cy + rOut * Math.sin(startAngle * toRad);
+    const x2_out = cx + rOut * Math.cos(endAngle * toRad);
+    const y2_out = cy + rOut * Math.sin(endAngle * toRad);
+    const x1_in = cx + rIn * Math.cos(endAngle * toRad);
+    const y1_in = cy + rIn * Math.sin(endAngle * toRad);
+    const x2_in = cx + rIn * Math.cos(startAngle * toRad);
+    const y2_in = cy + rIn * Math.sin(startAngle * toRad);
+    return `M ${x1_out} ${y1_out} A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out} L ${x1_in} ${y1_in} A ${rIn} ${rIn} 0 0 0 ${x2_in} ${y2_in} Z`;
+}
+
+let clickAudio = null;
+try {
+    clickAudio = new Audio('short-click.mp3');
+    clickAudio.volume = 0.35;
+} catch(e) {}
+
+function playClick() {
+    if (clickAudio) {
+        clickAudio.currentTime = 0;
+        clickAudio.play().catch(() => {});
+    }
+}
+
+function setupDragForWheel(wheelEl, key) {
+    let isDragging = false;
+    let startAngle = 0;
+    let lastSectorIndex = 0;
+    
+    const getAngle = (e) => {
+        const rect = wheelEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+    };
+    
+    const getCurrentSector = (rotation) => {
+        let norm = (-rotation) % 360;
+        if (norm < 0) norm += 360;
+        return Math.round(norm / 60) % 6;
+    };
+    
+    const onStart = (e) => {
+        isDragging = true;
+        startAngle = getAngle(e) - rotations[key];
+        wheelEl.style.transition = 'none';
+        lastSectorIndex = getCurrentSector(rotations[key]);
+        e.preventDefault();
+    };
+    
+    const onMove = (e) => {
+        if (!isDragging) return;
+        rotations[key] = getAngle(e) - startAngle;
+        wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+        
+        const currentSector = getCurrentSector(rotations[key]);
+        if (currentSector !== lastSectorIndex) {
+            playClick();
+            lastSectorIndex = currentSector;
+        }
+        
+        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        e.preventDefault();
+    };
+    
+    const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wheelEl.style.transition = 'transform 0.3s ease';
+        rotations[key] = Math.round(rotations[key] / 60) * 60;
+        wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
+        playClick();
+        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+    };
+    
+    wheelEl.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    wheelEl.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+}
+
+function updateWheelsDisplay(outerRot, middleRot, innerRot) {
+    if (!window.dataset || !window.dataset.outer) return;
+
+    const getIndex = (rotation) => {
+        let norm = (-rotation) % 360;
+        if (norm < 0) norm += 360;
+        return Math.round(norm / 60) % 6;
+    };
+    
+    const outerIdx = getIndex(outerRot);
+    const middleIdx = getIndex(middleRot);
+    const innerIdx = getIndex(innerRot);
+    
+    const outerData = window.dataset.outer[outerIdx];
+    const middleData = window.dataset.middle[middleIdx];
+    const innerData = window.dataset.inner[innerIdx];
+    
+    // ТОЧЕЧНОЕ ОБНОВЛЕНИЕ ТЕКСТА БЕЗ УНИЧТОЖЕНИЯ КРАСИВОЙ РАЗМЕТКИ MONTANA:
+    
+    // Вопрос (Внешний круг)
+    const qKk = document.getElementById('dash-q-kk');
+    const qRu = document.getElementById('dash-q-ru');
+    if (qKk) qKk.innerText = outerData?.kk || '-';
+    if (qRu) qRu.innerText = outerData?.ru || '-';
+    
+    // Ответ (Средний круг)
+    const aKk = document.getElementById('dash-a-kk');
+    const aRu = document.getElementById('dash-a-ru');
+    if (aKk) aKk.innerText = middleData?.kk || '-';
+    if (aRu) aRu.innerText = middleData?.ru || '-';
+    
+    // Реакция (Внутренний круг)
+    const rKk = document.getElementById('dash-r-kk');
+    const rRu = document.getElementById('dash-r-ru');
+    if (rKk) rKk.innerText = innerData?.kk || '-';
+    if (rRu) rRu.innerText = innerData?.ru || '-';
+}
+// ГЛОБАЛЬНЫЙ МОСТ ДЛЯ ИИ-КОНТЕКСТА И ТЕСТОВОГО СТЕНДА
+window.findAndRenderTheme = function(aiSuggestedWord) {
+    if (typeof searchTheme !== 'function') return;
+    const matchedThemeId = searchTheme(aiSuggestedWord);
+    if (matchedThemeId) {
+        loadTheme(matchedThemeId);
+    }
+};
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    // Безопасно получаем список всех зарегистрированных ключей тем
+    if (typeof getAllThemes === 'function') {
+        const allThemes = getAllThemes();
+        if (allThemes.length > 0) {
+            // Динамически загружаем самую первую тему из 38 существующих
+            loadTheme(allThemes[0]);
+        }
+    }
+    
+// === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК (ВАРИАНТ 3) ===
+    const themeSearch = document.getElementById('themeSearch');
+    const suggestionsBox = document.getElementById('searchSuggestions');
+    const clearSearchBtn = document.getElementById('clearSearchBtn'); 
+
+    if (themeSearch && suggestionsBox) {
+        
+        // Переключатель видимости крестика в зависимости от текста
+        const toggleClearButton = (text) => {
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = text.length > 0 ? 'block' : 'none';
+            }
+        };
+
+        // Функция для отрисовки подсказок с кнопками прокрутки
+        const showSuggestions = (query) => {
+            if (typeof getAllThemes !== 'function' || typeof getThemeData !== 'function') return;
+            
+            const allThemes = getAllThemes();
+            suggestionsBox.innerHTML = ''; // Чистим старый список
+            
+            // Фильтруем темы
+            const matches = allThemes.filter(themeKey => {
+                if (!query) return true;
+                const data = getThemeData(themeKey);
+                const searchStr = `${themeKey} ${data?.titleRu || ''} ${data?.titleKk || ''}`.toLowerCase();
+                return searchStr.includes(query.toLowerCase());
+            });
+
+            if (matches.length === 0) {
+                suggestionsBox.innerHTML = '<div class="suggestion-item" style="color:#94a3b8; cursor:default;">Ничего не найдено</div>';
+                suggestionsBox.style.display = 'block';
+                return;
+            }
+
+            // Создаем внутренний контейнер исключительно для элементов (чтобы стрелки не уезжали при скролле)
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'suggestions-items-container';
+            // Стилизуем его прямо в JS, чтобы не ломать ваши CSS файлы
+            itemsContainer.style.maxHeight = '320px';
+            itemsContainer.style.overflowY = 'auto';
+            itemsContainer.style.scrollBehavior = 'smooth'; // Плавная прокрутка
+
+            // Выводим варианты во внутренний контейнер
+            matches.forEach(themeKey => {
+                const data = getThemeData(themeKey);
+                const title = data?.titleRu || themeKey;
+                
+                const div = document.createElement('div');
+                const isCurrent = (currentTheme === themeKey);
+                
+                div.className = `suggestion-item ${isCurrent ? 'active-theme-item' : ''}`;
+                div.innerText = title;
+                
+                div.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    loadTheme(themeKey);
+                    themeSearch.value = title; 
+                    themeSearch.dataset.oldValue = title; // Обновляем сохраненное значение
+                    toggleClearButton(title); 
+                    hideSuggestions();
+                    themeSearch.blur();
+                    if (typeof closeRightMenu === 'function') closeRightMenu();
+                });
+                
+                itemsContainer.appendChild(div);
+            });
+
+            suggestionsBox.appendChild(itemsContainer);
+
+            // === ДОБАВЛЯЕМ КНОПКИ ПРОКРУТКИ (ИЗМЕНЕНО: теперь если больше 8 элементов) ===
+            if (matches.length > 8) {
+                const scrollUpBtn = document.createElement('div');
+                scrollUpBtn.className = 'suggestions-scroll-btn scroll-up';
+                scrollUpBtn.innerHTML = '▲';
+                
+                const scrollDownBtn = document.createElement('div');
+                scrollDownBtn.className = 'suggestions-scroll-btn scroll-down';
+                scrollDownBtn.innerHTML = '▼';
+
+                // Нажатие на стрелку вверх
+                scrollUpBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // Чтобы инпут не терял фокус
+                    itemsContainer.scrollTop -= 110; // Шаг прокрутки вверх
+                });
+
+                // Нажатие на стрелку вниз
+                scrollDownBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    itemsContainer.scrollTop += 110; // Шаг прокрутки вниз
+                });
+
+                // Добавляем стрелки в общий блок (над и под контейнером с темами)
+                suggestionsBox.insertBefore(scrollUpBtn, itemsContainer);
+                suggestionsBox.appendChild(scrollDownBtn);
+            }
+            
+            suggestionsBox.style.display = 'block';
+        };
+
+        const hideSuggestions = () => {
+            suggestionsBox.style.display = 'none';
+        };
+
+        // Живой ввод текста
+        themeSearch.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            toggleClearButton(query); 
+            showSuggestions(query); 
+        });
+
+        // ЛОГИКА КЛИКА ПО КРЕСТИКУ
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                themeSearch.value = ''; 
+                themeSearch.dataset.oldValue = ''; // Стираем кэш, так как пользователь сам нажал крестик
+                clearSearchBtn.style.display = 'none'; 
+                themeSearch.focus(); 
+                showSuggestions(''); 
             });
         }
 
-        if (menuCloseRight) {
-            menuCloseRight.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                closeRightMenu();
-            });
-        }
+        // ИЗМЕНЕНО: Скрытие списка при потере фокуса с возвратом старого значения, если ничего не выбрано
+        themeSearch.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (themeSearch.value.trim() === '' && themeSearch.dataset.oldValue) {
+                    themeSearch.value = themeSearch.dataset.oldValue;
+                    toggleClearButton(themeSearch.value);
+                }
+                hideSuggestions();
+            }, 250); // Задержка для корректной обработки mousedown на элементах
+        });
 
-        if (menuOverlayRight) {
-            menuOverlayRight.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                closeRightMenu();
-            });
-        }
+        // ИЗМЕНЕНО: При фокусе очищаем инпут для показа всех 38 тем
+        themeSearch.addEventListener('focus', () => {
+            // Сохраняем текущий текст инпута перед очисткой
+            themeSearch.dataset.oldValue = themeSearch.value;
+            
+            themeSearch.value = ''; // Стираем старый текст
+            toggleClearButton('');   // Прячем крестик
+            showSuggestions('');    // Разворачиваем полный список тем
+        });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && sidebarRight.classList.contains('open')) {
-                closeRightMenu();
+        // Обработка Enter
+        themeSearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = themeSearch.value.trim();
+                
+                if (typeof searchTheme === 'function' && query.length > 0) {
+                    const found = searchTheme(query);
+                    if (found) {
+                        loadTheme(found);
+                        const data = typeof getThemeData === 'function' ? getThemeData(found) : null;
+                        const title = data?.titleRu || found;
+                        themeSearch.value = title;
+                        themeSearch.dataset.oldValue = title;
+                        toggleClearButton(themeSearch.value);
+                    }
+                }
+                themeSearch.blur();
+                hideSuggestions();
+                if (typeof closeRightMenu === 'function') closeRightMenu();
             }
         });
-    </script>
-    
-    <div id="actionMenu">
-        <div class="action-menu-title">Выберите действие для фразы</div>
-        <div class="action-buttons-container">
-            <button id="actionTranslate" class="action-btn">
-                <span class="action-btn-icon">✨</span>
-                <div class="action-btn-text">
-                    Перевести фразу
-                    <span>Точный перевод и грамматический разбор слов</span>
-                </div>
-            </button>
-            <button id="actionDiscuss" class="action-btn">
-                <span class="action-btn-icon">💬</span>
-                <div class="action-btn-text">
-                    Обсудить ситуацию
-                    <span>Совет по этикету и пример живого мини-диалога</span>
-                </div>
-            </button>
-        </div>
-    </div>
-    <div id="actionMenuOverlay"></div>
 
-</body>
-</html>
+        // Первичная проверка при инициализации
+        toggleClearButton(themeSearch.value);
+    }
+}); // Закрывает Слушатель DOMContentLoaded
