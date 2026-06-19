@@ -382,10 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-// === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК ===
+// === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК (ВАРИАНТ 3) ===
     const themeSearch = document.getElementById('themeSearch');
     const suggestionsBox = document.getElementById('searchSuggestions');
-    const clearSearchBtn = document.getElementById('clearSearchBtn'); // Ловим кнопку крестика
+    const clearSearchBtn = document.getElementById('clearSearchBtn'); 
 
     if (themeSearch && suggestionsBox) {
         
@@ -396,15 +396,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Функция для отрисовки подсказок
+        // Функция для отрисовки подсказок с кнопками прокрутки
         const showSuggestions = (query) => {
             if (typeof getAllThemes !== 'function' || typeof getThemeData !== 'function') return;
             
-            const allThemes = getAllThemes(); // Берём все ключи тем из базы
+            const allThemes = getAllThemes();
             suggestionsBox.innerHTML = ''; // Чистим старый список
             
-            // Фильтруем темы по совпадению с введённым текстом (ищем в id темы и в её Ru/Kk названиях)
+            // Фильтруем темы
             const matches = allThemes.filter(themeKey => {
+                if (!query) return true;
                 const data = getThemeData(themeKey);
                 const searchStr = `${themeKey} ${data?.titleRu || ''} ${data?.titleKk || ''}`.toLowerCase();
                 return searchStr.includes(query.toLowerCase());
@@ -416,67 +417,112 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Выводим подходящие варианты
+            // Создаем внутренний контейнер исключительно для элементов (чтобы стрелки не уезжали при скролле)
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'suggestions-items-container';
+            // Стилизуем его прямо в JS, чтобы не ломать ваши CSS файлы
+            itemsContainer.style.maxHeight = '320px';
+            itemsContainer.style.overflowY = 'auto';
+            itemsContainer.style.scrollBehavior = 'smooth'; // Плавная прокрутка
+
+            // Выводим варианты во внутренний контейнер
             matches.forEach(themeKey => {
                 const data = getThemeData(themeKey);
                 const title = data?.titleRu || themeKey;
                 
                 const div = document.createElement('div');
-                div.className = 'suggestion-item';
+                const isCurrent = (currentTheme === themeKey);
+                
+                div.className = `suggestion-item ${isCurrent ? 'active-theme-item' : ''}`;
                 div.innerText = title;
                 
-                // При клике на подсказку — загружаем её
-                div.addEventListener('click', () => {
+                div.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
                     loadTheme(themeKey);
-                    themeSearch.value = title; // Записываем красивое имя в инпут
-                    toggleClearButton(title); // Проверяем крестик при выборе
+                    themeSearch.value = title; 
+                    themeSearch.dataset.oldValue = title; // Обновляем сохраненное значение
+                    toggleClearButton(title); 
                     hideSuggestions();
                     themeSearch.blur();
                     if (typeof closeRightMenu === 'function') closeRightMenu();
                 });
                 
-                suggestionsBox.appendChild(div);
+                itemsContainer.appendChild(div);
             });
+
+            suggestionsBox.appendChild(itemsContainer);
+
+            // === ДОБАВЛЯЕМ КНОПКИ ПРОКРУТКИ (ИЗМЕНЕНО: теперь если больше 8 элементов) ===
+            if (matches.length > 8) {
+                const scrollUpBtn = document.createElement('div');
+                scrollUpBtn.className = 'suggestions-scroll-btn scroll-up';
+                scrollUpBtn.innerHTML = '▲';
+                
+                const scrollDownBtn = document.createElement('div');
+                scrollDownBtn.className = 'suggestions-scroll-btn scroll-down';
+                scrollDownBtn.innerHTML = '▼';
+
+                // Нажатие на стрелку вверх
+                scrollUpBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // Чтобы инпут не терял фокус
+                    itemsContainer.scrollTop -= 110; // Шаг прокрутки вверх
+                });
+
+                // Нажатие на стрелку вниз
+                scrollDownBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    itemsContainer.scrollTop += 110; // Шаг прокрутки вниз
+                });
+
+                // Добавляем стрелки в общий блок (над и под контейнером с темами)
+                suggestionsBox.insertBefore(scrollUpBtn, itemsContainer);
+                suggestionsBox.appendChild(scrollDownBtn);
+            }
             
             suggestionsBox.style.display = 'block';
         };
 
         const hideSuggestions = () => {
-            setTimeout(() => {
-                suggestionsBox.style.display = 'none';
-            }, 250); // Задержка, чтобы клик по элементу успел сработать до скрытия
+            suggestionsBox.style.display = 'none';
         };
 
         // Живой ввод текста
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
-            toggleClearButton(query); // Скрываем/показываем крестик на лету
-            
-            if (query.length >= 2) {
-                showSuggestions(query);
-            } else {
-                suggestionsBox.style.display = 'none';
-            }
+            toggleClearButton(query); 
+            showSuggestions(query); 
         });
 
         // ЛОГИКА КЛИКА ПО КРЕСТИКУ
         if (clearSearchBtn) {
             clearSearchBtn.addEventListener('click', () => {
-                themeSearch.value = ''; // Стираем текст
-                suggestionsBox.style.display = 'none'; // Скрываем подсказки
-                clearSearchBtn.style.display = 'none'; // Прячем сам крестик
-                themeSearch.focus(); // Возвращаем фокус в инпут для нового ввода
+                themeSearch.value = ''; 
+                themeSearch.dataset.oldValue = ''; // Стираем кэш, так как пользователь сам нажал крестик
+                clearSearchBtn.style.display = 'none'; 
+                themeSearch.focus(); 
+                showSuggestions(''); 
             });
         }
 
-        // Скрытие списка при потере фокуса
-        themeSearch.addEventListener('blur', hideSuggestions);
+        // ИЗМЕНЕНО: Скрытие списка при потере фокуса с возвратом старого значения, если ничего не выбрано
+        themeSearch.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (themeSearch.value.trim() === '' && themeSearch.dataset.oldValue) {
+                    themeSearch.value = themeSearch.dataset.oldValue;
+                    toggleClearButton(themeSearch.value);
+                }
+                hideSuggestions();
+            }, 250); // Задержка для корректной обработки mousedown на элементах
+        });
 
-        // При фокусе, если там уже что-то введено, показываем варианты снова
+        // ИЗМЕНЕНО: При фокусе очищаем инпут для показа всех 38 тем
         themeSearch.addEventListener('focus', () => {
-            const query = themeSearch.value.trim();
-            toggleClearButton(query);
-            if (query.length >= 2) showSuggestions(query);
+            // Сохраняем текущий текст инпута перед очисткой
+            themeSearch.dataset.oldValue = themeSearch.value;
+            
+            themeSearch.value = ''; // Стираем старый текст
+            toggleClearButton('');   // Прячем крестик
+            showSuggestions('');    // Разворачиваем полный список тем
         });
 
         // Обработка Enter
@@ -490,7 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (found) {
                         loadTheme(found);
                         const data = typeof getThemeData === 'function' ? getThemeData(found) : null;
-                        themeSearch.value = data?.titleRu || found;
+                        const title = data?.titleRu || found;
+                        themeSearch.value = title;
+                        themeSearch.dataset.oldValue = title;
                         toggleClearButton(themeSearch.value);
                     }
                 }
