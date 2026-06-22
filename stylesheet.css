@@ -829,6 +829,13 @@ body {
     z-index: 55; /* Выше инпута */
     transition: color 0.2s ease, transform 0.2s ease;
 }
+/* Специальное позиционирование для кнопки редактирования, чтобы она вставала ЛЕВЕЕ карандаша */
+#editConstructorBtn {
+    right: 64px !important; /* Сдвиг левее карандаша */
+    display: none;          /* По умолчанию скрыта */
+    align-items: center;
+    justify-content: center;
+}
 
 /* Эффекты при наведении */
 .calc-search-row .search-wrapper .constructor-toggle-btn:hover {
