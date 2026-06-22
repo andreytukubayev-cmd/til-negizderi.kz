@@ -132,10 +132,10 @@ function switchToSector(sectorIndex) {
         // Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
         if (!inputKk || !inputRu) {
             box.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-                    <input type="text" class="constructor-input-kk" style="width: 100%; background: #0f172a; color: ${layer.colorKk}; border: 1px solid #334155; padding: 4px 8px; font-size: 13px; font-weight: bold; border-radius: 4px; box-sizing: border-box;">
-                    <input type="text" class="constructor-input-ru" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
-                </div>
+			<div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+            <input type="text" class="constructor-input-kk" autocomplete="off" style="width: 100%; background: #0f172a; color: ${layer.colorKk}; border: 1px solid #334155; padding: 4px 8px; font-size: 13px; font-weight: bold; border-radius: 4px; box-sizing: border-box;">
+            <input type="text" class="constructor-input-ru" autocomplete="off" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
+        </div>
             `;
             inputKk = box.querySelector('.constructor-input-kk');
             inputRu = box.querySelector('.constructor-input-ru');
