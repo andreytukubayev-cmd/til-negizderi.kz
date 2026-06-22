@@ -957,17 +957,14 @@ body {
 }
 
 /* ======================================================
-   10. МЕДИАЗАПРОСЫ
+   10. МЕДИАЗАПРОСЫ И СТАБИЛИЗАЦИЯ КОЛЁС
    ====================================================== */
-/* ======================================================
-   10. МЕДИАЗАПРОСЫ
-   ====================================================== */
-@media (min-width: 769px) {
-    .sidebar {
-        position: relative;
-        transform: translateX(0);
-        width: 300px;
-    }
+
+/* ------------------------------------------------------
+   ДИАПАЗОН 1: Широкие экраны (от 961px и выше)
+   ------------------------------------------------------ */
+@media (min-width: 961px) {
+    .sidebar { position: relative; transform: translateX(0); width: 300px; }
     .menu-toggle { display: none; }
     .menu-overlay { display: none !important; }
 
@@ -981,55 +978,79 @@ body {
     .menu-overlay-right { display: none !important; }
     .menu-close-right { display: none !important; }
 
-    /* ✅ ЖЕСТКАЯ СТАБИЛИЗАЦИЯ ДЕСКТОПА ДЛЯ КАЛЬКУЛЯТОРА */
     .calculator-device {
-        transform: none !important; /* Убираем любые мобильные scale */
+        transform: none !important;
         transform-origin: top center;
         width: 660px !important;
         height: 780px !important;
         margin: 0 auto !important;
     }
-
     .device-body {
-        transform: none !important; /* На десктопе колеса не масштабируются отдельно */
+        transform: none !important;
         width: var(--wheel-size);
         height: var(--wheel-size);
     }
-    
-    .wheels-container {
-        margin-top: 15px;
-        overflow: visible;
-        height: auto !important; /* Сбрасываем мобильную фиксированную высоту */
+    .wheels-container { margin-top: 15px; overflow: visible; height: auto !important; }
+
+    /* 🛠 ХОЧЕТСЯ ПОДНЯТЬ ВВЕРХ НА 3px */
+    .calculator-device .calc-wheels-deck #wheelsContainer {
+        top: 13px !important;
+        margin-top: -5px !important; 
     }
 
-    .scoreboard-container {
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 15px;
-        margin-top: 20px;
-        margin-bottom: 25px;
-        width: 100%;
-    }
+    .scoreboard-container { flex-direction: row; justify-content: space-between; gap: 15px; margin-top: 20px; margin-bottom: 25px; width: 100%; }
     .score-display { flex: 1; min-width: 0; }
-
-    #actionMenu {
-        max-width: 420px;
-        bottom: auto;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        border-radius: 20px;
-        opacity: 0;
-        pointer-events: none;
-        transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-    #actionMenu.active {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-        pointer-events: auto;
-    }
+    #actionMenu { max-width: 420px; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); border-radius: 20px; opacity: 0; pointer-events: none; transition: transform 0.2s ease, opacity 0.2s ease; }
+    #actionMenu.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
 }
 
+/* ------------------------------------------------------
+   ДИАПАЗОН 2: Средние экраны (от 769px до 960px)
+   ------------------------------------------------------ */
+@media (min-width: 769px) and (max-width: 960px) {
+    .sidebar { position: relative; transform: translateX(0); width: 300px; }
+    .menu-toggle { display: none; }
+    .menu-overlay { display: none !important; }
+
+    .sidebar-right {
+        position: relative;
+        transform: translateX(0) !important;
+        width: 660px;
+        align-items: center;
+    }
+    .menu-toggle-right { display: none !important; }
+    .menu-overlay-right { display: none !important; }
+    .menu-close-right { display: none !important; }
+
+    .calculator-device {
+        transform: none !important;
+        transform-origin: top center;
+        width: 660px !important;
+        height: 780px !important;
+        margin: 0 auto !important;
+    }
+    .device-body {
+        transform: none !important;
+        width: var(--wheel-size);
+        height: var(--wheel-size);
+    }
+    .wheels-container { margin-top: 15px; overflow: visible; height: auto !important; }
+
+    /* 🛠 ПРИМЕРНО НА 5px ВВЕРХ */
+    .calculator-device .calc-wheels-deck #wheelsContainer {
+        top: 5px !important;
+        margin-top: -5px !important; 
+    }
+
+    .scoreboard-container { flex-direction: row; justify-content: space-between; gap: 15px; margin-top: 20px; margin-bottom: 25px; width: 100%; }
+    .score-display { flex: 1; min-width: 0; }
+    #actionMenu { max-width: 420px; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); border-radius: 20px; opacity: 0; pointer-events: none; transition: transform 0.2s ease, opacity 0.2s ease; }
+    #actionMenu.active { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+}
+
+/* ------------------------------------------------------
+   ДИАПАЗОН 3: Мобильные экраны (меньше 769px)
+   ------------------------------------------------------ */
 @media (max-width: 768px) {
     .sidebar-right {
         position: fixed;
@@ -1039,67 +1060,44 @@ body {
         height: 100%;
         z-index: 9999;
         transform: translateX(100%);
-        padding-top: 80px;
+        padding-top: 0; 
         overflow-x: hidden;
     }
     .sidebar-right.open { transform: translateX(0); }
 
     .menu-close-right {
-        display: flex;
-        position: absolute;
-        top: 15px;
-        right: 16px;
-        width: 42px;
-        height: 42px;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 50%;
-        align-items: center;
-        justify-content: center;
-        font-size: 19px;
-        cursor: pointer;
-        z-index: 10010;
+        display: flex; position: absolute; top: 15px; right: 16px; width: 42px; height: 42px; background: #fff; border: 1px solid #e2e8f0; border-radius: 50%; align-items: center; justify-content: center; font-size: 19px; cursor: pointer; z-index: 10010;
     }
     .menu-close-right:active { background: #f1f5f9; }
 
     .search-theme-compact {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 75px;
-        margin: 0;
-        padding: 15px 70px 15px 16px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        z-index: 90;
+        position: absolute; top: 0; left: 0; width: 100%; height: 75px; margin: 0; padding: 15px 70px 15px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; z-index: 90;
     }
     .search-wrapper { height: 100%; }
     #themeSearch.theme-search-input { height: 100%; border-radius: 8px; }
-    .search-suggestions-box {
-        left: 16px;
-        right: 70px;
-        top: 60px;
-        z-index: 120;
-    }
+    .search-suggestions-box { left: 16px; right: 70px; top: 60px; z-index: 120; }
 
-    /* МОБИЛЬНЫЙ КОНТЕЙНЕР */
     .wheels-container {
         width: 100%;
-        height: 390px; /* Фиксируем пространство под scale(0.5) */
-        margin: 15px 0 0 0;
+        height: calc(780px * ((100vw - 20px) / 660)); 
+        margin: 85px 0 15px 0; 
         display: flex;
         align-items: flex-start;
         justify-content: center;
         overflow: visible;
     }
 
-    /* МОБИЛЬНЫЙ СЖАТЫЙ КАЛЬКУЛЯТОР */
     .calculator-device {
-        transform: scale(0.5) !important;
+        transform: scale(calc((100vw - 20px) / 660)) !important;
         transform-origin: top center;
         margin: 0 auto !important;
         flex-shrink: 0;
+    }
+
+    /* 🛠 ВСЁ, ЧТО НИЖЕ 769px — ОПУСТИТЬ ПРИМЕРНО НА 20px */
+    .calculator-device .calc-wheels-deck #wheelsContainer {
+        top: 5px !important;
+        margin-top: 20px !important; /* Положительное значение смещает вниз */
     }
 
     .device-body {
@@ -1110,13 +1108,4 @@ body {
     }
 
     .scoreboard-container { margin-top: 10px; z-index: 120; }
-}
-
-@media (max-width: 380px) {
-    .wheels-container { 
-        height: 335px; /* Под масштаб 0.43 */
-    }
-    .calculator-device { 
-        transform: scale(0.43) !important; 
-    }
 }
