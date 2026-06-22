@@ -28,21 +28,16 @@ function loadTheme(themeName) {
     
     regenerateWheels();
     
-    // === ЖЕСТКОЕ УПРАВЛЕНИЕ КНОПКОЙ РЕДАКТИРОВАНИЯ ===
+    // === ПРОСТОЕ ПЕРЕКЛЮЧЕНИЕ ВИДИМОСТИ ===
     const editBtn = document.getElementById('editConstructorBtn');
     if (editBtn) {
         if (themeName && themeName.startsWith('custom_')) {
-            // Включаем отображение кнопки
-            editBtn.style.setProperty('display', 'flex', 'important');
-            
-            // Намертво сдвигаем её влево на 64px, чтобы она встала ПЕРЕД карандашом
-            editBtn.style.setProperty('right', '64px', 'important');
+            editBtn.style.display = 'flex'; // Просто показываем её, позиция возьмется из HTML
         } else {
-            // Скрываем для стандартных тем
-            editBtn.style.setProperty('display', 'none', 'important');
+            editBtn.style.display = 'none'; // Скрываем
         }
     }
-    // ================================================
+    // ======================================
     
     return true;
 }
