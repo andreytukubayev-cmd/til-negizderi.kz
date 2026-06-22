@@ -12,6 +12,9 @@ let constructorData = {
 /**
  * Основная функция переключения режима Конструктора
  */
+/**
+ * Основная функция переключения режима Конструктора
+ */
 function toggleInlineConstructor() {
     window.isConstructorMode = !window.isConstructorMode;
     
@@ -20,7 +23,7 @@ function toggleInlineConstructor() {
     const saveAction = document.getElementById('constructorSaveAction');
     const searchInput = document.getElementById('themeSearch');
     
-    // Автоматически находим контейнер с колесами (по ID или по твоему классу у SVG)
+    // Автоматически находим контейнер с колесами (по ID или по классу у SVG)
     const wheelsContainer = document.getElementById('wheelsContainer') || document.querySelector('.wheels-block');
     
     if (!btn || !inputTitle || !saveAction) return;
@@ -35,8 +38,10 @@ function toggleInlineConstructor() {
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
         
-        // СКРЫВАЕМ СТАРЫЕ КОЛЕСА, чтобы они не путали при вводе фраз новой темы
-        if (wheelsContainer) wheelsContainer.style.style.setProperty('display', 'none', 'important');
+        // ИСПРАВЛЕНО: Скрываем старые колеса корректно без дублирования .style
+        if (wheelsContainer) {
+            wheelsContainer.style.setProperty('display', 'none', 'important');
+        }
         
         // Гарантированно очищаем старый текст на табло калькулятора
         if (typeof clearCalculatorFields === 'function') clearCalculatorFields();
@@ -66,8 +71,10 @@ function toggleInlineConstructor() {
         saveAction.style.display = 'none';
         if (searchInput) searchInput.style.visibility = 'visible';
 
-        // ВОЗВРАЩАЕМ ВИДИМОСТЬ КОЛЕС НА ЭКРАН
-        if (wheelsContainer) wheelsContainer.style.display = 'block';
+        // ИСПРАВЛЕНО: Возвращаем видимость колес (убираем display: none)
+        if (wheelsContainer) {
+            wheelsContainer.style.removeProperty('display');
+        }
 
         // Возвращаем дефолтный калькулятор
         if (window.currentTheme) {
