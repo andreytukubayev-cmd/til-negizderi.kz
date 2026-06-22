@@ -6,6 +6,9 @@ if (typeof currentTheme === 'undefined') {
 let rotations = { inner: 0, middle: 0, outer: 0 };
 let originalEngineInitialized = false;
 
+// Контроллер для автоматического удаления старых обработчиков window при регенерации колес
+let wheelsAbortController = null;
+
 function loadTheme(themeName) {
     const themeData = getThemeData(themeName);
     if (!themeData) return false;
@@ -29,6 +32,12 @@ function loadTheme(themeName) {
 }
 
 function regenerateWheels() {
+    // 1. Очищаем старые глобальные слушатели событий перед созданием новых колес
+    if (wheelsAbortController) {
+        wheelsAbortController.abort();
+    }
+    wheelsAbortController = new AbortController();
+
     const container = document.getElementById('wheelsContainer');
     if (!container) return;
     
@@ -59,37 +68,37 @@ function regenerateWheels() {
     
     container.appendChild(deviceBody);
     
-    // ===== НОВАЯ КНОПКА СБРОС (снаружи колеса, сверху справа) =====
+    // ===== КНОПКА СБРОС =====
     const resetBtn = document.createElement('button');
     resetBtn.id = 'resetWheelsBtn';
     resetBtn.className = 'reset-btn-outside';
-    // === SVG ИКОНКА СТРЕЛКИ СБРОСА ===
-resetBtn.innerHTML = `
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M1 4v6h6" />
-        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-    </svg>
-`;
-    // Находим .calc-wheels-deck
-const deck = document.querySelector('.calc-wheels-deck');
-if (deck) {
-    deck.appendChild(resetBtn);
-} else {
-    // fallback — если дека нет, добавляем в container
-    container.appendChild(resetBtn);
-}
+    resetBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 4v6h6" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+    `;
+
+    const deck = document.querySelector('.calc-wheels-deck');
+    if (deck) {
+        // Удаляем старую кнопку сброса, если она осталась в деке, чтобы избежать дублирования
+        const oldReset = deck.querySelector('#resetWheelsBtn');
+        if (oldReset) oldReset.remove();
+        deck.appendChild(resetBtn);
+    } else {
+        container.appendChild(resetBtn);
+    }
     
-    // Обработчик для новой кнопки
     resetBtn.addEventListener('click', function() {
         rotations = { inner: 0, middle: 0, outer: 0 };
         innerWheel.style.transform = 'rotate(0deg)';
         middleWheel.style.transform = 'rotate(0deg)';
         outerWheel.style.transform = 'rotate(0deg)';
-        updateWheelsDisplay(0, 0, 0);
+        
         playClick();
+        updateWheelsDisplay(0, 0, 0, true); // Принудительное обновление
     });
     
-    // ЗАЩИТА: Если в базе пусто, не падаем
     if (window.dataset && window.dataset.outer) {
         generateWheelCells(outerWheel, window.dataset.outer, 'outer');
         generateWheelCells(middleWheel, window.dataset.middle, 'middle');
@@ -102,7 +111,7 @@ if (deck) {
     setupDragForWheel(middleWheel, 'middle');
     setupDragForWheel(outerWheel, 'outer');
     
-    updateWheelsDisplay(0, 0, 0);
+    updateWheelsDisplay(0, 0, 0, true);
     
     originalEngineInitialized = true;
     
@@ -110,7 +119,6 @@ if (deck) {
         updateCurrentTheme(currentTheme);
     }
 }
-
 
 function generateWheelCells(wheelEl, items, type) {
     if (!items || items.length === 0) return;
@@ -301,9 +309,17 @@ function setupDragForWheel(wheelEl, key) {
         if (currentSector !== lastSectorIndex) {
             playClick();
             lastSectorIndex = currentSector;
+            
+            // Оптимизация: В режиме конструктора обновляем дисплей ТОЛЬКО при реальной смене сектора
+            if (window.isConstructorMode) {
+                updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+            }
         }
         
-        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        // В обычном режиме обновляем на каждый сдвиг (для плавности текста калькулятора, если нужно)
+        if (!window.isConstructorMode) {
+            updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        }
         e.preventDefault();
     };
     
@@ -314,20 +330,25 @@ function setupDragForWheel(wheelEl, key) {
         rotations[key] = Math.round(rotations[key] / 60) * 60;
         wheelEl.style.transform = `rotate(${rotations[key]}deg)`;
         playClick();
-        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner);
+        updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner, true); // Принудительно
     };
     
+    // Передаем сигнал отмены (AbortSignal) во все глобальные слушатели
+    const signal = wheelsAbortController.signal;
+    
     wheelEl.addEventListener('mousedown', onStart);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('mousemove', onMove, { signal });
+    window.addEventListener('mouseup', onEnd, { signal });
+    
     wheelEl.addEventListener('touchstart', onStart, { passive: false });
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false, signal });
+    window.addEventListener('touchend', onEnd, { signal });
 }
 
-function updateWheelsDisplay(outerRot, middleRot, innerRot) {
-    if (!window.dataset || !window.dataset.outer) return;
+// Запоминаем последний обработанный сектор конструктора, чтобы не дергать DOM зря
+let lastConstructorSector = -1;
 
+function updateWheelsDisplay(outerRot, middleRot, innerRot, forceUpdate = false) {
     const getIndex = (rotation) => {
         let norm = (-rotation) % 360;
         if (norm < 0) norm += 360;
@@ -337,32 +358,44 @@ function updateWheelsDisplay(outerRot, middleRot, innerRot) {
     const outerIdx = getIndex(outerRot);
     const middleIdx = getIndex(middleRot);
     const innerIdx = getIndex(innerRot);
+
+    // === ПЕРЕХВАТ ДЛЯ РЕЖИМА КОНСТРУКТОРА ===
+    if (window.isConstructorMode) {
+        const activeSector = outerIdx + 1; 
+        
+        // Защита: Вызываем switchToSector только если сектор реально изменился или это принудительный апдейт
+        if (activeSector !== lastConstructorSector || forceUpdate) {
+            lastConstructorSector = activeSector;
+            if (typeof window.switchToSector === 'function') {
+                window.switchToSector(activeSector);
+            }
+        }
+        return; 
+    }
+    // =======================================
+
+    if (!window.dataset || !window.dataset.outer) return;
     
     const outerData = window.dataset.outer[outerIdx];
     const middleData = window.dataset.middle[middleIdx];
     const innerData = window.dataset.inner[innerIdx];
     
-    // ТОЧЕЧНОЕ ОБНОВЛЕНИЕ ТЕКСТА БЕЗ УНИЧТОЖЕНИЯ КРАСИВОЙ РАЗМЕТКИ MONTANA:
-    
-    // Вопрос (Внешний круг)
     const qKk = document.getElementById('dash-q-kk');
     const qRu = document.getElementById('dash-q-ru');
     if (qKk) qKk.innerText = outerData?.kk || '-';
     if (qRu) qRu.innerText = outerData?.ru || '-';
     
-    // Ответ (Средний круг)
     const aKk = document.getElementById('dash-a-kk');
     const aRu = document.getElementById('dash-a-ru');
     if (aKk) aKk.innerText = middleData?.kk || '-';
     if (aRu) aRu.innerText = middleData?.ru || '-';
     
-    // Реакция (Внутренний круг)
     const rKk = document.getElementById('dash-r-kk');
     const rRu = document.getElementById('dash-r-ru');
     if (rKk) rKk.innerText = innerData?.kk || '-';
     if (rRu) rRu.innerText = innerData?.ru || '-';
 }
-// ГЛОБАЛЬНЫЙ МОСТ ДЛЯ ИИ-КОНТЕКСТА И ТЕСТОВОГО СТЕНДА
+
 window.findAndRenderTheme = function(aiSuggestedWord) {
     if (typeof searchTheme !== 'function') return;
     const matchedThemeId = searchTheme(aiSuggestedWord);
@@ -371,39 +404,31 @@ window.findAndRenderTheme = function(aiSuggestedWord) {
     }
 };
 
-// Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Безопасно получаем список всех зарегистрированных ключей тем
     if (typeof getAllThemes === 'function') {
         const allThemes = getAllThemes();
         if (allThemes.length > 0) {
-            // Динамически загружаем самую первую тему из 38 существующих
             loadTheme(allThemes[0]);
         }
     }
     
-// === УМНЫЙ ПОИСК С ВЫПАДАЮЩИМ СПИСКОМ ПОДСКАЗОК (ВАРИАНТ 3) ===
     const themeSearch = document.getElementById('themeSearch');
     const suggestionsBox = document.getElementById('searchSuggestions');
     const clearSearchBtn = document.getElementById('clearSearchBtn'); 
 
     if (themeSearch && suggestionsBox) {
-        
-        // Переключатель видимости крестика в зависимости от текста
         const toggleClearButton = (text) => {
             if (clearSearchBtn) {
                 clearSearchBtn.style.display = text.length > 0 ? 'block' : 'none';
             }
         };
 
-        // Функция для отрисовки подсказок с кнопками прокрутки
         const showSuggestions = (query) => {
             if (typeof getAllThemes !== 'function' || typeof getThemeData !== 'function') return;
             
             const allThemes = getAllThemes();
-            suggestionsBox.innerHTML = ''; // Чистим старый список
+            suggestionsBox.innerHTML = ''; 
             
-            // Фильтруем темы
             const matches = allThemes.filter(themeKey => {
                 if (!query) return true;
                 const data = getThemeData(themeKey);
@@ -417,16 +442,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Создаем внутренний контейнер исключительно для элементов (чтобы стрелки не уезжали при скролле)
             const itemsContainer = document.createElement('div');
             itemsContainer.className = 'suggestions-items-container';
-            // Стилизуем его прямо в JS, чтобы не ломать ваши CSS файлы
             itemsContainer.style.maxHeight = '320px';
             itemsContainer.style.overflowY = 'auto';
-            itemsContainer.style.scrollBehavior = 'smooth'; // Плавная прокрутка
+            itemsContainer.style.scrollBehavior = 'smooth'; 
 
-            // Выводим варианты во внутренний контейнер
-            // Выводим варианты во внутренний контейнер
             matches.forEach(themeKey => {
                 const data = getThemeData(themeKey);
                 const title = data?.titleRu || themeKey;
@@ -441,12 +462,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     loadTheme(themeKey);
                     themeSearch.value = title; 
-                    themeSearch.dataset.oldValue = title; // Обновляем сохраненное значение
+                    themeSearch.dataset.oldValue = title; 
                     toggleClearButton(title); 
                     hideSuggestions();
                     themeSearch.blur();
                     
-                    // 🛠 ФИКС: Вместо closeRightMenu() принудительно держим панель открытой на мобилках
                     if (window.innerWidth <= 768 && typeof openRightMenu === 'function') {
                         openRightMenu();
                     }
@@ -457,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             suggestionsBox.appendChild(itemsContainer);
 
-            // === ДОБАВЛЯЕМ КНОПКИ ПРОКРУТКИ ===
             if (matches.length > 8) {
                 const scrollUpBtn = document.createElement('div');
                 scrollUpBtn.className = 'suggestions-scroll-btn scroll-up';
@@ -488,7 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestionsBox.style.display = 'none';
         };
 
-        // Живой ввод текста
         themeSearch.addEventListener('input', (e) => {
             const query = e.target.value.trim();
             toggleClearButton(query); 
@@ -522,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showSuggestions('');    
         });
 
-        // Обработка Enter
         themeSearch.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -542,7 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 themeSearch.blur();
                 hideSuggestions();
                 
-                // 🛠 ФИКС ЗДЕСЬ: Не закрываем правое меню на мобилке при нажатии Enter
                 if (window.innerWidth <= 768 && typeof openRightMenu === 'function') {
                     openRightMenu();
                 }
