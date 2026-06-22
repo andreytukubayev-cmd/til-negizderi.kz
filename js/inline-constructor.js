@@ -31,6 +31,9 @@ function toggleInlineConstructor() {
         inputTitle.style.flexDirection = 'column';
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
+        
+        // Гарантированно очищаем старый текст на табло калькулятора
+        if (typeof clearCalculatorFields === 'function') clearCalculatorFields();
 
         // Сбрасываем буфер для новой темы
         constructorData = {
@@ -107,7 +110,6 @@ function switchToSector(sectorIndex) {
         inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
 
         // Чтобы не сбрасывать фокус активного элемента, меняем value только если оно РЕАЛЬНО отличается
-        // (например, при переключении сектора колесом)
         const nextKkValue = constructorData[layer.key][idx].kk;
         const nextRuValue = constructorData[layer.key][idx].ru;
 
@@ -144,24 +146,88 @@ async function applyInlineTheme() {
         return;
     }
 
-    const payload = {
-        title_ru: titleRu,
-        title_kk: titleKk,
-        data: constructorData
-    };
+    if (typeof supabase === 'undefined') {
+        alert('Ошибка: Модуль Supabase не найден на странице!');
+        return;
+    }
 
-    console.log('Готово к сохранению в Supabase:', payload);
-    
-    // Твой будущий код интеграции:
-    // const { data, error } = await supabase.from('themes').insert([ { name_ru: titleRu, name_kk: titleKk, content: constructorData } ]);
+    try {
+        // Проверяем авторизацию пользователя (требует RLS политика)
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            alert('Ошибка безопасности: Вы должны быть авторизованы для создания тем!');
+            return;
+        }
 
-    alert('Тема успешно сформирована в буфере! Проверь консоль разработчика.');
-    toggleInlineConstructor(); 
+        // ШАГ 1: Создаем запись в таблице public.themes
+        const { data: themeRecord, error: themeError } = await supabase
+            .from('themes')
+            .insert([{
+                user_id: user.id, 
+                title_ru: titleRu,
+                title_kk: titleKk
+            }])
+            .select()
+            .single(); 
+
+        if (themeError) throw themeError;
+        const newThemeId = themeRecord.id;
+
+        // ШАГ 2: Собираем все 18 сегментов в один массив
+        const itemsToInsert = [];
+        const circles = ['outer', 'middle', 'inner'];
+
+        circles.forEach(circleType => {
+            constructorData[circleType].forEach((sector, index) => {
+                const txtRu = sector.ru.trim() || `Сектор ${index + 1}`;
+                const txtKk = sector.kk.trim() || `Сектор ${index + 1}`;
+
+                itemsToInsert.push({
+                    theme_id: newThemeId,
+                    circle_type: circleType,
+                    position: index, 
+                    text_ru: txtRu,
+                    text_kk: txtKk
+                });
+            });
+        });
+
+        // Отправляем все 18 строк в таблицу public.wheel_items
+        const { error: itemsError } = await supabase
+            .from('wheel_items')
+            .insert(itemsToInsert);
+
+        if (itemsError) throw itemsError;
+
+        alert('Тема успешно сохранена в базу данных!');
+
+        // ШАГ 3: Обновляем локальное меню в wheels_library.js
+        if (typeof window.loadCustomThemes === 'function') {
+            await window.loadCustomThemes();
+        }
+
+        // ШАГ 4: Переключаем колеса на только что созданную тему
+        window.currentTheme = `custom_${newThemeId}`;
+        
+        // Выключаем конструктор (это вернет стандартный калькулятор)
+        toggleInlineConstructor();
+
+        // Принудительно рендерим новые колеса на экран
+        if (typeof window.renderLullyTheme === 'function') {
+            window.renderLullyTheme(window.currentTheme);
+        }
+
+    } catch (err) {
+        console.error('Критическая ошибка сохранения:', err);
+        alert('Не удалось сохранить тему в базу: ' + err.message);
+    }
 }
 
-// Глобальный экспорт
+// Глобальный экспорт функций для внешних вызовов (из chat.js или HTML-кнопок)
 window.switchToSector = switchToSector;
-window.toggleInlineConstructorLogic = toggleInlineConstructor;
+window.toggleInlineConstructor = toggleInlineConstructor; // Имя совпадает с функцией!
+window.applyInlineTheme = applyInlineTheme;
 
 /**
  * Очищает текстовые поля экрана калькулятора до дефолтных значений
