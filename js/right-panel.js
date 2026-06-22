@@ -426,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsContainer.style.scrollBehavior = 'smooth'; // Плавная прокрутка
 
             // Выводим варианты во внутренний контейнер
+            // Выводим варианты во внутренний контейнер
             matches.forEach(themeKey => {
                 const data = getThemeData(themeKey);
                 const title = data?.titleRu || themeKey;
@@ -444,7 +445,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     toggleClearButton(title); 
                     hideSuggestions();
                     themeSearch.blur();
-                    if (typeof closeRightMenu === 'function') closeRightMenu();
+                    
+                    // 🛠 ФИКС: Вместо closeRightMenu() принудительно держим панель открытой на мобилках
+                    if (window.innerWidth <= 768 && typeof openRightMenu === 'function') {
+                        openRightMenu();
+                    }
                 });
                 
                 itemsContainer.appendChild(div);
@@ -452,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             suggestionsBox.appendChild(itemsContainer);
 
-            // === ДОБАВЛЯЕМ КНОПКИ ПРОКРУТКИ (ИЗМЕНЕНО: теперь если больше 8 элементов) ===
+            // === ДОБАВЛЯЕМ КНОПКИ ПРОКРУТКИ ===
             if (matches.length > 8) {
                 const scrollUpBtn = document.createElement('div');
                 scrollUpBtn.className = 'suggestions-scroll-btn scroll-up';
@@ -462,19 +467,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 scrollDownBtn.className = 'suggestions-scroll-btn scroll-down';
                 scrollDownBtn.innerHTML = '▼';
 
-                // Нажатие на стрелку вверх
                 scrollUpBtn.addEventListener('mousedown', (e) => {
-                    e.preventDefault(); // Чтобы инпут не терял фокус
-                    itemsContainer.scrollTop -= 110; // Шаг прокрутки вверх
+                    e.preventDefault();
+                    itemsContainer.scrollTop -= 110;
                 });
 
-                // Нажатие на стрелку вниз
                 scrollDownBtn.addEventListener('mousedown', (e) => {
                     e.preventDefault();
-                    itemsContainer.scrollTop += 110; // Шаг прокрутки вниз
+                    itemsContainer.scrollTop += 110;
                 });
 
-                // Добавляем стрелки в общий блок (над и под контейнером с темами)
                 suggestionsBox.insertBefore(scrollUpBtn, itemsContainer);
                 suggestionsBox.appendChild(scrollDownBtn);
             }
@@ -493,18 +495,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showSuggestions(query); 
         });
 
-        // ЛОГИКА КЛИКА ПО КРЕСТИКУ
         if (clearSearchBtn) {
             clearSearchBtn.addEventListener('click', () => {
                 themeSearch.value = ''; 
-                themeSearch.dataset.oldValue = ''; // Стираем кэш, так как пользователь сам нажал крестик
+                themeSearch.dataset.oldValue = ''; 
                 clearSearchBtn.style.display = 'none'; 
                 themeSearch.focus(); 
                 showSuggestions(''); 
             });
         }
 
-        // ИЗМЕНЕНО: Скрытие списка при потере фокуса с возвратом старого значения, если ничего не выбрано
         themeSearch.addEventListener('blur', () => {
             setTimeout(() => {
                 if (themeSearch.value.trim() === '' && themeSearch.dataset.oldValue) {
@@ -512,17 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     toggleClearButton(themeSearch.value);
                 }
                 hideSuggestions();
-            }, 250); // Задержка для корректной обработки mousedown на элементах
+            }, 250);
         });
 
-        // ИЗМЕНЕНО: При фокусе очищаем инпут для показа всех 38 тем
         themeSearch.addEventListener('focus', () => {
-            // Сохраняем текущий текст инпута перед очисткой
             themeSearch.dataset.oldValue = themeSearch.value;
-            
-            themeSearch.value = ''; // Стираем старый текст
-            toggleClearButton('');   // Прячем крестик
-            showSuggestions('');    // Разворачиваем полный список тем
+            themeSearch.value = ''; 
+            toggleClearButton('');   
+            showSuggestions('');    
         });
 
         // Обработка Enter
@@ -544,11 +541,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 themeSearch.blur();
                 hideSuggestions();
-                if (typeof closeRightMenu === 'function') closeRightMenu();
+                
+                // 🛠 ФИКС ЗДЕСЬ: Не закрываем правое меню на мобилке при нажатии Enter
+                if (window.innerWidth <= 768 && typeof openRightMenu === 'function') {
+                    openRightMenu();
+                }
             }
         });
 
-        // Первичная проверка при инициализации
         toggleClearButton(themeSearch.value);
     }
-}); // Закрывает Слушатель DOMContentLoaded
+});
