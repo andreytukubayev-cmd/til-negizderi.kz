@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="stylesheet.css">
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
-    </head>
+</head>
 <body>
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="menu-overlay-right" id="menuOverlayRight"></div>
@@ -106,23 +106,28 @@
                 <div class="calc-search-row">
                     <div class="search-wrapper">
                         <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
+                        
+                        <button type="button" id="toggleConstructorBtn" class="constructor-toggle-btn" title="Создать свою тему">
+                            <span class="btn-icon">✍️</span>
+                        </button>
+
                         <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
                     </div>
                     <div id="searchSuggestions" class="search-suggestions-box"></div>
                 </div>
 
-                <button type="button" id="toggleConstructorBtn" class="constructor-toggle-btn" style="display: none;" onclick="toggleInlineConstructor()">
-    <span class="btn-icon">✍️</span>
-    <span class="btn-text">Создать тему</span>
-	</button>
+                <div id="inlineThemeInputs" style="display: none; position: absolute; top: 56px; left: 40px; right: 45px; gap: 6px; z-index: 60;">
+                    <input type="text" id="inlineTitleRu" placeholder="Название темы (RU), напр. Еда" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 13px;">
+                    <input type="text" id="inlineTitleKk" placeholder="Тақырып атауы (KK), напр. Тамақ" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 13px;">
+                </div>
 
-                <div id="inlineThemeInputs" style="display: none; gap: 8px; padding: 0 16px 12px 16px; width: 100%; box-sizing: border-box;">
-                    <input type="text" id="inlineTitleRu" placeholder="Название темы (RU), напр. Еда" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px;">
-                    <input type="text" id="inlineTitleKk" placeholder="Тақырып атауы (KK), напр. Тамақ" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px;">
+                <div id="constructorSaveAction" style="display: none; position: absolute; top: 335px; left: 40px; right: 40px; z-index: 60;">
+                    <button type="button" onclick="applyInlineTheme()" style="width: 100%; background: #2a9d8f; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 0 10px rgba(42,157,143,0.4);">
+                        💾 Сохранить тему в базу
+                    </button>
                 </div>
 
                 <div id="wheelsDisplay" class="calc-screen-area">
-                    
                     <div class="calc-display-line">
                         <span class="lbl-q">ВОПРОС</span>
                         <div class="txt-box">
@@ -146,40 +151,21 @@
                             <span class="lang-ru" id="dash-r-ru">-</span>
                         </div>
                     </div>
-
-                </div>
-
-                <div id="inlinePhrasesPanel" style="display: none; background: rgba(255,255,255,0.95); padding: 12px; border-radius: 8px; margin: 12px 16px; border: 1px solid #cbd5e1; box-sizing: border-box;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #475569; text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Заполнение секторов (от 1 до 6):</h4>
-                    
-                    <div class="circle-tabs" style="display: flex; gap: 6px; margin-bottom: 10px;">
-                        <button type="button" class="tab-btn active" onclick="switchConstructorTab('outer', this)" style="flex: 1; font-size: 11px;">Внешний круг</button>
-                        <button type="button" class="tab-btn" onclick="switchConstructorTab('middle', this)" style="flex: 1; font-size: 11px;">Средний круг</button>
-                        <button type="button" class="tab-btn" onclick="switchConstructorTab('inner', this)" style="flex: 1; font-size: 11px;">Внутренний круг</button>
-                    </div>
-
-                    <div id="inlineInputsHolder" style="max-height: 160px; overflow-y: auto; padding-right: 2px;"></div>
-                    
-                    <button type="button" onclick="applyInlineTheme()" style="width: 100%; margin-top: 10px; background: #2a9d8f; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        💾 Сохранить тему в базу
-                    </button>
                 </div>
 
                 <div class="calc-wheels-deck">
                     <div id="wheelsContainer" class="wheels-container"></div>
                 </div>
             </div> 
-            
         </div>
-        
-    </div> 
+    </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/wheels_library.js"></script>
     <script src="js/localTranslator.js"></script>
     <script src="js/right-panel.js"></script>
-	<script src="js/inline-constructor.js"></script>
+    <script src="js/inline-constructor.js"></script>
     <script src="js/chat.js"></script>
     
     <script>
@@ -265,6 +251,16 @@
                 closeRightMenu();
             }
         });
+
+        // Назначаем вызов конструктора черезaddEventListener
+        const toggleBtnElement = document.getElementById('toggleConstructorBtn');
+        if (toggleBtnElement) {
+            toggleBtnElement.addEventListener('click', () => {
+                if (typeof toggleInlineConstructor === 'function') {
+                    toggleInlineConstructor();
+                }
+            });
+        }
     </script>
     
     <div id="actionMenu">
@@ -287,6 +283,5 @@
         </div>
     </div>
     <div id="actionMenuOverlay"></div>
-
 </body>
 </html>
