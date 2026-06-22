@@ -12,39 +12,25 @@ let constructorData = {
 /**
  * Основная функция переключения режима Конструктора
  */
-/**
- * Основная функция переключения режима Конструктора
- */
 function toggleInlineConstructor() {
     window.isConstructorMode = !window.isConstructorMode;
-    
+
     const btn = document.getElementById('toggleConstructorBtn');
     const inputTitle = document.getElementById('inlineThemeInputs');
     const saveAction = document.getElementById('constructorSaveAction');
     const searchInput = document.getElementById('themeSearch');
-    
-    // Автоматически находим контейнер с колесами (по ID или по классу у SVG)
-    const wheelsContainer = document.getElementById('wheelsContainer') || document.querySelector('.wheels-block');
-    
+
     if (!btn || !inputTitle || !saveAction) return;
 
     if (window.isConstructorMode) {
         // Включаем режим создания темы
         btn.classList.add('active-mode');
         btn.innerHTML = '<span class="btn-icon">❌</span><span class="btn-text">Закрыть</span>';
-        
+
         inputTitle.style.display = 'flex';
         inputTitle.style.flexDirection = 'column';
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
-        
-        // ИСПРАВЛЕНО: Скрываем старые колеса корректно без дублирования .style
-        if (wheelsContainer) {
-            wheelsContainer.style.setProperty('display', 'none', 'important');
-        }
-        
-        // Гарантированно очищаем старый текст на табло калькулятора
-        if (typeof clearCalculatorFields === 'function') clearCalculatorFields();
 
         // Сбрасываем буфер для новой темы
         constructorData = {
@@ -52,31 +38,29 @@ function toggleInlineConstructor() {
             middle: Array.from({ length: 6 }, () => ({ ru: '', kk: '' })),
             inner: Array.from({ length: 6 }, () => ({ ru: '', kk: '' }))
         };
-        
-        // Принудительно очищаем старую разметку калькулятора перед внедрением инпутов
-        const boxes = ['.calc-display-line:nth-child(1) .txt-box', '.calc-display-line:nth-child(2) .txt-box', '.calc-display-line:nth-child(3) .txt-box'];
-        boxes.forEach(selector => {
-            const box = document.querySelector(selector);
-            if (box) box.innerHTML = '';
-        });
 
-        // Переводим экран результатов в режим ввода для текущего сектора
-        switchToSector(window.currentSectorIndex || 1);
+        // Рендерим пустое колесо-конструктор (колёса остаются видимыми!)
+        window.dataset = {
+            outer: constructorData.outer,
+            middle: constructorData.middle,
+            inner: constructorData.inner
+        };
+        if (typeof regenerateWheels === 'function') regenerateWheels();
+
+        // Показываем инпуты для первого сектора
+        window.currentSectorIndex = 1;
+        switchToSector(1);
+
     } else {
         // Выключаем режим конструктора
         btn.classList.remove('active-mode');
         btn.innerHTML = '<span class="btn-icon">✍️</span><span class="btn-text">Создать тему</span>';
-        
+
         inputTitle.style.display = 'none';
         saveAction.style.display = 'none';
         if (searchInput) searchInput.style.visibility = 'visible';
 
-        // ИСПРАВЛЕНО: Возвращаем видимость колес (убираем display: none)
-        if (wheelsContainer) {
-            wheelsContainer.style.removeProperty('display');
-        }
-
-        // Возвращаем дефолтный калькулятор
+        // Восстанавливаем прежнюю тему
         if (window.currentTheme) {
             if (typeof window.loadTheme === 'function') window.loadTheme(window.currentTheme);
         } else {
@@ -86,7 +70,7 @@ function toggleInlineConstructor() {
 }
 
 /**
- * Динамически подменяет или обновляет инпуты ввода данных без потери фокуса
+ * Переключает инпуты на нужный сектор и подсвечивает активный сектор на колесе
  */
 function switchToSector(sectorIndex) {
     if (!window.isConstructorMode) return;
@@ -94,7 +78,10 @@ function switchToSector(sectorIndex) {
 
     const idx = sectorIndex - 1; // Индекс в массиве (0-5)
 
-    // Конфигурация слоев для автоматической сборки
+    // Подсвечиваем активный сектор на всех колёсах
+    highlightActiveSector(sectorIndex);
+
+    // Конфигурация слоев
     const layers = [
         { key: 'outer', step: 1, colorKk: '#00f3ff', label: 'Вопрос' },
         { key: 'middle', step: 2, colorKk: '#32d74b', label: 'Ответ' },
@@ -105,11 +92,10 @@ function switchToSector(sectorIndex) {
         const box = document.querySelector(`.calc-display-line:nth-child(${layer.step}) .txt-box`);
         if (!box) return;
 
-        // Ищем существующие инпуты внутри этого контейнера
-        let inputKk = box.querySelector(`.constructor-input-kk`);
-        let inputRu = box.querySelector(`.constructor-input-ru`);
+        let inputKk = box.querySelector('.constructor-input-kk');
+        let inputRu = box.querySelector('.constructor-input-ru');
 
-        // Если инпутов еще нет — создаем структуру один раз
+        // Если инпутов ещё нет — создаём один раз
         if (!inputKk || !inputRu) {
             box.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
@@ -117,15 +103,15 @@ function switchToSector(sectorIndex) {
                     <input type="text" class="constructor-input-ru" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
                 </div>
             `;
-            inputKk = box.querySelector(`.constructor-input-kk`);
-            inputRu = box.querySelector(`.constructor-input-ru`);
+            inputKk = box.querySelector('.constructor-input-kk');
+            inputRu = box.querySelector('.constructor-input-ru');
         }
 
-        // Навешиваем/обновляем события ввода, привязанные к текущему сектору динамически
+        // Обновляем обработчики (привязаны к текущему сектору)
         inputKk.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'kk', e.target.value);
         inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
 
-        // Чтобы не сбрасывать фокус активного элемента, меняем value только если оно РЕАЛЬНО отличается
+        // Подставляем значения буфера не теряя фокус
         const nextKkValue = constructorData[layer.key][idx].kk;
         const nextRuValue = constructorData[layer.key][idx].ru;
 
@@ -136,18 +122,63 @@ function switchToSector(sectorIndex) {
             inputRu.value = nextRuValue;
         }
 
-        // Обновляем плейсхолдеры, чтобы пользователь видел, в каком он секторе
+        // Обновляем плейсхолдеры
         inputKk.placeholder = `Сектор ${sectorIndex}: ${layer.label} (KK)`;
         inputRu.placeholder = `Сектор ${sectorIndex}: ${layer.label} (RU)`;
     });
 }
 
 /**
- * Обновляет значения в буфере данных при вводе в инпуты
+ * Подсвечивает активный сектор на всех трёх колёсах рамкой
+ */
+function highlightActiveSector(sectorIndex) {
+    // Убираем старую подсветку со всех секторов
+    document.querySelectorAll('.segment-cell path[data-constructor-highlight]').forEach(el => {
+        el.removeAttribute('data-constructor-highlight');
+        el.setAttribute('stroke', 'white');
+        el.setAttribute('stroke-width', '2');
+    });
+
+    // Индекс сектора в DOM = sectorIndex - 1
+    const idx = sectorIndex - 1;
+
+    ['originalOuterWheel', 'originalMiddleWheel', 'originalInnerWheel'].forEach(wheelId => {
+        const wheel = document.getElementById(wheelId);
+        if (!wheel) return;
+
+        const cells = wheel.querySelectorAll('.segment-cell');
+        const cell = cells[idx];
+        if (!cell) return;
+
+        const path = cell.querySelector('path');
+        if (path) {
+            path.setAttribute('data-constructor-highlight', '1');
+            path.setAttribute('stroke', '#ffffff');
+            path.setAttribute('stroke-width', '4');
+            // Добавляем мигающую обводку через filter
+            path.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,0.9))';
+        }
+    });
+}
+
+/**
+ * Обновляет значения в буфере и перерисовывает колесо живьём
  */
 function updateConstructorValue(circle, sectorIndex, lang, value) {
     const idx = sectorIndex - 1;
     constructorData[circle][idx][lang] = value;
+
+    // Обновляем колесо с живыми данными
+    window.dataset = {
+        outer: constructorData.outer,
+        middle: constructorData.middle,
+        inner: constructorData.inner
+    };
+    if (typeof regenerateWheels === 'function') {
+        regenerateWheels();
+        // После перерисовки восстанавливаем подсветку
+        highlightActiveSector(window.currentSectorIndex);
+    }
 }
 
 /**
@@ -171,7 +202,7 @@ async function applyInlineTheme() {
 
     try {
         console.log("=== ЗАПУСК СОХРАНЕНИЯ ТЕМЫ ===");
-        
+
         if (!dbClient.auth) {
             alert('Ошибка конфигурации: В объекте Supabase отсутствует модуль auth!');
             return;
@@ -183,8 +214,8 @@ async function applyInlineTheme() {
             console.log("Используем метод v2 SDK: getUser()");
             const { data: authData, error: authError } = await dbClient.auth.getUser();
             if (!authError && authData) user = authData.user;
-        } 
-        
+        }
+
         if (!user && typeof dbClient.auth.user === 'function') {
             console.log("Используем метод v1 SDK: user()");
             user = dbClient.auth.user();
@@ -197,16 +228,16 @@ async function applyInlineTheme() {
             return;
         }
 
-        // ШАГ 1: Создаем запись в таблице public.themes
+        // ШАГ 1: Создаём запись в таблице public.themes
         const { data: themeRecord, error: themeError } = await dbClient
             .from('themes')
             .insert([{
-                user_id: user.id, 
+                user_id: user.id,
                 title_ru: titleRu,
                 title_kk: titleKk
             }])
             .select()
-            .single(); 
+            .single();
 
         if (themeError) throw themeError;
         const newThemeId = themeRecord.id;
@@ -224,14 +255,14 @@ async function applyInlineTheme() {
                 itemsToInsert.push({
                     theme_id: newThemeId,
                     circle_type: circleType,
-                    position: index, 
+                    position: index,
                     text_ru: txtRu,
                     text_kk: txtKk
                 });
             });
         });
 
-        // Отправляем все 18 строк в таблицу public.wheel_items одним пакетом
+        // Отправляем все 18 строк одним пакетом
         const { error: itemsError } = await dbClient
             .from('wheel_items')
             .insert(itemsToInsert);
@@ -246,11 +277,11 @@ async function applyInlineTheme() {
         }
 
         window.currentTheme = `custom_${newThemeId}`;
-        
+
         toggleInlineConstructor();
 
-        if (typeof window.renderLullyTheme === 'function') {
-            window.renderLullyTheme(window.currentTheme);
+        if (typeof window.loadTheme === 'function') {
+            window.loadTheme(window.currentTheme);
         }
 
     } catch (err) {
@@ -259,7 +290,7 @@ async function applyInlineTheme() {
     }
 }
 
-// Глобальный экспорт функций для внешних вызовов
+// Глобальный экспорт функций
 window.switchToSector = switchToSector;
 window.toggleInlineConstructor = toggleInlineConstructor;
 window.applyInlineTheme = applyInlineTheme;
