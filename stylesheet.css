@@ -678,7 +678,7 @@ body {
     box-shadow: none !important;
     color: #fff !important;
     font-size: 15px !important;
-    padding: 0 35px 0 42px !important;
+    padding: 0 60px 0 42px !important;
     z-index: 51;
 }
 .calc-search-row .theme-search-input::placeholder {
@@ -809,6 +809,47 @@ body {
     z-index: 20; /* поверх всего, но под кнопкой если нужно */
 }
 
+/* Кнопка конструктора внутри поисковой строки */
+.calc-search-row .search-wrapper .constructor-toggle-btn {
+    position: absolute;
+    right: 34px; /* Встает левее крестика очистки */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: #8a99ad !important; /* В тон плейсхолдера */
+    font-size: 16px !important;
+    cursor: pointer;
+    display: none; /* Переключается через JS (flex/none) */
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0 !important;
+    z-index: 55; /* Выше инпута */
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+/* Эффекты при наведении */
+.calc-search-row .search-wrapper .constructor-toggle-btn:hover {
+    color: #2a9d8f !important; /* Твой фирменный зеленый */
+    transform: translateY(-50%) scale(1.15);
+}
+
+/* Активный режим (когда превращается в крестик отмены) */
+.calc-search-row .search-wrapper .constructor-toggle-btn.active-mode {
+    color: #ff453a !important; /* Красный неоновый в тон lbl-q */
+    text-shadow: 0 0 6px rgba(255, 69, 58, 0.6);
+}
+
+/* Корректировка кнопки очистки (если нужно зафиксировать позицию) */
+.calc-search-row .search-wrapper .clear-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 55;
+}
 /* ======================================================
    8. ACTION MENU (ШТОРКА ДЕЙСТВИЙ)
    ====================================================== */
