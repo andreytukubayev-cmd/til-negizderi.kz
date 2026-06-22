@@ -44,7 +44,7 @@ function toggleInlineConstructor(themeIdToEdit = null) {
             window.editingThemeId = rawId;
             console.log(`[Конструктор] Режим РЕДАКТИРОВАНИЯ темы ID: ${rawId}`);
 
-            // Подтягиваем данные из глобальной библиотеки, которые уже скачаны из Supabase
+            // Подтягиваем данные из GLOBAL библиотеки, которые уже скачаны из Supabase
             const sourceData = window.WHEELS_LIBRARY[themeIdToEdit];
             if (sourceData) {
                 if (titleRuEl) titleRuEl.value = sourceData.titleRu || '';
@@ -107,9 +107,6 @@ function toggleInlineConstructor(themeIdToEdit = null) {
 /**
  * Переключает инпуты на нужный сектор и подсвечивает активный сектор на колесе
  */
-/**
- * Переключает инпуты на нужный сектор и подсвечивает активный сектор на колесе
- */
 function switchToSector(sectorIndex) {
     if (!window.isConstructorMode) return;
     window.currentSectorIndex = sectorIndex;
@@ -131,7 +128,7 @@ function switchToSector(sectorIndex) {
         let inputKk = box.querySelector('.constructor-input-kk');
         let inputRu = box.querySelector('.constructor-input-ru');
 
-        // ИСПРАВЛЕНИЕ: Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
+        // Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
         if (!inputKk || !inputRu) {
             box.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
@@ -141,11 +138,35 @@ function switchToSector(sectorIndex) {
             `;
             inputKk = box.querySelector('.constructor-input-kk');
             inputRu = box.querySelector('.constructor-input-ru');
-            
-            // Навешиваем обработчики ОДИН раз при создании инпута
-            inputKk.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'kk', e.target.value);
-            inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
         }
+
+        // ВАЖНОЕ ИСПРАВЛЕНИЕ: Привязываем обработчики к жесткой локальной переменной sectorIndex данного вызова,
+        // а не к динамической window.currentSectorIndex.
+        // Используем 'input' для моментального сохранения в память буфера, но БЕЗ перерисовки колеса во время печати.
+        inputKk.oninput = (e) => {
+            const currentIdx = sectorIndex - 1;
+            constructorData[layer.key][currentIdx]['kk'] = e.target.value;
+            window.dataset[layer.key] = constructorData[layer.key];
+        };
+        inputRu.oninput = (e) => {
+            const currentIdx = sectorIndex - 1;
+            constructorData[layer.key][currentIdx]['ru'] = e.target.value;
+            window.dataset[layer.key] = constructorData[layer.key];
+        };
+
+        // А вот при потере фокуса (onchange) или окончании ввода — обновляем колесо на фоне целиком
+        inputKk.onchange = () => {
+            if (typeof regenerateWheels === 'function') {
+                regenerateWheels();
+                highlightActiveSector(window.currentSectorIndex);
+            }
+        };
+        inputRu.onchange = () => {
+            if (typeof regenerateWheels === 'function') {
+                regenerateWheels();
+                highlightActiveSector(window.currentSectorIndex);
+            }
+        };
 
         const nextKkValue = constructorData[layer.key][idx].kk;
         const nextRuValue = constructorData[layer.key][idx].ru;
@@ -225,9 +246,7 @@ async function applyInlineTheme() {
         return;
     }
 
-    // Используем строго глобальный клиент, настроенный в supabase-config.js
     const client = window.supabaseClient;
-
     if (!client) {
         alert('Ошибка: Клиент Supabase (window.supabaseClient) не инициализирован!');
         return;
@@ -255,7 +274,6 @@ async function applyInlineTheme() {
             // --- РЕЖИМ АПДЕЙТА (UPDATE) ---
             console.log(`Обновляем существующую тему ID: ${targetThemeId}`);
             
-            // 1. Обновляем заголовки в таблице themes
             const { error: updateThemeError } = await client
                 .from('themes')
                 .update({ title_ru: titleRu, title_kk: titleKk })
@@ -263,7 +281,6 @@ async function applyInlineTheme() {
 
             if (updateThemeError) throw updateThemeError;
 
-            // 2. Удаляем старые 18 сегментов этой темы, чтобы залить новые очищенным пакетом
             const { error: deleteItemsError } = await client
                 .from('wheel_items')
                 .delete()
@@ -288,7 +305,6 @@ async function applyInlineTheme() {
             targetThemeId = themeRecord.id;
         }
 
-        // ШАГ 2: Сборка и отправка 18 сегментов (одинаково для обоих режимов)
         const itemsToInsert = [];
         const circles = ['outer', 'middle', 'inner'];
 
@@ -316,11 +332,9 @@ async function applyInlineTheme() {
 
         alert(window.editingThemeId ? 'Тема успешно обновлена!' : 'Тема успешно сохранена в базу данных!');
 
-        // Сброс полей ввода
         titleRuEl.value = '';
         titleKkEl.value = '';
 
-        // Синхронизируем локальный WHEELS_LIBRARY с обновленной базой данных
         if (typeof window.loadCustomThemes === 'function') {
             await window.loadCustomThemes();
         }
@@ -328,7 +342,7 @@ async function applyInlineTheme() {
         window.currentTheme = `custom_${targetThemeId}`;
         window.editingThemeId = null;
 
-        toggleInlineConstructor(); // Закрываем конструктор
+        toggleInlineConstructor(); 
 
         if (typeof window.loadTheme === 'function') {
             window.loadTheme(window.currentTheme);
