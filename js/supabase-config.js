@@ -6,6 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_lRzYypPaoMrWUgbznU2zKg_T4kW_nkB';
 
 if (typeof supabaseClient === 'undefined') {
     window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabase = window.supabaseClient; // перезаписываем: теперь window.supabase = готовый клиент
     console.log('✅ Supabase клиент создан');
 }
 
