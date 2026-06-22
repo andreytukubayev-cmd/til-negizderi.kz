@@ -17,7 +17,12 @@ function loadTheme(themeName) {
     
     const themeTitleEl = document.getElementById('currentTheme');
     if (themeTitleEl) {
-        themeTitleEl.innerText = themeData.titleRu || themeName;
+        // ИЗМЕНЕНИЕ: Если тема вариативная, выводим её со звёздочкой на табло
+        if (themeData.isVariative) {
+            themeTitleEl.innerHTML = `⭐ <span style="color: #ffd60a;">${themeData.titleRu || themeName}</span>`;
+        } else {
+            themeTitleEl.innerText = themeData.titleRu || themeName;
+        }
     }
     
     window.dataset = {
@@ -498,7 +503,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isCurrent = (currentTheme === themeKey);
                 
                 div.className = `suggestion-item ${isCurrent ? 'active-theme-item' : ''}`;
-                div.innerText = title;
+                
+                // ИЗМЕНЕНИЕ: Если тема помечена как вариативная, красим её и добавляем звезду
+                if (data && data.isVariative) {
+                    div.innerHTML = `⭐ <span style="font-weight: 600; color: #ffd60a;">${title}</span> <small style="color: #64748b; font-size: 10px; margin-left: 4px;">(36+ вар.)</small>`;
+                } else {
+                    div.innerText = title;
+                }
                 
                 div.addEventListener('mousedown', (e) => {
                     e.preventDefault();
