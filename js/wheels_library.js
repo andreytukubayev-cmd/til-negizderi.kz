@@ -1558,65 +1558,82 @@ const WHEELS_LIBRARY = {
 
 // Функция, которая собирает темы и сегменты из Supabase и склеивает их для WHEELS_LIBRARY
 window.loadCustomThemes = async function() {
-    if (typeof supabase === 'undefined') return;
+    if (typeof supabase === 'undefined') {
+        console.warn("[Библиотека Колес] Supabase не инициализирован.");
+        return;
+    }
 
     try {
-        // 1. Скачиваем все темы
+        // 1. Скачиваем все кастомные темы
         const { data: themes, error: themesError } = await supabase
             .from('themes')
             .select('*');
 
-        if (themesError) throw themesError;
+        if (themesError) {
+            console.error("[Библиотека Колес] Ошибка загрузки тем:", themesError.message);
+            return;
+        }
         if (!themes || themes.length === 0) return;
 
-        // 2. Скачиваем все сегменты колес для этих тем
+        // 2. Скачиваем все сегменты колес
         const { data: items, error: itemsError } = await supabase
             .from('wheel_items')
             .select('*');
 
-        if (itemsError) throw itemsError;
+        if (itemsError) {
+            console.error("[Библиотека Колес] Ошибка загрузки сегментов:", itemsError.message);
+            return;
+        }
 
-        // 3. Собираем структуру, которую ждут наши колеса
+        // 3. Сборка структуры для WHEELS_LIBRARY
         themes.forEach(theme => {
-            const themeId = `custom_${theme.id}`; // делаем уникальный ID строки
+            const themeId = `custom_${theme.id}`; 
+            const themeItems = items || [];
 
-            // Фильтруем сегменты для конкретно этой темы по кругам
-            const outerSegments = (items || [])
+            // Фильтруем и сортируем сегменты строго по позициям (0-5)
+            const outerSegments = themeItems
                 .filter(i => i.theme_id === theme.id && i.circle_type === 'outer')
                 .sort((a, b) => a.position - b.position)
                 .map(i => ({ kk: i.text_kk, ru: i.text_ru }));
 
-            const middleSegments = (items || [])
+            const middleSegments = themeItems
                 .filter(i => i.theme_id === theme.id && i.circle_type === 'middle')
                 .sort((a, b) => a.position - b.position)
                 .map(i => ({ kk: i.text_kk, ru: i.text_ru }));
 
-            const innerSegments = (items || [])
+            const innerSegments = themeItems
                 .filter(i => i.theme_id === theme.id && i.circle_type === 'inner')
                 .sort((a, b) => a.position - b.position)
                 .map(i => ({ kk: i.text_kk, ru: i.text_ru }));
 
-            // Записываем готовую тему в наше печатное меню
-            WHEELS_LIBRARY[themeId] = {
-                titleRu: theme.title_ru,
-                // Ключевые слова для поиска (название темы в нижнем регистре)
-                keywords: [theme.title_ru.toLowerCase(), theme.title_kk.toLowerCase()], 
-                outer: outerSegments,
-                middle: middleSegments,
-                inner: innerSegments
-            };
+            // Проверяем, чтобы массивы не оказались пустыми, иначе рендер упадет
+            if (outerSegments.length === 6 && middleSegments.length === 6 && innerSegments.length === 6) {
+                window.WHEELS_LIBRARY[themeId] = {
+                    titleRu: theme.title_ru,
+                    keywords: [theme.title_ru.toLowerCase(), theme.title_kk.toLowerCase()], 
+                    outer: outerSegments,
+                    middle: middleSegments,
+                    inner: innerSegments
+                };
+            } else {
+                console.warn(`[Библиотека Колес] Тема ${theme.title_ru} пропущена: некорректное число сегментов (${outerSegments.length}/6)`);
+            }
         });
 
-        console.log("[Библиотека Колес] Кастомные темы из Supabase успешно загружены:", Object.keys(WHEELS_LIBRARY));
+        console.log("[Библиотека Колес] База успешно синхронизирована с WHEELS_LIBRARY. Темы:", Object.keys(window.WHEELS_LIBRARY));
 
     } catch (err) {
-        console.error("[Библиотека Колес] Ошибка при сборке кастомных тем:", err.message);
+        console.error("[Библиотека Колес] Критический сбой сборщика:", err.message);
     }
 };
 
 // Автоматический запуск при загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(window.loadCustomThemes, 500); 
+    // Делаем небольшую задержку, чтобы сам объект WHEELS_LIBRARY точно успел создаться в памяти
+    setTimeout(() => {
+        if (!window.WHEELS_LIBRARY) window.WHEELS_LIBRARY = {};
+        window.loadCustomThemes();
+    }, 600); 
 });
 
 // Возвращает массив технических ID всех тем (ключи объекта)
