@@ -152,11 +152,40 @@ async function applyInlineTheme() {
     }
 
     try {
-        // Проверяем авторизацию пользователя (требует RLS политика)
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        // === ЛОГИРОВАНИЕ ДЛЯ ДИАГНОСТИКИ ===
+        console.log("=== ДИАГНОСТИКА ИНИЦИАЛИЗАЦИИ SUPABASE ===");
+        console.log("Тип переменной supabase:", typeof supabase);
         
-        if (authError || !user) {
-            alert('Ошибка безопасности: Вы должны быть авторизованы для создания тем!');
+        if (typeof supabase !== 'undefined') {
+            console.log("Сам объект supabase:", supabase);
+            console.log("Ключи объекта supabase:", Object.keys(supabase));
+            console.log("Существует ли auth в supabase?:", typeof supabase.auth !== 'undefined');
+            if (supabase.auth) {
+                console.log("Ключи внутри supabase.auth:", Object.keys(supabase.auth));
+            }
+        }
+        console.log("=========================================");
+
+        let user = null;
+
+        // Самая безопасная проверка на существование auth
+        if (supabase && supabase.auth) {
+            if (typeof supabase.auth.getUser === 'function') {
+                console.log("Используем метод v2: getUser()");
+                const { data: authData, error: authError } = await supabase.auth.getUser();
+                if (!authError && authData) user = authData.user;
+            } else if (typeof supabase.auth.user === 'function') {
+                console.log("Используем метод v1: user()");
+                user = supabase.auth.user();
+            }
+        } else {
+            throw new Error("Объект supabase.auth полностью отсутствует (undefined)!");
+        }
+        
+        console.log("Результат определения пользователя:", user);
+
+        if (!user) {
+            alert('Ошибка безопасности: Вы должны быть авторизованы для создания тем! Текущий объект пользователя пуст.');
             return;
         }
 
@@ -202,18 +231,13 @@ async function applyInlineTheme() {
 
         alert('Тема успешно сохранена в базу данных!');
 
-        // ШАГ 3: Обновляем локальное меню в wheels_library.js
         if (typeof window.loadCustomThemes === 'function') {
             await window.loadCustomThemes();
         }
 
-        // ШАГ 4: Переключаем колеса на только что созданную тему
         window.currentTheme = `custom_${newThemeId}`;
-        
-        // Выключаем конструктор (это вернет стандартный калькулятор)
         toggleInlineConstructor();
 
-        // Принудительно рендерим новые колеса на экран
         if (typeof window.renderLullyTheme === 'function') {
             window.renderLullyTheme(window.currentTheme);
         }
