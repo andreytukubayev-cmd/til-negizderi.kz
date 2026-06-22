@@ -105,14 +105,18 @@
                 
                 <div class="calc-search-row">
                     <div class="search-wrapper">
-                        <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
-                        
-                        <button type="button" id="toggleConstructorBtn" class="constructor-toggle-btn" title="Создать свою тему">
-                            <span class="btn-icon">✍️</span>
-                        </button>
+    <input type="text" id="themeSearch" class="theme-search-input" placeholder="Поиск темы...">
+    
+    <button type="button" id="editConstructorBtn" class="constructor-toggle-btn" title="Редактировать эту тему" style="display: none; background: #1e293b; border-color: #38bdf8; margin-right: 4px;">
+        <span class="btn-icon" style="color: #38bdf8;">⚙️</span>
+    </button>
 
-                        <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
-                    </div>
+    <button type="button" id="toggleConstructorBtn" class="constructor-toggle-btn" title="Создать свою тему">
+        <span class="btn-icon">✍️</span>
+    </button>
+
+    <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
+</div>
                     <div id="searchSuggestions" class="search-suggestions-box"></div>
                 </div>
 
@@ -252,12 +256,23 @@
             }
         });
 
-        // Назначаем вызов конструктора черезaddEventListener
+// === Назначаем вызов конструктора в режиме СОЗДАНИЯ ===
         const toggleBtnElement = document.getElementById('toggleConstructorBtn');
         if (toggleBtnElement) {
             toggleBtnElement.addEventListener('click', () => {
                 if (typeof toggleInlineConstructor === 'function') {
-                    toggleInlineConstructor();
+                    toggleInlineConstructor(); // Создание новой темы с нуля
+                }
+            });
+        }
+
+        // === Назначаем вызов конструктора в режиме РЕДАКТИРОВАНИЯ ===
+        const editBtnElement = document.getElementById('editConstructorBtn');
+        if (editBtnElement) {
+            editBtnElement.addEventListener('click', () => {
+                if (typeof toggleInlineConstructor === 'function' && window.currentTheme) {
+                    // Передаем текущую кастомную тему (например, "custom_15") в конструктор
+                    toggleInlineConstructor(window.currentTheme); 
                 }
             });
         }
