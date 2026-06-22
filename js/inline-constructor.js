@@ -107,6 +107,9 @@ function toggleInlineConstructor(themeIdToEdit = null) {
 /**
  * Переключает инпуты на нужный сектор и подсвечивает активный сектор на колесе
  */
+/**
+ * Переключает инпуты на нужный сектор и подсвечивает активный сектор на колесе
+ */
 function switchToSector(sectorIndex) {
     if (!window.isConstructorMode) return;
     window.currentSectorIndex = sectorIndex;
@@ -128,6 +131,7 @@ function switchToSector(sectorIndex) {
         let inputKk = box.querySelector('.constructor-input-kk');
         let inputRu = box.querySelector('.constructor-input-ru');
 
+        // ИСПРАВЛЕНИЕ: Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
         if (!inputKk || !inputRu) {
             box.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
@@ -137,14 +141,16 @@ function switchToSector(sectorIndex) {
             `;
             inputKk = box.querySelector('.constructor-input-kk');
             inputRu = box.querySelector('.constructor-input-ru');
+            
+            // Навешиваем обработчики ОДИН раз при создании инпута
+            inputKk.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'kk', e.target.value);
+            inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
         }
-
-        inputKk.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'kk', e.target.value);
-        inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
 
         const nextKkValue = constructorData[layer.key][idx].kk;
         const nextRuValue = constructorData[layer.key][idx].ru;
 
+        // Обновляем текст в инпутах, только если пользователь прямо сейчас в них не пишет
         if (document.activeElement !== inputKk) inputKk.value = nextKkValue;
         if (document.activeElement !== inputRu) inputRu.value = nextRuValue;
 
