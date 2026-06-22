@@ -1,7 +1,7 @@
 // Инициализируем глобальное состояние режима конструктора
 window.isConstructorMode = false;
 window.currentSectorIndex = 1; // По умолчанию первый сектор
-window.editingThemeId = null;  // ID редактируемой темы из базы (если null — создаем новую)
+window.editingThemeId = null;  // ID редактируемой темы из базы (строка UUID или null)
 
 // Структура данных для новой темы (6 секторов для каждого из 3 кругов)
 let constructorData = {
@@ -12,7 +12,7 @@ let constructorData = {
 
 /**
  * Основная функция переключения режима Конструктора
- * @param {string|null} themeIdToEdit - если передан ID темы (например, 'custom_12'), включается режим редактирования
+ * @param {string|null} themeIdToEdit - если передан ID темы (например, 'custom_uuid'), включается режим редактирования
  */
 function toggleInlineConstructor(themeIdToEdit = null) {
     window.isConstructorMode = !window.isConstructorMode;
@@ -21,7 +21,7 @@ function toggleInlineConstructor(themeIdToEdit = null) {
     const inputTitle = document.getElementById('inlineThemeInputs');
     const saveAction = document.getElementById('constructorSaveAction');
     const searchInput = document.getElementById('themeSearch');
-	const editBtn = document.getElementById('editConstructorBtn');
+    const editBtn = document.getElementById('editConstructorBtn');
     const titleRuEl = document.getElementById('inlineTitleRu');
     const titleKkEl = document.getElementById('inlineTitleKk');
 
@@ -36,13 +36,14 @@ function toggleInlineConstructor(themeIdToEdit = null) {
         inputTitle.style.flexDirection = 'column';
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
-		if (editBtn) editBtn.style.display = 'none'; // Скрываем шестерёнку во время редактирования
+        if (editBtn) editBtn.style.display = 'none'; // Скрываем шестерёнку во время редактирования
 
         // Проверяем, передан ли ID для редактирования
         if (themeIdToEdit && themeIdToEdit.startsWith('custom_')) {
-            const rawId = parseInt(themeIdToEdit.replace('custom_', ''), 10);
+            // ИСПРАВЛЕНИЕ: Сохраняем UUID как чистую строку, БЕЗ parseInt
+            const rawId = themeIdToEdit.replace('custom_', '');
             window.editingThemeId = rawId;
-            console.log(`[Конструктор] Режим РЕДАКТИРОВАНИЯ темы ID: ${rawId}`);
+            console.log(`[Конструктор] Режим РЕДАКТИРОВАНИЯ темы ID (UUID): ${rawId}`);
 
             // Подтягиваем данные из GLOBAL библиотеки, которые уже скачаны из Supabase
             const sourceData = window.WHEELS_LIBRARY[themeIdToEdit];
@@ -140,9 +141,7 @@ function switchToSector(sectorIndex) {
             inputRu = box.querySelector('.constructor-input-ru');
         }
 
-        // ВАЖНОЕ ИСПРАВЛЕНИЕ: Привязываем обработчики к жесткой локальной переменной sectorIndex данного вызова,
-        // а не к динамической window.currentSectorIndex.
-        // Используем 'input' для моментального сохранения в память буфера, но БЕЗ перерисовки колеса во время печати.
+        // Фиксируем sectorIndex для обработчиков, исключая влияние асинхронных прыжков
         inputKk.oninput = (e) => {
             const currentIdx = sectorIndex - 1;
             constructorData[layer.key][currentIdx]['kk'] = e.target.value;
@@ -154,7 +153,7 @@ function switchToSector(sectorIndex) {
             window.dataset[layer.key] = constructorData[layer.key];
         };
 
-        // А вот при потере фокуса (onchange) или окончании ввода — обновляем колесо на фоне целиком
+        // Живая перерисовка колеса происходит только при потере фокуса (onchange)
         inputKk.onchange = () => {
             if (typeof regenerateWheels === 'function') {
                 regenerateWheels();
@@ -171,7 +170,7 @@ function switchToSector(sectorIndex) {
         const nextKkValue = constructorData[layer.key][idx].kk;
         const nextRuValue = constructorData[layer.key][idx].ru;
 
-        // Обновляем текст в инпутах, только если пользователь прямо сейчас в них не пишет
+        // Обновляем значения только если пользователь не пишет в инпут прямо сейчас
         if (document.activeElement !== inputKk) inputKk.value = nextKkValue;
         if (document.activeElement !== inputRu) inputRu.value = nextRuValue;
 
@@ -268,11 +267,11 @@ async function applyInlineTheme() {
             return;
         }
 
-        let targetThemeId = window.editingThemeId;
+        let targetThemeId = window.editingThemeId; // Это либо валидная строка UUID, либо null
 
         if (targetThemeId) {
             // --- РЕЖИМ АПДЕЙТА (UPDATE) ---
-            console.log(`Обновляем существующую тему ID: ${targetThemeId}`);
+            console.log(`Обновляем существующую тему ID (UUID): ${targetThemeId}`);
             
             const { error: updateThemeError } = await client
                 .from('themes')
@@ -302,9 +301,10 @@ async function applyInlineTheme() {
                 .single();
 
             if (themeError) throw themeError;
-            targetThemeId = themeRecord.id;
+            targetThemeId = themeRecord.id; // Supabase возвращает сгенерированную строку UUID
         }
 
+        // Сборка массива из 18 сегментов для записи
         const itemsToInsert = [];
         const circles = ['outer', 'middle', 'inner'];
 
@@ -314,7 +314,7 @@ async function applyInlineTheme() {
                 const txtKk = sector.kk.trim() || `Сектор ${index + 1}`;
 
                 itemsToInsert.push({
-                    theme_id: targetThemeId,
+                    theme_id: targetThemeId, // Валидная строка UUID
                     circle_type: circleType,
                     position: index,
                     text_ru: txtRu,
@@ -332,9 +332,11 @@ async function applyInlineTheme() {
 
         alert(window.editingThemeId ? 'Тема успешно обновлена!' : 'Тема успешно сохранена в базу данных!');
 
+        // Очищаем поля ввода заголовков
         titleRuEl.value = '';
         titleKkEl.value = '';
 
+        // Перезагружаем кастомные темы локально из базы
         if (typeof window.loadCustomThemes === 'function') {
             await window.loadCustomThemes();
         }
@@ -342,7 +344,7 @@ async function applyInlineTheme() {
         window.currentTheme = `custom_${targetThemeId}`;
         window.editingThemeId = null;
 
-        toggleInlineConstructor(); 
+        toggleInlineConstructor(); // Закрываем конструктор
 
         if (typeof window.loadTheme === 'function') {
             window.loadTheme(window.currentTheme);
