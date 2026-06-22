@@ -1,259 +1,176 @@
-// === ЖИВОЙ КОНСТРУКТОР ТЕМ ДЛЯ КОЛЕС ЛУЛЛИЯ ===
+// Инициализируем глобальное состояние режима конструктора
+window.isConstructorMode = false;
+window.currentSectorIndex = 1; // По умолчанию первый сектор
 
-let isConstructorMode = false;
-let currentConstructorCircle = 'outer';
-let savedBackupTheme = null; // Хранилище ID темы, которая стояла до включения конструктора
-
-// Временный буфер для создания колеса (6 секторов для каждого уровня)
-let customThemeBuffer = {
-    titleRu: '',
-    titleKk: '',
-    outer: Array.from({length: 6}, () => ({ ru: '', kk: '' })),
-    middle: Array.from({length: 6}, () => ({ ru: '', kk: '' })),
-    inner: Array.from({length: 6}, () => ({ ru: '', kk: '' }))
+// Структура данных для новой темы (6 секторов для каждого из 3 кругов)
+let constructorData = {
+    outer: Array.from({ length: 6 }, () => ({ ru: '', kk: '' })),
+    middle: Array.from({ length: 6 }, () => ({ ru: '', kk: '' })),
+    inner: Array.from({ length: 6 }, () => ({ ru: '', kk: '' }))
 };
 
 /**
- * Переключение режима (Своя тема / Обычный режим)
+ * Основная функция переключения режима Конструктора
  */
 function toggleInlineConstructor() {
-    isConstructorMode = !isConstructorMode;
+    window.isConstructorMode = !window.isConstructorMode;
     
     const btn = document.getElementById('toggleConstructorBtn');
     const inputTitle = document.getElementById('inlineThemeInputs');
-    const phrasesPanel = document.getElementById('inlinePhrasesPanel');
-    const searchRow = document.querySelector('.calc-search-row');
+    const saveAction = document.getElementById('constructorSaveAction');
+    const searchInput = document.getElementById('themeSearch');
+    
+    if (!btn || !inputTitle || !saveAction) return;
 
-    if (isConstructorMode) {
-        // Включаем режим конструктора
+    if (window.isConstructorMode) {
+        // Включаем режим создания темы
         btn.classList.add('active-mode');
-        btn.querySelector('.btn-icon').innerText = '❌'; // Меняем карандаш на крестик отмены
-        btn.setAttribute('title', 'Отменить создание');
+        btn.innerHTML = '<span class="btn-icon">❌</span><span class="btn-text">Закрыть</span>';
         
-        if(searchRow) searchRow.style.display = 'none';
         inputTitle.style.display = 'flex';
-        phrasesPanel.style.display = 'block';
-        
-        if (window.currentTheme) {
-            savedBackupTheme = window.currentTheme;
-        }
+        inputTitle.style.flexDirection = 'column';
+        saveAction.style.display = 'block';
+        if (searchInput) searchInput.style.visibility = 'hidden';
 
-        resetConstructorBuffer();
-        clearCalculatorFields();
-        renderInlineInputs();
+        // Сбрасываем буфер для новой темы
+        constructorData = {
+            outer: Array.from({ length: 6 }, () => ({ ru: '', kk: '' })),
+            middle: Array.from({ length: 6 }, () => ({ ru: '', kk: '' })),
+            inner: Array.from({ length: 6 }, () => ({ ru: '', kk: '' }))
+        };
+        
+        // Принудительно очищаем старую разметку калькулятора перед внедрением инпутов
+        const boxes = ['.calc-display-line:nth-child(1) .txt-box', '.calc-display-line:nth-child(2) .txt-box', '.calc-display-line:nth-child(3) .txt-box'];
+        boxes.forEach(selector => {
+            const box = document.querySelector(selector);
+            if (box) box.innerHTML = '';
+        });
+
+        // Переводим экран результатов в режим ввода для текущего сектора
+        switchToSector(window.currentSectorIndex || 1);
     } else {
-        // Выход из режима без сохранения
+        // Выключаем режим конструктора
         btn.classList.remove('active-mode');
-        btn.querySelector('.btn-icon').innerText = '✍️'; // Возвращаем карандаш обратно
-        btn.setAttribute('title', 'Создать свою тему');
+        btn.innerHTML = '<span class="btn-icon">✍️</span><span class="btn-text">Создать тему</span>';
         
-        if(searchRow) searchRow.style.display = 'flex';
         inputTitle.style.display = 'none';
-        phrasesPanel.style.display = 'none';
-        
-        if (savedBackupTheme && typeof window.loadTheme === 'function') {
-            window.loadTheme(savedBackupTheme);
+        saveAction.style.display = 'none';
+        if (searchInput) searchInput.style.visibility = 'visible';
+
+        // Возвращаем дефолтный калькулятор
+        if (window.currentTheme) {
+            if (typeof window.loadTheme === 'function') window.loadTheme(window.currentTheme);
         } else {
-            clearCalculatorFields();
+            if (typeof clearCalculatorFields === 'function') clearCalculatorFields();
         }
     }
 }
 
 /**
- * Очистка датасета колес на лету (визуальный "чистый лист")
+ * Динамически подменяет или обновляет инпуты ввода данных без потери фокуса
  */
-function clearCalculatorFields() {
-    window.dataset = {
-        outer: Array(6).fill({ kk: ' ', ru: ' ' }),
-        middle: Array(6).fill({ kk: ' ', ru: ' ' }),
-        inner: Array(6).fill({ kk: ' ', ru: ' ' })
-    };
-    if (typeof window.regenerateWheels === 'function') window.regenerateWheels();
-}
+function switchToSector(sectorIndex) {
+    if (!window.isConstructorMode) return;
+    window.currentSectorIndex = sectorIndex;
 
-/**
- * Сброс буфера данных
- */
-function resetConstructorBuffer() {
-    document.getElementById('inlineTitleRu').value = '';
-    document.getElementById('inlineTitleKk').value = '';
-    customThemeBuffer = {
-        titleRu: '',
-        titleKk: '',
-        outer: Array.from({length: 6}, () => ({ ru: '', kk: '' })),
-        middle: Array.from({length: 6}, () => ({ ru: '', kk: '' })),
-        inner: Array.from({length: 6}, () => ({ ru: '', kk: '' }))
-    };
-}
+    const idx = sectorIndex - 1; // Индекс в массиве (0-5)
 
-/**
- * Переключение вкладок кругов (Внешний / Средний / Внутренний)
- */
-function switchConstructorTab(circleType, btnEl) {
-    saveCurrentInputsToBuffer(); // Сохраняем данные из текущих инпутов перед уходом
-    currentConstructorCircle = circleType;
-    
-    // Переключаем активную кнопку в UI
-    document.querySelectorAll('.circle-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-    btnEl.classList.add('active');
-    
-    renderInlineInputs(); // Рендерим инпуты для переключенного круга
-}
+    // Конфигурация слоев для автоматической сборки
+    const layers = [
+        { key: 'outer', step: 1, colorKk: '#00f3ff', label: 'Вопрос' },
+        { key: 'middle', step: 2, colorKk: '#32d74b', label: 'Ответ' },
+        { key: 'inner', step: 3, colorKk: '#ffd60a', label: 'Реакция' }
+    ];
 
-/**
- * Генерация 6 пар инпутов для текущего активного круга
- */
-function renderInlineInputs() {
-    const holder = document.getElementById('inlineInputsHolder');
-    if (!holder) return;
-    holder.innerHTML = '';
-    
-    const items = customThemeBuffer[currentConstructorCircle];
-    
-    for (let i = 0; i < 6; i++) {
-        const row = document.createElement('div');
-        row.className = 'inline-phrase-row';
-        row.style.display = 'flex';
-        row.style.gap = '6px';
-        row.style.marginBottom = '6px';
-        row.style.alignItems = 'center';
-        
-        row.innerHTML = `
-            <span style="font-size: 11px; font-weight: bold; width: 14px; color: #475569; text-align: center;">${i+1}</span>
-            <input type="text" class="inline-item-ru" data-pos="${i}" value="${items[i].ru || ''}" placeholder="Русская фраза" style="flex:1; height: 28px; box-sizing: border-box;" oninput="updateLiveWheel(${i}, 'ru', this.value)">
-            <input type="text" class="inline-item-kk" data-pos="${i}" value="${items[i].kk || ''}" placeholder="Қазақша" style="flex:1; height: 28px; box-sizing: border-box;" oninput="updateLiveWheel(${i}, 'kk', this.value)">
-        `;
-        holder.appendChild(row);
-    }
-}
+    layers.forEach(layer => {
+        const box = document.querySelector(`.calc-display-line:nth-child(${layer.step}) .txt-box`);
+        if (!box) return;
 
-/**
- * Парсинг и сохранение данных из полей ввода в буфер
- */
-function saveCurrentInputsToBuffer() {
-    const rowsRu = document.querySelectorAll('.inline-item-ru');
-    const rowsKk = document.querySelectorAll('.inline-item-kk');
-    
-    rowsRu.forEach(input => {
-        const pos = parseInt(input.getAttribute('data-pos'));
-        customThemeBuffer[currentConstructorCircle][pos].ru = input.value;
-    });
-    rowsKk.forEach(input => {
-        const pos = parseInt(input.getAttribute('data-pos'));
-        customThemeBuffer[currentConstructorCircle][pos].kk = input.value;
+        // Ищем существующие инпуты внутри этого контейнера
+        let inputKk = box.querySelector(`.constructor-input-kk`);
+        let inputRu = box.querySelector(`.constructor-input-ru`);
+
+        // Если инпутов еще нет — создаем структуру один раз
+        if (!inputKk || !inputRu) {
+            box.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                    <input type="text" class="constructor-input-kk" style="width: 100%; background: #0f172a; color: ${layer.colorKk}; border: 1px solid #334155; padding: 4px 8px; font-size: 13px; font-weight: bold; border-radius: 4px; box-sizing: border-box;">
+                    <input type="text" class="constructor-input-ru" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
+                </div>
+            `;
+            inputKk = box.querySelector(`.constructor-input-kk`);
+            inputRu = box.querySelector(`.constructor-input-ru`);
+        }
+
+        // Навешиваем/обновляем события ввода, привязанные к текущему сектору динамически
+        inputKk.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'kk', e.target.value);
+        inputRu.oninput = (e) => updateConstructorValue(layer.key, window.currentSectorIndex, 'ru', e.target.value);
+
+        // Чтобы не сбрасывать фокус активного элемента, меняем value только если оно РЕАЛЬНО отличается
+        // (например, при переключении сектора колесом)
+        const nextKkValue = constructorData[layer.key][idx].kk;
+        const nextRuValue = constructorData[layer.key][idx].ru;
+
+        if (document.activeElement !== inputKk && inputKk.value !== nextKkValue) {
+            inputKk.value = nextKkValue;
+        }
+        if (document.activeElement !== inputRu && inputRu.value !== nextRuValue) {
+            inputRu.value = nextRuValue;
+        }
+
+        // Обновляем плейсхолдеры, чтобы пользователь видел, в каком он секторе
+        inputKk.placeholder = `Сектор ${sectorIndex}: ${layer.label} (KK)`;
+        inputRu.placeholder = `Сектор ${sectorIndex}: ${layer.label} (RU)`;
     });
 }
 
 /**
- * ЭФФЕКТ НА ЛЕТУ: Перерисовка текста на диске прямо во время ввода в инпут
+ * Обновляет значения в буфере данных при вводе в инпуты
  */
-function updateLiveWheel(pos, lang, value) {
-    // Пишем в буфер конструктора
-    customThemeBuffer[currentConstructorCircle][pos][lang] = value;
-    
-    // Подменяем значение в глобальном dataset калькулятора (если пусто — ставим пробел)
-    if (!window.dataset) window.dataset = {};
-    if (!window.dataset[currentConstructorCircle]) window.dataset[currentConstructorCircle] = [];
-    
-    window.dataset[currentConstructorCircle][pos] = {
-        ru: customThemeBuffer[currentConstructorCircle][pos].ru || ' ',
-        kk: customThemeBuffer[currentConstructorCircle][pos].kk || ' '
-    };
-    
-    // Вызываем перерисовку колес из библиотеки wheels_library.js
-    if (typeof window.regenerateWheels === 'function') {
-        window.regenerateWheels();
-    }
+function updateConstructorValue(circle, sectorIndex, lang, value) {
+    const idx = sectorIndex - 1;
+    constructorData[circle][idx][lang] = value;
 }
 
 /**
- * ФИНАЛЬНЫЙ ШАГ: Сборка и отправка структуры в таблицы Supabase
+ * Отправка готового объекта темы в базу данных Supabase
  */
 async function applyInlineTheme() {
-    saveCurrentInputsToBuffer(); // Фиксируем данные из открытой на данный момент вкладки
-    
     const titleRu = document.getElementById('inlineTitleRu').value.trim();
     const titleKk = document.getElementById('inlineTitleKk').value.trim();
-    
+
     if (!titleRu || !titleKk) {
-        alert("Пожалуйста, заполните названия темы на обоих языках!");
+        alert('Пожалуйста, заполните название темы на обоих языках!');
         return;
     }
 
-    // Проверяем авторизацию через правильное имя клиента из конфигурации
-    const { data: { session }, error: authError } = await window.supabaseClient.auth.getSession();
-    
-    if (authError || !session) {
-        alert("Чтобы сохранять свои колеса, необходимо войти в аккаунт через Google!");
-        return;
-    }
-    
-    const userId = session.user.id;
-    
-    try {
-        // 1. Вставляем запись в таблицу тем через верный клиент
-        const { data: themeData, error: themeError } = await window.supabaseClient
-            .from('themes')
-            .insert([{ 
-                user_id: userId, 
-                title_ru: titleRu, 
-                title_kk: titleKk 
-            }])
-            .select()
-            .single();
-            
-        if (themeError) throw themeError;
-        
-        const newThemeId = themeData.id;
-        
-        // 2. Формируем массив из 18 элементов для множественного INSERT (Bulk Insert)
-        const itemsToInsert = [];
-        const circles = ['outer', 'middle', 'inner'];
-        
-        circles.forEach(circleType => {
-            for (let i = 0; i < 6; i++) {
-                const item = customThemeBuffer[circleType][i];
-                itemsToInsert.push({
-                    theme_id: newThemeId,
-                    circle_type: circleType,
-                    position: i,
-                    text_ru: item.ru.trim() || '-', // Защита от пустых строк
-                    text_kk: item.kk.trim() || '-'
-                });
-            }
-        });
-        
-        // 3. Отправляем 18 элементов одним запросом в базу через верный клиент
-        const { error: itemsError } = await window.supabaseClient
-            .from('wheel_items')
-            .insert(itemsToInsert);
-            
-        if (itemsError) throw itemsError;
-        
-        alert(`Тема "${titleRu}" успешно сохранена в базу данных!`);
-        
-        // Переключаем интерфейс обратно, фиксируя созданную тему как текущую активную
-        isConstructorMode = false;
-        const btn = document.getElementById('toggleConstructorBtn');
-        btn.classList.remove('active-mode');
-        btn.querySelector('.btn-text').innerText = 'Своя тема';
-        btn.querySelector('.btn-icon').innerText = '✍️';
-        
-        const searchRow = document.querySelector('.calc-search-row');
-        if(searchRow) searchRow.style.display = 'flex';
-        document.getElementById('inlineThemeInputs').style.display = 'none';
-        document.getElementById('inlinePhrasesPanel').style.display = 'none';
-        
-        // Устанавливаем ID новой темы и обновляем заголовок калькулятора
-        window.currentTheme = newThemeId;
-        const mainTitle = document.getElementById('currentTheme');
-        if (mainTitle) mainTitle.innerText = titleRu;
+    const payload = {
+        title_ru: titleRu,
+        title_kk: titleKk,
+        data: constructorData
+    };
 
-        // Если в твоем проекте есть функция обновления списка тем в поиске — вызови её здесь
-        if (typeof window.initThemeSearch === 'function') window.initThemeSearch();
+    console.log('Готово к сохранению в Supabase:', payload);
+    
+    // Твой будущий код интеграции:
+    // const { data, error } = await supabase.from('themes').insert([ { name_ru: titleRu, name_kk: titleKk, content: constructorData } ]);
 
-    } catch (err) {
-        console.error("Ошибка при сохранении темы:", err.message || err);
-        alert("Произошла ошибка при сохранении темы в Supabase. Проверьте консоль.");
-    }
+    alert('Тема успешно сформирована в буфере! Проверь консоль разработчика.');
+    toggleInlineConstructor(); 
 }
+
+// Глобальный экспорт
+window.switchToSector = switchToSector;
+window.toggleInlineConstructorLogic = toggleInlineConstructor;
+
+/**
+ * Очищает текстовые поля экрана калькулятора до дефолтных значений
+ */
+function clearCalculatorFields() {
+    const fields = ['dash-q-kk', 'dash-q-ru', 'dash-a-kk', 'dash-a-ru', 'dash-r-kk', 'dash-r-ru'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = '-';
+    });
+}
+window.clearCalculatorFields = clearCalculatorFields;
