@@ -20,6 +20,9 @@ function toggleInlineConstructor() {
     const saveAction = document.getElementById('constructorSaveAction');
     const searchInput = document.getElementById('themeSearch');
     
+    // Автоматически находим контейнер с колесами (по ID или по твоему классу у SVG)
+    const wheelsContainer = document.getElementById('wheelsContainer') || document.querySelector('.wheels-block');
+    
     if (!btn || !inputTitle || !saveAction) return;
 
     if (window.isConstructorMode) {
@@ -31,6 +34,9 @@ function toggleInlineConstructor() {
         inputTitle.style.flexDirection = 'column';
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
+        
+        // СКРЫВАЕМ СТАРЫЕ КОЛЕСА, чтобы они не путали при вводе фраз новой темы
+        if (wheelsContainer) wheelsContainer.style.style.setProperty('display', 'none', 'important');
         
         // Гарантированно очищаем старый текст на табло калькулятора
         if (typeof clearCalculatorFields === 'function') clearCalculatorFields();
@@ -59,6 +65,9 @@ function toggleInlineConstructor() {
         inputTitle.style.display = 'none';
         saveAction.style.display = 'none';
         if (searchInput) searchInput.style.visibility = 'visible';
+
+        // ВОЗВРАЩАЕМ ВИДИМОСТЬ КОЛЕС НА ЭКРАН
+        if (wheelsContainer) wheelsContainer.style.display = 'block';
 
         // Возвращаем дефолтный калькулятор
         if (window.currentTheme) {
@@ -146,51 +155,43 @@ async function applyInlineTheme() {
         return;
     }
 
-    if (typeof supabase === 'undefined') {
-        alert('Ошибка: Модуль Supabase не найден на странице!');
+    if (typeof window.supabase === 'undefined' && typeof supabase === 'undefined') {
+        alert('Ошибка: Клиент Supabase не инициализирован на странице или еще не загрузился!');
         return;
     }
 
+    const dbClient = window.supabase || supabase;
+
     try {
-        // === ЛОГИРОВАНИЕ ДЛЯ ДИАГНОСТИКИ ===
-        console.log("=== ДИАГНОСТИКА ИНИЦИАЛИЗАЦИИ SUPABASE ===");
-        console.log("Тип переменной supabase:", typeof supabase);
+        console.log("=== ЗАПУСК СОХРАНЕНИЯ ТЕМЫ ===");
         
-        if (typeof supabase !== 'undefined') {
-            console.log("Сам объект supabase:", supabase);
-            console.log("Ключи объекта supabase:", Object.keys(supabase));
-            console.log("Существует ли auth в supabase?:", typeof supabase.auth !== 'undefined');
-            if (supabase.auth) {
-                console.log("Ключи внутри supabase.auth:", Object.keys(supabase.auth));
-            }
+        if (!dbClient.auth) {
+            alert('Ошибка конфигурации: В объекте Supabase отсутствует модуль auth!');
+            return;
         }
-        console.log("=========================================");
 
         let user = null;
 
-        // Самая безопасная проверка на существование auth
-        if (supabase && supabase.auth) {
-            if (typeof supabase.auth.getUser === 'function') {
-                console.log("Используем метод v2: getUser()");
-                const { data: authData, error: authError } = await supabase.auth.getUser();
-                if (!authError && authData) user = authData.user;
-            } else if (typeof supabase.auth.user === 'function') {
-                console.log("Используем метод v1: user()");
-                user = supabase.auth.user();
-            }
-        } else {
-            throw new Error("Объект supabase.auth полностью отсутствует (undefined)!");
-        }
+        if (typeof dbClient.auth.getUser === 'function') {
+            console.log("Используем метод v2 SDK: getUser()");
+            const { data: authData, error: authError } = await dbClient.auth.getUser();
+            if (!authError && authData) user = authData.user;
+        } 
         
-        console.log("Результат определения пользователя:", user);
+        if (!user && typeof dbClient.auth.user === 'function') {
+            console.log("Используем метод v1 SDK: user()");
+            user = dbClient.auth.user();
+        }
+
+        console.log("Результат авторизации:", user);
 
         if (!user) {
-            alert('Ошибка безопасности: Вы должны быть авторизованы для создания тем! Текущий объект пользователя пуст.');
+            alert('Ошибка безопасности: Вы должны быть авторизованы на сайте для создания тем!');
             return;
         }
 
         // ШАГ 1: Создаем запись в таблице public.themes
-        const { data: themeRecord, error: themeError } = await supabase
+        const { data: themeRecord, error: themeError } = await dbClient
             .from('themes')
             .insert([{
                 user_id: user.id, 
@@ -202,6 +203,7 @@ async function applyInlineTheme() {
 
         if (themeError) throw themeError;
         const newThemeId = themeRecord.id;
+        console.log("Создана новая тема с ID:", newThemeId);
 
         // ШАГ 2: Собираем все 18 сегментов в один массив
         const itemsToInsert = [];
@@ -222,12 +224,13 @@ async function applyInlineTheme() {
             });
         });
 
-        // Отправляем все 18 строк в таблицу public.wheel_items
-        const { error: itemsError } = await supabase
+        // Отправляем все 18 строк в таблицу public.wheel_items одним пакетом
+        const { error: itemsError } = await dbClient
             .from('wheel_items')
             .insert(itemsToInsert);
 
         if (itemsError) throw itemsError;
+        console.log("Все 18 сегментов успешно записаны.");
 
         alert('Тема успешно сохранена в базу данных!');
 
@@ -236,6 +239,7 @@ async function applyInlineTheme() {
         }
 
         window.currentTheme = `custom_${newThemeId}`;
+        
         toggleInlineConstructor();
 
         if (typeof window.renderLullyTheme === 'function') {
@@ -243,14 +247,14 @@ async function applyInlineTheme() {
         }
 
     } catch (err) {
-        console.error('Критическая ошибка сохранения:', err);
+        console.error('Критическая ошибка сохранения темы:', err);
         alert('Не удалось сохранить тему в базу: ' + err.message);
     }
 }
 
-// Глобальный экспорт функций для внешних вызовов (из chat.js или HTML-кнопок)
+// Глобальный экспорт функций для внешних вызовов
 window.switchToSector = switchToSector;
-window.toggleInlineConstructor = toggleInlineConstructor; // Имя совпадает с функцией!
+window.toggleInlineConstructor = toggleInlineConstructor;
 window.applyInlineTheme = applyInlineTheme;
 
 /**
