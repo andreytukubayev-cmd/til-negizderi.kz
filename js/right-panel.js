@@ -92,7 +92,6 @@ function regenerateWheels() {
 
     const deck = document.querySelector('.calc-wheels-deck');
     if (deck) {
-        // Удаляем старую кнопку сброса, если она осталась в деке, чтобы избежать дублирования
         const oldReset = deck.querySelector('#resetWheelsBtn');
         if (oldReset) oldReset.remove();
         deck.appendChild(resetBtn);
@@ -107,7 +106,7 @@ function regenerateWheels() {
         outerWheel.style.transform = 'rotate(0deg)';
         
         playClick();
-        updateWheelsDisplay(0, 0, 0, true); // Принудительное обновление
+        updateWheelsDisplay(0, 0, 0, true);
     });
     
     if (window.dataset && window.dataset.outer) {
@@ -116,13 +115,21 @@ function regenerateWheels() {
         generateWheelCells(innerWheel, window.dataset.inner, 'inner');
     }
     
-    rotations = { inner: 0, middle: 0, outer: 0 };
+    // ИСПРАВЛЕНИЕ: Если мы в режиме конструктора — сохраняем углы, иначе — сбрасываем в 0
+    if (!window.isConstructorMode) {
+        rotations = { inner: 0, middle: 0, outer: 0 };
+    }
     
     setupDragForWheel(innerWheel, 'inner');
     setupDragForWheel(middleWheel, 'middle');
     setupDragForWheel(outerWheel, 'outer');
     
-    updateWheelsDisplay(0, 0, 0, true);
+    // Применяем сохраненные или новые углы поворота к элементам DOM после их пересоздания
+    innerWheel.style.transform = `rotate(${rotations.inner}deg)`;
+    middleWheel.style.transform = `rotate(${rotations.middle}deg)`;
+    outerWheel.style.transform = `rotate(${rotations.outer}deg)`;
+    
+    updateWheelsDisplay(rotations.outer, rotations.middle, rotations.inner, true);
     
     originalEngineInitialized = true;
     
@@ -130,6 +137,30 @@ function regenerateWheels() {
         updateCurrentTheme(currentTheme);
     }
 }
+
+/**
+ * Функция принудительного поворота всех колес на выбранный сектор (1-6)
+ */
+function rotateToSector(sectorIndex) {
+    const idx = sectorIndex - 1; // 0-5
+    // Вычисляем угол. Так как getIndex считает против часовой стрелки через (-rotation), 
+    // то для поворота сектора к маркеру нам нужен отрицательный угол: -idx * 60
+    const targetAngle = -idx * 60;
+
+    rotations.outer = targetAngle;
+    rotations.middle = targetAngle;
+    rotations.inner = targetAngle;
+
+    const outerWheel = document.getElementById('originalOuterWheel');
+    const middleWheel = document.getElementById('originalMiddleWheel');
+    const innerWheel = document.getElementById('originalInnerWheel');
+
+    if (outerWheel) outerWheel.style.transform = `rotate(${targetAngle}deg)`;
+    if (middleWheel) middleWheel.style.transform = `rotate(${targetAngle}deg)`;
+    if (innerWheel) innerWheel.style.transform = `rotate(${targetAngle}deg)`;
+}
+// Экспортируем в глобальную область
+window.rotateToSector = rotateToSector;
 
 function generateWheelCells(wheelEl, items, type) {
     if (!items || items.length === 0) return;
