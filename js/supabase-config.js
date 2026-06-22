@@ -154,6 +154,8 @@ async function updateAuthUI() {
     const loginBtn = document.getElementById('google-signin-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const totalSpan = document.getElementById('totalTranslations');
+    // НАХОДИМ НАШУ КНОПКУ КОНСТРУКТОРА
+    const constructorBtn = document.getElementById('toggleConstructorBtn');
     
     const user = await checkUser();
     console.log('Проверка UI. Пользователь в системе:', user ? 'ДА' : 'НЕТ');
@@ -162,6 +164,8 @@ async function updateAuthUI() {
     if (user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
+        // ПОЛЬЗОВАТЕЛЬ АВТОРИЗОВАН -> ПОКАЗЫВАЕМ КНОПКУ
+        if (constructorBtn) constructorBtn.style.display = 'flex';
         
         let displayName = user.user_metadata?.full_name || 'Пользователь';
         
@@ -188,6 +192,8 @@ async function updateAuthUI() {
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
+        // ПОЛЬЗОВАТЕЛЬ ВЫШЕЛ ИЛИ НЕ КЛИКНУЛ ВХОД -> СКРЫВАЕМ КНОПКУ
+        if (constructorBtn) constructorBtn.style.display = 'none';
     }
 
     isUpdatingAuth = false; 
