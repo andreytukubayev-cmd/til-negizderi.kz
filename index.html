@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="stylesheet.css">
     <title>Изучение казахского языка по методике Тукубаева А.С.</title>
+    <style>
+        .constructor-toggle-btn {
+            width: calc(100% - 32px);
+            margin: 0 16px 15px 16px;
+            background: linear-gradient(135deg, #2a9d8f, #264653);
+            color: white;
+            border: 1px solid #1d3557;
+            border-radius: 8px;
+            height: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            transition: all 0.2s ease;
+        }
+        .constructor-toggle-btn:hover {
+            background: linear-gradient(135deg, #2cbdab, #2a4d5c);
+        }
+        .constructor-toggle-btn.active-mode {
+            background: linear-gradient(135deg, #e63946, #9b2226) !important;
+        }
+        .circle-tabs button {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.15s ease;
+        }
+        .circle-tabs button.active {
+            background: #00b4d8;
+            color: white;
+            border-color: #0096b6;
+        }
+        .inline-phrase-row input {
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 6px 8px;
+            outline: none;
+            font-size: 13px;
+        }
+        .inline-phrase-row input:focus {
+            border-color: #00b4d8;
+            box-shadow: 0 0 0 2px rgba(0,180,216,0.15);
+        }
+    </style>
 </head>
 <body>
     <div class="menu-overlay" id="menuOverlay"></div>
@@ -69,7 +121,7 @@
                     </button>
                 </div>
                 <button id="logout-btn" class="btn-logout" style="display: none;">Выйти из аккаунта</button>
-            </div>     
+            </div>      
         </div>
 
         <div class="chat-area">
@@ -98,7 +150,7 @@
             </form>
         </div>
 
-<div class="sidebar-right" id="sidebarRight">
+        <div class="sidebar-right" id="sidebarRight">
             <button class="menu-close-right" id="menuCloseRight">🎡</button>
 
             <div class="calculator-device">
@@ -109,6 +161,16 @@
                         <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="Очистить поиск">&times;</button>
                     </div>
                     <div id="searchSuggestions" class="search-suggestions-box"></div>
+                </div>
+
+                <button type="button" id="toggleConstructorBtn" class="constructor-toggle-btn" style="display: none;" onclick="toggleInlineConstructor()">
+    <span class="btn-icon">✍️</span>
+    <span class="btn-text">Создать тему</span>
+	</button>
+
+                <div id="inlineThemeInputs" style="display: none; gap: 8px; padding: 0 16px 12px 16px; width: 100%; box-sizing: border-box;">
+                    <input type="text" id="inlineTitleRu" placeholder="Название темы (RU), напр. Еда" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px;">
+                    <input type="text" id="inlineTitleKk" placeholder="Тақырып атауы (KK), напр. Тамақ" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px;">
                 </div>
 
                 <div id="wheelsDisplay" class="calc-screen-area">
@@ -139,20 +201,37 @@
 
                 </div>
 
+                <div id="inlinePhrasesPanel" style="display: none; background: rgba(255,255,255,0.95); padding: 12px; border-radius: 8px; margin: 12px 16px; border: 1px solid #cbd5e1; box-sizing: border-box;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #475569; text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Заполнение секторов (от 1 до 6):</h4>
+                    
+                    <div class="circle-tabs" style="display: flex; gap: 6px; margin-bottom: 10px;">
+                        <button type="button" class="tab-btn active" onclick="switchConstructorTab('outer', this)" style="flex: 1; font-size: 11px;">Внешний круг</button>
+                        <button type="button" class="tab-btn" onclick="switchConstructorTab('middle', this)" style="flex: 1; font-size: 11px;">Средний круг</button>
+                        <button type="button" class="tab-btn" onclick="switchConstructorTab('inner', this)" style="flex: 1; font-size: 11px;">Внутренний круг</button>
+                    </div>
+
+                    <div id="inlineInputsHolder" style="max-height: 160px; overflow-y: auto; padding-right: 2px;"></div>
+                    
+                    <button type="button" onclick="applyInlineTheme()" style="width: 100%; margin-top: 10px; background: #2a9d8f; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        💾 Сохранить тему в базу
+                    </button>
+                </div>
+
                 <div class="calc-wheels-deck">
-    
-    <div id="wheelsContainer" class="wheels-container"></div>
-    
-</div>
+                    <div id="wheelsContainer" class="wheels-container"></div>
+                </div>
             </div> 
-			
-			</div>
+            
+        </div>
         
-    </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    </div> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/wheels_library.js"></script>
     <script src="js/localTranslator.js"></script>
     <script src="js/right-panel.js"></script>
+	<script src="js/inline-constructor.js"></script>
     <script src="js/chat.js"></script>
     
     <script>
