@@ -129,46 +129,55 @@ function switchToSector(sectorIndex) {
         let inputKk = box.querySelector('.constructor-input-kk');
         let inputRu = box.querySelector('.constructor-input-ru');
 
-        // Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
+        // 1. Пересоздаем инпуты ТОЛЬКО если их физически нет в текущем box
         if (!inputKk || !inputRu) {
             box.innerHTML = `
-			<div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-            <input type="text" class="constructor-input-kk" autocomplete="new-sector-text" style="width: 100%; background: #0f172a; color: ${layer.colorKk}; border: 1px solid #334155; padding: 4px 8px; font-size: 13px; font-weight: bold; border-radius: 4px; box-sizing: border-box;">
-            <input type="text" class="constructor-input-ru" autocomplete="new-sector-text" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
-        </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                    <input type="text" class="constructor-input-kk" autocomplete="new-sector-text" style="width: 100%; background: #0f172a; color: ${layer.colorKk}; border: 1px solid #334155; padding: 4px 8px; font-size: 13px; font-weight: bold; border-radius: 4px; box-sizing: border-box;">
+                    <input type="text" class="constructor-input-ru" autocomplete="new-sector-text" style="width: 100%; background: #0f172a; color: #cbd5e1; border: 1px solid #334155; padding: 4px 8px; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
+                </div>
             `;
             inputKk = box.querySelector('.constructor-input-kk');
             inputRu = box.querySelector('.constructor-input-ru');
         }
 
+        // 2. ОБНОВЛЯЕМ ОБРАБОТЧИКИ ВСЕГДА (Вынесено из условия IF)
         // Фиксируем sectorIndex для обработчиков, исключая влияние асинхронных прыжков
         inputKk.oninput = (e) => {
-            const currentIdx = sectorIndex - 1;
-            constructorData[layer.key][currentIdx]['kk'] = e.target.value;
+            constructorData[layer.key][idx]['kk'] = e.target.value;
             window.dataset[layer.key] = constructorData[layer.key];
         };
         inputRu.oninput = (e) => {
-            const currentIdx = sectorIndex - 1;
-            constructorData[layer.key][currentIdx]['ru'] = e.target.value;
+            constructorData[layer.key][idx]['ru'] = e.target.value;
             window.dataset[layer.key] = constructorData[layer.key];
         };
 
-        // Живая перерисовка колеса происходит только при потере фокуса (onchange)
+        // При потере фокуса (onchange) — обновляем колесо на фоне целиком
         inputKk.onchange = () => {
             if (typeof regenerateWheels === 'function') {
                 regenerateWheels();
+                // Возвращаем колеса на текущий сектор, чтобы они не сбрасывались в 0
+                if (typeof window.rotateToSector === 'function') {
+                    window.rotateToSector(window.currentSectorIndex);
+                }
                 highlightActiveSector(window.currentSectorIndex);
             }
         };
+        
         inputRu.onchange = () => {
             if (typeof regenerateWheels === 'function') {
                 regenerateWheels();
+                // Возвращаем колеса на текущий сектор, чтобы они не сбрасывались в 0
+                if (typeof window.rotateToSector === 'function') {
+                    window.rotateToSector(window.currentSectorIndex);
+                }
                 highlightActiveSector(window.currentSectorIndex);
             }
         };
 
-        const nextKkValue = constructorData[layer.key][idx].kk;
-        const nextRuValue = constructorData[layer.key][idx].ru;
+        // 3. Обновляем значения и плейсхолдеры под текущий сектор
+        const nextKkValue = constructorData[layer.key][idx].kk || '';
+        const nextRuValue = constructorData[layer.key][idx].ru || '';
 
         // Обновляем значения только если пользователь не пишет в инпут прямо сейчас
         if (document.activeElement !== inputKk) inputKk.value = nextKkValue;
@@ -178,7 +187,6 @@ function switchToSector(sectorIndex) {
         inputRu.placeholder = `Сектор ${sectorIndex}: ${layer.label} (RU)`;
     });
 }
-
 /**
  * Подсвечивает активный сектор на всех трёх колёсах рамкой
  */
