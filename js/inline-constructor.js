@@ -25,36 +25,32 @@ function toggleInlineConstructor() {
     const searchRow = document.querySelector('.calc-search-row');
 
     if (isConstructorMode) {
-        // 1. Включаем режим конструктора
+        // Включаем режим конструктора
         btn.classList.add('active-mode');
-        btn.querySelector('.btn-text').innerText = 'Отмена';
-        btn.querySelector('.btn-icon').innerText = '❌';
+        btn.querySelector('.btn-icon').innerText = '❌'; // Меняем карандаш на крестик отмены
+        btn.setAttribute('title', 'Отменить создание');
         
-        // Показываем панель ввода, прячем поиск тем
         if(searchRow) searchRow.style.display = 'none';
         inputTitle.style.display = 'flex';
         phrasesPanel.style.display = 'block';
         
-        // Бекапим текущую тему, если она была
         if (window.currentTheme) {
             savedBackupTheme = window.currentTheme;
         }
 
-        // 2. Сбрасываем буфер и очищаем калькулятор для ввода
         resetConstructorBuffer();
         clearCalculatorFields();
         renderInlineInputs();
     } else {
-        // 3. Выход из режима без сохранения
+        // Выход из режима без сохранения
         btn.classList.remove('active-mode');
-        btn.querySelector('.btn-text').innerText = 'Своя тема';
-        btn.querySelector('.btn-icon').innerText = '✍️';
+        btn.querySelector('.btn-icon').innerText = '✍️'; // Возвращаем карандаш обратно
+        btn.setAttribute('title', 'Создать свою тему');
         
         if(searchRow) searchRow.style.display = 'flex';
         inputTitle.style.display = 'none';
         phrasesPanel.style.display = 'none';
         
-        // Возвращаем старую тему назад
         if (savedBackupTheme && typeof window.loadTheme === 'function') {
             window.loadTheme(savedBackupTheme);
         } else {
