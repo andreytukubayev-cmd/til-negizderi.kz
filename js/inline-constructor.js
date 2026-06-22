@@ -21,6 +21,7 @@ function toggleInlineConstructor(themeIdToEdit = null) {
     const inputTitle = document.getElementById('inlineThemeInputs');
     const saveAction = document.getElementById('constructorSaveAction');
     const searchInput = document.getElementById('themeSearch');
+	const editBtn = document.getElementById('editConstructorBtn');
     const titleRuEl = document.getElementById('inlineTitleRu');
     const titleKkEl = document.getElementById('inlineTitleKk');
 
@@ -35,6 +36,7 @@ function toggleInlineConstructor(themeIdToEdit = null) {
         inputTitle.style.flexDirection = 'column';
         saveAction.style.display = 'block';
         if (searchInput) searchInput.style.visibility = 'hidden';
+		if (editBtn) editBtn.style.display = 'none'; // Скрываем шестерёнку во время редактирования
 
         // Проверяем, передан ли ID для редактирования
         if (themeIdToEdit && themeIdToEdit.startsWith('custom_')) {
