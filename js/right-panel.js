@@ -28,6 +28,22 @@ function loadTheme(themeName) {
     
     regenerateWheels();
     
+    // === ЛОГИРОВАНИЕ ДЛЯ ПРОВЕРКИ ===
+    const editBtn = document.getElementById('editConstructorBtn');
+    console.log("[ОТЛАДКА] Вызвана loadTheme для:", themeName);
+    console.log("[ОТЛАДКА] Найдена ли кнопка в DOM?:", editBtn ? "ДА" : "НЕТ");
+    // ================================
+
+    if (editBtn) {
+        if (themeName && themeName.startsWith('custom_')) {
+            console.log("[ОТЛАДКА] Тема кастомная, включаю кнопку редактирования");
+            editBtn.style.display = 'inline-flex';
+        } else {
+            console.log("[ОТЛАДКА] Тема системная, скрываю кнопку");
+            editBtn.style.display = 'none';
+        }
+    }
+    
     return true;
 }
 
