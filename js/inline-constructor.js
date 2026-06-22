@@ -88,7 +88,7 @@ function toggleInlineConstructor(themeIdToEdit = null) {
     } else {
         // Выключаем режим конструктора
         btn.classList.remove('active-mode');
-        btn.innerHTML = '<span class="btn-icon">✍️</span><span class="btn-text">Создать тему</span>';
+        btn.innerHTML = '<span class="btn-icon">✍️</span><span class="btn-text">Создать</span>';
 
         inputTitle.style.display = 'none';
         saveAction.style.display = 'none';
