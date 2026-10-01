@@ -16,8 +16,9 @@
         <h1 class="text-xl font-bold">🔋 BMS Мониторинг</h1>
 
         <!-- Кнопки выбора периода -->
-        <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs">
-            <button onclick="setPeriod('hour')" id="btn-hour" class="py-2 rounded-lg bg-slate-800 text-white font-medium transition">Час</button>
+        <div class="grid grid-cols-4 gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs">
+            <button onclick="setPeriod('hour')" id="btn-hour" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Час</button>
+            <button onclick="setPeriod('6hours')" id="btn-6hours" class="py-2 rounded-lg bg-slate-800 text-white font-medium transition">6 часов</button>
             <button onclick="setPeriod('day')" id="btn-day" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Сутки</button>
             <button onclick="setPeriod('yesterday')" id="btn-yesterday" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Вчера</button>
         </div>
@@ -52,13 +53,13 @@
         const SUPABASE_KEY = 'sb_publishable_lRzYypPaoMrWUgbznU2zKg_T4kW_nkB';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentPeriod = 'hour'; // По умолчанию за последний час
+        let currentPeriod = '6hours'; // По умолчанию за 6 часов
 
         function setPeriod(period) {
             currentPeriod = period;
             
             // Подсветка активной кнопки
-            ['hour', 'day', 'yesterday'].forEach(p => {
+            ['hour', '6hours', 'day', 'yesterday'].forEach(p => {
                 const btn = document.getElementById(`btn-${p}`);
                 if (p === period) {
                     btn.className = "py-2 rounded-lg bg-slate-800 text-white font-medium transition";
@@ -77,6 +78,9 @@
             if (currentPeriod === 'hour') {
                 const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
                 query = query.gte('created_at', oneHourAgo.toISOString());
+            } else if (currentPeriod === '6hours') {
+                const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+                query = query.gte('created_at', sixHoursAgo.toISOString());
             } else if (currentPeriod === 'day') {
                 const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
                 query = query.gte('created_at', oneDayAgo.toISOString());
