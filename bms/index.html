@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мониторинг BMS</title>
+    <!-- Подключаем Tailwind CSS для красивого дизайна -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Подключаем клиент Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 p-4 font-sans">
+    <div class="max-w-md mx-auto space-y-4">
+        <h1 class="text-xl font-bold">🔋 BMS Мониторинг</h1>
+
+        <!-- Карточки текущих значений -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Напряжение</div>
+                <div id="val-v" class="text-lg font-bold text-green-400">--</div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Ток</div>
+                <div id="val-c" class="text-lg font-bold text-yellow-400">--</div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Заряд</div>
+                <div id="val-s" class="text-lg font-bold text-blue-400">--</div>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+            <canvas id="voltageChart" height="120"></canvas>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+            <canvas id="currentChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://dozirkpilsfxthhzlfiv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_lRzYypPaoMrWUgbznU2zKg_T4kW_nkB';
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadData() {
+            const { data, error } = await client
+                .from('bms_logs')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+            if (error || !data) return;
+
+            const latest = data[data.length - 1];
+            document.getElementById('val-v').innerText = latest.voltage + ' В';
+            document.getElementById('val-c').innerText = latest.current + ' А';
+            document.getElementById('val-s').innerText = latest.soc + ' %';
+
+            const times = data.map(d => new Date(d.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+            
+            vChart.data.labels = times;
+            vChart.data.datasets[0].data = data.map(d => d.voltage);
+            vChart.update();
+
+            cChart.data.labels = times;
+            cChart.data.datasets[0].data = data.map(d => d.current);
+            cChart.update();
+        }
+
+        // Инициализация графиков
+        const vCtx = document.getElementById('voltageChart').getContext('2d');
+        const vChart = new Chart(vCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Напряжение (В)', data: [], borderColor: '#4ade80', tension: 0.2 }] },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
+        });
+
+        const cCtx = document.getElementById('currentChart').getContext('2d');
+        const cChart = new Chart(cCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Ток (А)', data: [], borderColor: '#facc15', tension: 0.2 }] },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
+        });
+
+        loadData();
+        setInterval(loadData, 30000); // Обновление каждые 30 секунд
+    </script>
+</body>
+</html>
